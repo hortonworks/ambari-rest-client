@@ -13,23 +13,30 @@ class AmbariClient {
 		ambari.headers['Authorization'] = 'Basic '+"$user:$password".getBytes('iso-8859-1').encodeBase64()
 	}
 	
-	def String[] clusters() {
-		def clusters = slurper.parseText(ambari.get( path : "clusters", params: ['fields': 'Clusters/*' ] ).data.text)
-		clusters.items.collect{"[$it.Clusters.cluster_id] $it.Clusters.cluster_name:$it.Clusters.version"}
+	def clusters() {
+		slurper.parseText(ambari.get( path : "clusters", query: ['fields': 'Clusters/*' ] ).data.text)
 	}
 	
 	def String clusterList() {
-		clusters().join("\n")
+		clusters().items.collect{"[$it.Clusters.cluster_id] $it.Clusters.cluster_name:$it.Clusters.version"}.join("\n")
 	}
 	
-	def String[] tasks(task=1) {		
-		try {
-		  def tt=slurper.parseText(ambari.get( path : "clusters/MySingleNodeCluster/requests/$task" , params: ['fields': 'tasks/Tasks/*'] ).data.text)
-		  println "# of Tasks: ${tt.tasks.size}";
-		  def taskList = tt.tasks.collect{ "${it.Tasks.command_detail.padRight(30)} [${it.Tasks.status}]"}
-		} catch (Exception e) {
-		  e.printStackTrace();
-		}
+	
+	def tasks(task=1) {		
+		slurper.parseText(ambari.get( path : "clusters/MySingleNodeCluster/requests/$task" , params: ['fields': 'tasks/Tasks/*'] ).data.text)
+	}
+	
+	def tasksList(task=1) {
+		tasks(task).tasks.collect{ "${it.Tasks.command_detail.padRight(30)} [${it.Tasks.status}]"}.join("\n")
+		
+	}
+	
+	def hosts() {
+		slurper.parseText(ambari.get( path : "clusters/MySingleNodeCluster/hosts", query: ['fields':'Hosts/*']).data.text)
+	}
+	
+	def hostsList() {
+		hosts().items.collect{"$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch"}.join("\n")
 	}
 
 	public static void main(String[] args) {
@@ -43,9 +50,8 @@ class AmbariClient {
 		}
 		
 		AmbariClient client = new AmbariClient(host, port)
-		def tasks = client.tasks()
-		tasks.each{
-			println "# next task: $it"
-		}
+		println "\n  clusterList: \n ${client.clusterList()}"
+		println "\n  hostsList: \n ${client.hostsList()}"
+		println "\n  tasksList: \n ${client.tasksList()}"
 	}	
 }
