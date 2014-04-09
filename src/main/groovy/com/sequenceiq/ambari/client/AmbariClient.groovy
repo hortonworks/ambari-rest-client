@@ -47,6 +47,14 @@ class AmbariClient {
 		hosts().items.collect{"$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch"}.join("\n")
 	}
 
+	def services() {
+		getAllResources("services", "ServiceInfo")
+	}
+	
+	def String serviceList() {
+		services().items.collect{"${it.ServiceInfo.service_name.padRight(30)} [$it.ServiceInfo.state]"}.join("\n")
+	}
+	
 	public static void main(String[] args) {
 		
 		
@@ -61,5 +69,7 @@ class AmbariClient {
 		println "\n  clusterList: \n${client.clusterList()}"
 		println "\n  hostsList: \n${client.hostList()}"
 		println "\n  tasksList: \n${client.taskList()}"
+		println "\n  serviceList: \n${client.serviceList()}"
+		
 	}	
 }
