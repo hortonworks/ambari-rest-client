@@ -7,35 +7,43 @@ class AmbariClient {
 
 	def slurper = new JsonSlurper();
 	def ambari
+	def clusterName
 	
 	AmbariClient(host = 'localhost', port = '8080', user = 'admin', password = 'admin') {
 		ambari = new RESTClient( "http://${host}:${port}/api/v1/" as String )
 		ambari.headers['Authorization'] = 'Basic '+"$user:$password".getBytes('iso-8859-1').encodeBase64()
+		clusterName = clusters().items[0].Clusters.cluster_name
 	}
 	
+	def slurp(path, fields) {
+		slurper.parseText(ambari.get( path : "$path", query: ['fields':"$fields"]).data.text)
+	}
+	
+	def getAllResources(resourceName, fields) {
+		slurp("clusters/$clusterName/$resourceName", "$fields/*")
+	}	
+	
 	def clusters() {
-		slurper.parseText(ambari.get( path : "clusters", query: ['fields': 'Clusters/*' ] ).data.text)
+		slurp("clusters", "Clusters")
 	}
 	
 	def String clusterList() {
 		clusters().items.collect{"[$it.Clusters.cluster_id] $it.Clusters.cluster_name:$it.Clusters.version"}.join("\n")
 	}
-	
-	
-	def tasks(task=1) {		
-		slurper.parseText(ambari.get( path : "clusters/MySingleNodeCluster/requests/$task" , params: ['fields': 'tasks/Tasks/*'] ).data.text)
+
+	def tasks(request=1) {	
+		getAllResources("requests/$request","tasks/Tasks")
 	}
 	
-	def tasksList(task=1) {
-		tasks(task).tasks.collect{ "${it.Tasks.command_detail.padRight(30)} [${it.Tasks.status}]"}.join("\n")
-		
+	def String taskList(request=1) {
+		tasks(request).tasks.collect{ "${it.Tasks.command_detail.padRight(30)} [${it.Tasks.status}]"}.join("\n")
 	}
 	
 	def hosts() {
-		slurper.parseText(ambari.get( path : "clusters/MySingleNodeCluster/hosts", query: ['fields':'Hosts/*']).data.text)
+		getAllResources("hosts", "Hosts")
 	}
 	
-	def hostsList() {
+	def String hostList() {
 		hosts().items.collect{"$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch"}.join("\n")
 	}
 
@@ -50,8 +58,8 @@ class AmbariClient {
 		}
 		
 		AmbariClient client = new AmbariClient(host, port)
-		println "\n  clusterList: \n ${client.clusterList()}"
-		println "\n  hostsList: \n ${client.hostsList()}"
-		println "\n  tasksList: \n ${client.tasksList()}"
+		println "\n  clusterList: \n${client.clusterList()}"
+		println "\n  hostsList: \n${client.hostList()}"
+		println "\n  tasksList: \n${client.taskList()}"
 	}	
 }
