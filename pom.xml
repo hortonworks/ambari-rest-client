@@ -16,9 +16,9 @@
 
 	<repositories>
 		<repository>
-			<id>maven-s3-release-repo</id>
+			<id>aws-release</id>
 			<name>S3 Release Repository</name>
-			<url>s3://seq-repo/release</url>
+			<url>http://maven.sequenceiq.com/release</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -27,9 +27,9 @@
 			</snapshots>
 		</repository>
 		<repository>
-			<id>maven-s3-snapshot-repo</id>
+			<id>aws-snapshots</id>
 			<name>S3 Snapshot Repository</name>
-			<url>s3://seq-repo/snapshots</url>
+			<url>http://maven.sequenceiq.com/snapshots</url>
 			<releases>
 				<enabled>false</enabled>
 			</releases>
@@ -96,7 +96,7 @@
 			<url>s3://maven.sequenceiq.com/release</url>
 		</repository>
 		<snapshotRepository>
-			<id>aws-snapshot</id>
+			<id>aws-snapshots</id>
 			<name>S3 Snapshot Repository</name>
 			<url>s3://maven.sequenceiq.com/snapshots</url>
 		</snapshotRepository>
