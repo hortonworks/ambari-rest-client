@@ -23,6 +23,18 @@ class AmbariClient {
 		slurp("clusters/$clusterName/$resourceName", "$fields/*")
 	}	
 	
+	def blueprints() {
+		slurp("blueprints", "Blueprints")
+	}
+	
+	def String getClusterBlueprint() {
+		ambari.get( path : "clusters/$clusterName", query: ['format':"blueprint"]).data.text
+	}
+	
+	def String blueprintList() {
+		blueprints().items.collect{"${it.Blueprints.blueprint_name.padRight(30)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]"}.join("\n")
+	}
+	
 	def clusters() {
 		slurp("clusters", "Clusters")
 	}
@@ -70,6 +82,8 @@ class AmbariClient {
 		println "\n  hostsList: \n${client.hostList()}"
 		println "\n  tasksList: \n${client.taskList()}"
 		println "\n  serviceList: \n${client.serviceList()}"
+		println "\n  blueprintList: \n${client.blueprintList()}"
+		println "\n  getClusterBlueprint: \n${client.getClusterBlueprint()}"
 		
 	}	
 }
