@@ -93,12 +93,12 @@
 		<repository>
 			<id>aws-release</id>
 			<name>S3 Release Repository</name>
-			<url>s3://seq-repo/release</url>
+			<url>s3://maven.sequenceiq.com/release</url>
 		</repository>
 		<snapshotRepository>
 			<id>aws-snapshot</id>
 			<name>S3 Snapshot Repository</name>
-			<url>s3://seq-repo/snapshots</url>
+			<url>s3://maven.sequenceiq.com/snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
 </project>
