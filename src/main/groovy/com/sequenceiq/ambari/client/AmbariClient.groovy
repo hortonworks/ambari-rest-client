@@ -93,6 +93,14 @@ class AmbariClient {
 	def String serviceList() {
 		services().items.collect{"${it.ServiceInfo.service_name.padRight(30)} [$it.ServiceInfo.state]"}.join("\n")
 	}
+
+	def hostComponents(host) {
+		getAllResources("hosts/$host/host_components", "HostRoles")
+	}
+	
+	def String hostComponentList(host) {
+		hostComponents(host).items.collect{"${it.HostRoles.component_name.padRight(30)} [$it.HostRoles.state]"}.join("\n")
+	}
 	
 	public static void main(String[] args) {
 		
