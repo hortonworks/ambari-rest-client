@@ -20,6 +20,10 @@ class AmbariClient {
 		debugEnabled = enabled;
 	} 
 	
+	def String getClusterName() {
+		clusterName
+	}
+	
 	def slurp(path, fields) {
 		if (debugEnabled) {
 			def baseUri=ambari.getUri();
