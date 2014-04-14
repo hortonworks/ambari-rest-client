@@ -6,8 +6,9 @@ import groovyx.net.http.RESTClient
 class AmbariClient {
 
 	def slurper = new JsonSlurper();
-	def ambari
+	def RESTClient ambari
 	def clusterName
+	boolean debugEnabled = false;
 	
 	AmbariClient(host = 'localhost', port = '8080', user = 'admin', password = 'admin') {
 		ambari = new RESTClient( "http://${host}:${port}/api/v1/" as String )
@@ -15,7 +16,16 @@ class AmbariClient {
 		clusterName = clusters().items[0].Clusters.cluster_name
 	}
 	
+	def setDebugEnabled(boolean enabled) {
+		debugEnabled = enabled;
+	} 
+	
 	def slurp(path, fields) {
+		if (debugEnabled) {
+			def baseUri=ambari.getUri();
+			println "[DEBUG] ${baseUri}${path}?fields=$fields"
+		}
+		
 		slurper.parseText(ambari.get( path : "$path", query: ['fields':"$fields"]).data.text)
 	}
 	
