@@ -1,4 +1,4 @@
-package com.sequenceiq.ambar.client;
+package com.sequenceiq.ambari.client;
 
 /**
  * Hello world!
