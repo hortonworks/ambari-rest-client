@@ -36,7 +36,49 @@ class AmbariClient {
 	def getAllResources(resourceName, fields) {
 		slurp("clusters/$clusterName/$resourceName", "$fields/*")
 	}	
+
+	def calcMaxLength(table, fields) {
+		def maxLength = [:]
+		fields.each{field -> maxLength[field]=field.length()}
+		
+		table.each{ row ->
+			fields.each{ field ->
+				def actualFieldLength = row[field].toString().length()
+				maxLength[field] = Math.max(maxLength[field], actualFieldLength)
+			}
+		}
+		
+		return maxLength
+	}
+		
+	def resourceTable(table, fields) {
+		def maxLength = calcMaxLength(table, fields)
+		
+		def lines = []
+		lines << fields.collect{field-> field.center(maxLength[field]) }.join(" | ")
+		lines << fields.collect{field-> "-".center(maxLength[field], '-') }.join("-+-")
+		
+		table.each{ row ->
+			lines << fields.collect{ field -> row[field].toString().padRight(maxLength[field])}.join( " | ")
+		}
+		
+		lines.collect{ line ->
+			"| ${line} |"
+		}.join("\n")
+	}
 	
+	def resourceList(collection, resourceName, fields, itemListName = 'items') {
+		def table = collection[itemListName].collect{ item->
+			def row = [:]
+			fields.each{ field-> 
+				row[field] = item[resourceName][field]
+			}
+			return row
+		}
+		
+		resourceTable(table, fields)
+	}
+
 	def blueprints() {
 		slurp("blueprints", "Blueprints")
 	}
@@ -46,7 +88,7 @@ class AmbariClient {
 	}
 	
 	def String blueprintList() {
-		blueprints().items.collect{"${it.Blueprints.blueprint_name.padRight(30)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]"}.join("\n")
+		resourceList(blueprints(), "Blueprints", ["blueprint_name", "stack_name", "stack_version"])
 	}
 	
 	def clusters() {
@@ -54,7 +96,7 @@ class AmbariClient {
 	}
 	
 	def String clusterList() {
-		clusters().items.collect{"[$it.Clusters.cluster_id] $it.Clusters.cluster_name:$it.Clusters.version"}.join("\n")
+		resourceList(clusters(), "Clusters", ["cluster_id", "cluster_name", "version"])
 	}
 
 	def tasks(request=1) {	
@@ -62,7 +104,7 @@ class AmbariClient {
 	}
 	
 	def String taskList(request=1) {
-		tasks(request).tasks.collect{ "${it.Tasks.command_detail.padRight(30)} [${it.Tasks.status}]"}.join("\n")
+		resourceList(tasks(request), "Tasks", ["command_detail", "status"], "tasks")
 	}
 	
 	def hosts() {
@@ -70,7 +112,7 @@ class AmbariClient {
 	}
 	
 	def String hostList() {
-		hosts().items.collect{"$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch"}.join("\n")
+		resourceList(hosts(), "Hosts", ["host_name", "host_status", "os_type", "os_arch"])
 	}
 	
 	def serviceComponents(service) {
@@ -78,12 +120,13 @@ class AmbariClient {
 	}
 
 	def String allServiceComponents() {
-		services().items.collect{
+		def allComponents = services().items.collect{
 			def name = it.ServiceInfo.service_name
-			def state = it.ServiceInfo.state
-			def componentList = serviceComponents(name).items.collect{"    ${it.ServiceComponentInfo.component_name.padRight(30)}  [$it.ServiceComponentInfo.state]"}.join("\n")
-			"${name.padRight(30)} [$state]\n$componentList"
-		}.join("\n")
+			def componentList = serviceComponents(name).items
+		}.flatten()
+
+		def temp=[items: allComponents]
+		resourceList(temp, "ServiceComponentInfo", ["service_name", "component_name", "state"])		
 	}
 	
 	def services() {
@@ -91,7 +134,7 @@ class AmbariClient {
 	}
 	
 	def String serviceList() {
-		services().items.collect{"${it.ServiceInfo.service_name.padRight(30)} [$it.ServiceInfo.state]"}.join("\n")
+		resourceList(services(), "ServiceInfo", ["service_name", "state"])
 	}
 
 	def hostComponents(host) {
@@ -99,7 +142,7 @@ class AmbariClient {
 	}
 	
 	def String hostComponentList(host) {
-		hostComponents(host).items.collect{"${it.HostRoles.component_name.padRight(30)} [$it.HostRoles.state]"}.join("\n")
+		resourceList(hostComponents(host), "HostRoles", ["component_name", "state"])
 	}
 	
 	public static void main(String[] args) {
@@ -113,12 +156,14 @@ class AmbariClient {
 		}
 		
 		AmbariClient client = new AmbariClient(host, port)
+		
 		println "\n  clusterList: \n${client.clusterList()}"
 		println "\n  hostsList: \n${client.hostList()}"
 		println "\n  tasksList: \n${client.taskList()}"
 		println "\n  serviceList: \n${client.serviceList()}"
 		println "\n  blueprintList: \n${client.blueprintList()}"
 		println "\n  getClusterBlueprint: \n${client.getClusterBlueprint()}"
+		println "\n allServiceComponents: ${client.allServiceComponents()}"
 		
 	}	
 }
