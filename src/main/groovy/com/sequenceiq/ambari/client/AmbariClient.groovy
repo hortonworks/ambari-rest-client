@@ -126,7 +126,7 @@ class AmbariClient {
 		}.flatten()
 
 		def temp=[items: allComponents]
-		resourceList(temp, "ServiceComponentInfo", ["service_name", "component_name", "state"])		
+		resourceList(temp, "ServiceComponentInfo", ["component_name", "service_name", "category", "state"])		
 	}
 	
 	def services() {
