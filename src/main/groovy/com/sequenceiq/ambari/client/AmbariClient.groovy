@@ -163,7 +163,7 @@ class AmbariClient {
 		println "\n  serviceList: \n${client.serviceList()}"
 		println "\n  blueprintList: \n${client.blueprintList()}"
 		println "\n  getClusterBlueprint: \n${client.getClusterBlueprint()}"
-		println "\n allServiceComponents: ${client.allServiceComponents()}"
+		println "\n allServiceComponents: \n${client.allServiceComponents()}"
 		
 	}	
 }
