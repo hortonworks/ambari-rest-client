@@ -101,24 +101,4 @@ class AmbariClient {
 	def String hostComponentList(host) {
 		hostComponents(host).items.collect{"${it.HostRoles.component_name.padRight(30)} [$it.HostRoles.state]"}.join("\n")
 	}
-	
-	public static void main(String[] args) {
-		
-		
-		def host = 'localhost'
-		def port = '49156'
-		if (args.size == 2) {
-			host = args[0]
-			port = args[1]
-		}
-		
-		AmbariClient client = new AmbariClient(host, port)
-		println "\n  clusterList: \n${client.clusterList()}"
-		println "\n  hostsList: \n${client.hostList()}"
-		println "\n  tasksList: \n${client.taskList()}"
-		println "\n  serviceList: \n${client.serviceList()}"
-		println "\n  blueprintList: \n${client.blueprintList()}"
-		println "\n  getClusterBlueprint: \n${client.getClusterBlueprint()}"
-		
-	}	
 }
