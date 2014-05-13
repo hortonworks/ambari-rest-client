@@ -19,9 +19,12 @@ package com.sequenceiq.ambari.client
 
 import groovy.json.JsonSlurper
 import groovyx.net.http.RESTClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 class AmbariClient {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(AmbariClient.class)
   def slurper = new JsonSlurper();
   def RESTClient ambari
   def clusterName
@@ -63,12 +66,15 @@ class AmbariClient {
   }
 
   def String addDefaultBlueprint(name) {
-    ambari.post(path: "blueprints/$name", body: getClass().getResource("/blueprints/$name").text, { it }).status
-  }
-
-  def String addDefaultBlueprints() {
-    def path = getClass().getResource('/blueprints').toURI().getPath()
-    new File(path).eachFile { addDefaultBlueprint(it.name) }
+    def result
+    try {
+      def status = ambari.post(path: "blueprints/$name", body: getClass().getResource("/blueprints/$name").text, { it }).status
+      result = "Success: $status"
+    } catch (e) {
+      LOGGER.error("Error during blueprint post", e)
+      result = "Error adding the blueprint: $e.message"
+    }
+    return result
   }
 
   def String blueprintList() {
