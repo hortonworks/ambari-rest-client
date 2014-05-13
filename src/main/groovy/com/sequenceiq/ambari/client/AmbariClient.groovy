@@ -30,6 +30,7 @@ class AmbariClient {
   AmbariClient(host = 'localhost', port = '8080', user = 'admin', password = 'admin') {
     ambari = new RESTClient("http://${host}:${port}/api/v1/" as String)
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
+    ambari.headers['X-Requested-By'] = 'ambari'
     clusterName = clusters().items[0].Clusters.cluster_name
   }
 
@@ -46,7 +47,6 @@ class AmbariClient {
       def baseUri = ambari.getUri();
       println "[DEBUG] ${baseUri}${path}?fields=$fields"
     }
-
     slurper.parseText(ambari.get(path: "$path", query: ['fields': "$fields"]).data.text)
   }
 
@@ -60,6 +60,15 @@ class AmbariClient {
 
   def String getClusterBlueprint() {
     ambari.get(path: "clusters/$clusterName", query: ['format': "blueprint"]).data.text
+  }
+
+  def String addDefaultBlueprint(name) {
+    ambari.post(path: "blueprints/$name", body: getClass().getResource("/blueprints/$name").text, { it }).status
+  }
+
+  def String addDefaultBlueprints() {
+    def path = getClass().getResource('/blueprints').toURI().getPath()
+    new File(path).eachFile { addDefaultBlueprint(it.name) }
   }
 
   def String blueprintList() {
