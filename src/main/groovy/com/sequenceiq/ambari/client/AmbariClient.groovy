@@ -65,12 +65,17 @@ class AmbariClient {
     ambari.get(path: "clusters/$clusterName", query: ['format': "blueprint"]).data.text
   }
 
-  def String addBlueprint(String name, String url) {
-    String blueprint = getBlueprint(name, url)
-    if (name && blueprint) {
-      postBlueprint(name, blueprint)
-    } else {
-      "Invalid name or url specification"
+  def String addBlueprint(String url) {
+    try {
+      def blueprint = new URL(url)?.text
+      if (blueprint) {
+        postBlueprint(blueprint)
+      } else {
+        "Cannot read blueprint from $url"
+      }
+    } catch (e) {
+      LOGGER.error("Invalid URL {}", url, e)
+      "Invalid URL: ($url)"
     }
   }
 
@@ -133,24 +138,17 @@ class AmbariClient {
     hostComponents(host).items.collect { "${it.HostRoles.component_name.padRight(30)} [$it.HostRoles.state]" }.join("\n")
   }
 
-  private String getBlueprint(String name, String url) {
-    def blueprint
-    if (url) {
-      try {
-        blueprint = new URL(url)?.text
-      } catch (e) {
-        LOGGER.error("Invalid URL {}", url, e)
-        blueprint = null
-      }
-    } else {
-      blueprint = getClass().getResource("/blueprints/$name")?.text
-    }
-    blueprint
-  }
-
-  private def String postBlueprint(String name, String blueprint) {
+  /**
+   * Posts the blueprint JSON to Ambari with name 'bp' in the URL
+   * because it does not matter here. The blueprint's name is
+   * provided in the JSON.
+   *
+   * @param blueprint json
+   * @return response message
+   */
+  private String postBlueprint(String blueprint) {
     try {
-      def status = ambari.post(path: "blueprints/$name", body: blueprint, { it }).status
+      def status = ambari.post(path: "blueprints/bp", body: blueprint, { it }).status
       "Success: $status"
     } catch (e) {
       LOGGER.error("Error during blueprint post", e)
