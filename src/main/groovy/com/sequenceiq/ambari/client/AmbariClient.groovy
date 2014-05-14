@@ -26,6 +26,7 @@ class AmbariClient {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AmbariClient.class)
   private static final int PAD = 30
+  private static final int OK_RESPONSE = 200
   def slurper = new JsonSlurper();
   def RESTClient ambari
   def clusterName
@@ -56,6 +57,16 @@ class AmbariClient {
 
   def getAllResources(resourceName, fields) {
     slurp("clusters/$clusterName/$resourceName", "$fields/*")
+  }
+
+  boolean isBlueprintExists(String id) {
+    def result = false
+    try {
+      result = ambari.get(path: "blueprints/$id", query: ['fields': "Blueprints"]).status == OK_RESPONSE
+    } catch (e) {
+      LOGGER.info("Blueprint does not exist", e)
+    }
+    return result
   }
 
   def blueprint(String id) {
