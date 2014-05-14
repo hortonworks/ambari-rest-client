@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory
 class AmbariClient {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AmbariClient.class)
+  private static final int PAD = 30
   def slurper = new JsonSlurper();
   def RESTClient ambari
   def clusterName
@@ -57,6 +58,21 @@ class AmbariClient {
     slurp("clusters/$clusterName/$resourceName", "$fields/*")
   }
 
+  def blueprint(String id) {
+    try {
+      def resp = slurp("blueprints/$id", "host_groups,Blueprints")
+      def groups = resp.host_groups.collect {
+        def name = it.name
+        def comps = it.components.collect { it.name.padRight(PAD).padLeft(PAD + 10) }.join("\n")
+        return "HOSTGROUP: $name\n$comps"
+      }.join("\n")
+      return "[${resp.Blueprints.stack_name}:${resp.Blueprints.stack_version}]\n$groups"
+    } catch (e) {
+      LOGGER.error("Error during requesting blueprint: $id", e)
+    }
+    return "Not found"
+  }
+
   def blueprints() {
     slurp("blueprints", "Blueprints")
   }
@@ -80,7 +96,7 @@ class AmbariClient {
   }
 
   def String blueprintList() {
-    blueprints().items.collect { "${it.Blueprints.blueprint_name.padRight(30)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]" }.join("\n")
+    blueprints().items.collect { "${it.Blueprints.blueprint_name.padRight(PAD)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]" }.join("\n")
   }
 
   def clusters() {
@@ -96,7 +112,7 @@ class AmbariClient {
   }
 
   def String taskList(request = 1) {
-    tasks(request).tasks.collect { "${it.Tasks.command_detail.padRight(30)} [${it.Tasks.status}]" }.join("\n")
+    tasks(request).tasks.collect { "${it.Tasks.command_detail.padRight(PAD)} [${it.Tasks.status}]" }.join("\n")
   }
 
   def hosts() {
@@ -116,9 +132,9 @@ class AmbariClient {
       def name = it.ServiceInfo.service_name
       def state = it.ServiceInfo.state
       def componentList = serviceComponents(name).items.collect {
-        "    ${it.ServiceComponentInfo.component_name.padRight(30)}  [$it.ServiceComponentInfo.state]"
+        "    ${it.ServiceComponentInfo.component_name.padRight(PAD)}  [$it.ServiceComponentInfo.state]"
       }.join("\n")
-      "${name.padRight(30)} [$state]\n$componentList"
+      "${name.padRight(PAD)} [$state]\n$componentList"
     }.join("\n")
   }
 
@@ -127,7 +143,7 @@ class AmbariClient {
   }
 
   def String serviceList() {
-    services().items.collect { "${it.ServiceInfo.service_name.padRight(30)} [$it.ServiceInfo.state]" }.join("\n")
+    services().items.collect { "${it.ServiceInfo.service_name.padRight(PAD)} [$it.ServiceInfo.state]" }.join("\n")
   }
 
   def hostComponents(host) {
@@ -135,7 +151,7 @@ class AmbariClient {
   }
 
   def String hostComponentList(host) {
-    hostComponents(host).items.collect { "${it.HostRoles.component_name.padRight(30)} [$it.HostRoles.state]" }.join("\n")
+    hostComponents(host).items.collect { "${it.HostRoles.component_name.padRight(PAD)} [$it.HostRoles.state]" }.join("\n")
   }
 
   /**
