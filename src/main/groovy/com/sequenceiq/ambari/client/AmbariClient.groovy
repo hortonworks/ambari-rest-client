@@ -59,7 +59,7 @@ class AmbariClient {
     slurp("clusters/$clusterName/$resourceName", "$fields/*")
   }
 
-  boolean isBlueprintExists(String id) {
+  boolean doesBlueprintExists(String id) {
     def result = false
     try {
       result = ambari.get(path: "blueprints/$id", query: ['fields': "Blueprints"]).status == OK_RESPONSE
