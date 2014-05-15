@@ -17,6 +17,7 @@
  */
 package com.sequenceiq.ambari.client
 
+import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovyx.net.http.RESTClient
 import org.slf4j.Logger
@@ -69,7 +70,7 @@ class AmbariClient {
     return result
   }
 
-  def blueprint(String id) {
+  def blueprintById(String id) {
     try {
       def resp = slurp("blueprints/$id", "host_groups,Blueprints")
       def groups = resp.host_groups.collect {
@@ -108,6 +109,17 @@ class AmbariClient {
 
   def String blueprintList() {
     blueprints().items.collect { "${it.Blueprints.blueprint_name.padRight(PAD)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]" }.join("\n")
+  }
+
+  String createCluster(String clusterName, String blueprintName, Map hostGroups) {
+    def json = createClusterJson(blueprintName, hostGroups)
+    try {
+      def status = ambari.post(path: "clusters/$clusterName", body: json, { it }).status
+      "Success: $status"
+    } catch (e) {
+      LOGGER.error("Error during create cluster post", e)
+      "Error creating the cluster: $e.message $e.statusCode"
+    }
   }
 
   def clusters() {
@@ -181,5 +193,15 @@ class AmbariClient {
       LOGGER.error("Error during blueprint post", e)
       "Error adding the blueprint: $e.message"
     }
+  }
+
+  private def createClusterJson(String name, Map hostGroups) {
+    def builder = new JsonBuilder()
+    def groups = hostGroups.collect {
+      def hostList = it.value.collect { ['fqdn': it] }
+      [name: it.key, hosts: hostList]
+    }
+    builder { "blueprint" name; "host-groups" groups }
+    builder.toPrettyString()
   }
 }
