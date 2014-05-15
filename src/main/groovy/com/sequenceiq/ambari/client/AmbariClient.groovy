@@ -70,23 +70,34 @@ class AmbariClient {
     return result
   }
 
-  def String blueprintById(String id) {
-    try {
-      def resp = slurp("blueprints/$id", "host_groups,Blueprints")
+  def String showBlueprint(String id) {
+    def resp = blueprintById(id)
+    if (resp) {
       def groups = resp.host_groups.collect {
         def name = it.name
         def comps = it.components.collect { it.name.padRight(PAD).padLeft(PAD + 10) }.join("\n")
         return "HOSTGROUP: $name\n$comps"
       }.join("\n")
       return "[${resp.Blueprints.stack_name}:${resp.Blueprints.stack_version}]\n$groups"
-    } catch (e) {
-      LOGGER.error("Error during requesting blueprint: $id", e)
     }
     return "Not found"
   }
 
+  def List<String> hostGroupsByBlueprint(String id) {
+    def result = blueprintById(id)
+    result != null ? result.host_groups.collect { it.name } : new ArrayList<String>()
+  }
+
   def blueprints() {
     slurp("blueprints", "Blueprints")
+  }
+
+  def Map blueprintById(id) {
+    try {
+      slurp("blueprints/$id", "host_groups,Blueprints")
+    } catch (e) {
+      LOGGER.error("Error during requesting blueprint: $id", e)
+    }
   }
 
   def String getClusterBlueprint() {
