@@ -60,7 +60,7 @@ class AmbariClient {
     slurp("clusters/$clusterName/$resourceName", "$fields/*")
   }
 
-  boolean doesBlueprintExists(String id) {
+  def boolean doesBlueprintExists(String id) {
     def result = false
     try {
       result = ambari.get(path: "blueprints/$id", query: ['fields': "Blueprints"]).status == OK_RESPONSE
@@ -70,7 +70,7 @@ class AmbariClient {
     return result
   }
 
-  def blueprintById(String id) {
+  def String blueprintById(String id) {
     try {
       def resp = slurp("blueprints/$id", "host_groups,Blueprints")
       def groups = resp.host_groups.collect {
@@ -111,7 +111,7 @@ class AmbariClient {
     blueprints().items.collect { "${it.Blueprints.blueprint_name.padRight(PAD)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]" }.join("\n")
   }
 
-  String createCluster(String clusterName, String blueprintName, Map hostGroups) {
+  def String createCluster(String clusterName, String blueprintName, Map hostGroups) {
     def json = createClusterJson(blueprintName, hostGroups)
     try {
       def status = ambari.post(path: "clusters/$clusterName", body: json, { it }).status
