@@ -37,7 +37,6 @@ class AmbariClient {
     ambari = new RESTClient("http://${host}:${port}/api/v1/" as String)
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
     ambari.headers['X-Requested-By'] = 'ambari'
-    clusterName = getClusters().items[0].Clusters.cluster_name
   }
 
   def setDebugEnabled(boolean enabled) {
@@ -45,7 +44,10 @@ class AmbariClient {
   }
 
   def String getClusterName() {
-    clusterName
+    if (!clusterName) {
+      clusterName = getClusters().items[0]?.Clusters?.cluster_name
+    }
+    return clusterName
   }
 
   def boolean doesBlueprintExists(String id) {
@@ -85,7 +87,7 @@ class AmbariClient {
   }
 
   def String showClusterBlueprint() {
-    ambari.get(path: "clusters/$clusterName", query: ['format': "blueprint"]).data.text
+    ambari.get(path: "clusters/${getClusterName()}", query: ['format': "blueprint"]).data.text
   }
 
   def String addBlueprint(String url) {
@@ -169,7 +171,7 @@ class AmbariClient {
   }
 
   def getAllResources(resourceName, fields) {
-    slurp("clusters/$clusterName/$resourceName", "$fields/*")
+    slurp("clusters/${getClusterName()}/$resourceName", "$fields/*")
   }
 
   def Map getBlueprint(id) {
