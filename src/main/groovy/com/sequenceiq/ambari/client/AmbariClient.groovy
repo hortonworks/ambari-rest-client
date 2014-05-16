@@ -115,6 +115,17 @@ class AmbariClient {
     return result
   }
 
+  def boolean deleteCluster(String clusterName) {
+    def result = true
+    try {
+      ambari.delete(path: "clusters/$clusterName")
+    } catch (e) {
+      LOGGER.error("Error during delete cluster $clusterName", e)
+      result = false
+    }
+    return result
+  }
+
   def getClusters() {
     slurp("clusters", "Clusters")
   }
