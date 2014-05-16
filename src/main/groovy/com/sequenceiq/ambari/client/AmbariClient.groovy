@@ -45,10 +45,7 @@ class AmbariClient {
 
   def String getClusterName() {
     if (!clusterName) {
-      def cluster = getClusters().items[0]?.Clusters
-      if (cluster && cluster.desired_configs) {
-        clusterName = cluster.cluster_name
-      }
+      clusterName = getClusters().items[0]?.Clusters?.cluster_name
     }
     return clusterName
   }
