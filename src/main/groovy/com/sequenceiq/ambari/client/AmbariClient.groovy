@@ -104,15 +104,15 @@ class AmbariClient {
     }
   }
 
-  def String createCluster(String clusterName, String blueprintName, Map hostGroups) {
-    def json = createClusterJson(blueprintName, hostGroups)
+  def boolean createCluster(String clusterName, String blueprintName, Map hostGroups) {
+    def result = true
     try {
-      def status = ambari.post(path: "clusters/$clusterName", body: json, { it }).status
-      "Success: $status"
+      ambari.post(path: "clusters/$clusterName", body: createClusterJson(blueprintName, hostGroups), { it })
     } catch (e) {
       LOGGER.error("Error during create cluster post", e)
-      "Error creating the cluster: $e.message $e.statusCode"
+      result = false
     }
+    return result
   }
 
   def getClusters() {
