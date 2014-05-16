@@ -90,17 +90,9 @@ class AmbariClient {
     ambari.get(path: "clusters/${getClusterName()}", query: ['format': "blueprint"]).data.text
   }
 
-  def String addBlueprint(String url) {
-    try {
-      def blueprint = new URL(url)?.text
-      if (blueprint) {
-        postBlueprint(blueprint)
-      } else {
-        "Cannot read blueprint from $url"
-      }
-    } catch (e) {
-      LOGGER.error("Invalid URL {}", url, e)
-      "Invalid URL: ($url)"
+  def boolean addBlueprint(String json) {
+    if (json) {
+      postBlueprint(json)
     }
   }
 
@@ -201,14 +193,15 @@ class AmbariClient {
    * @param blueprint json
    * @return response message
    */
-  private String postBlueprint(String blueprint) {
+  private boolean postBlueprint(String blueprint) {
+    def result = true
     try {
-      def status = ambari.post(path: "blueprints/bp", body: blueprint, { it }).status
-      "Success: $status"
+      ambari.post(path: "blueprints/bp", body: blueprint, { it })
     } catch (e) {
       LOGGER.error("Error during blueprint post", e)
-      "Error adding the blueprint: $e.message"
+      result = false
     }
+    return result
   }
 
   private def createClusterJson(String name, Map hostGroups) {
