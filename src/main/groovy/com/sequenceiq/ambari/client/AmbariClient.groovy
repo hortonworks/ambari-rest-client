@@ -37,7 +37,7 @@ class AmbariClient {
     ambari = new RESTClient("http://${host}:${port}/api/v1/" as String)
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
     ambari.headers['X-Requested-By'] = 'ambari'
-    clusterName = clusters().items[0].Clusters.cluster_name
+    clusterName = getClusters().items[0].Clusters.cluster_name
   }
 
   def setDebugEnabled(boolean enabled) {
@@ -46,18 +46,6 @@ class AmbariClient {
 
   def String getClusterName() {
     clusterName
-  }
-
-  def slurp(path, fields) {
-    if (debugEnabled) {
-      def baseUri = ambari.getUri();
-      println "[DEBUG] ${baseUri}${path}?fields=$fields"
-    }
-    slurper.parseText(ambari.get(path: "$path", query: ['fields': "$fields"]).data.text)
-  }
-
-  def getAllResources(resourceName, fields) {
-    slurp("clusters/$clusterName/$resourceName", "$fields/*")
   }
 
   def boolean doesBlueprintExists(String id) {
@@ -71,7 +59,7 @@ class AmbariClient {
   }
 
   def String showBlueprint(String id) {
-    def resp = blueprintById(id)
+    def resp = getBlueprint(id)
     if (resp) {
       def groups = resp.host_groups.collect {
         def name = it.name
@@ -83,24 +71,20 @@ class AmbariClient {
     return "Not found"
   }
 
-  def List<String> hostGroupsByBlueprint(String id) {
-    def result = blueprintById(id)
-    result != null ? result.host_groups.collect { it.name } : new ArrayList<String>()
+  def String showBlueprints() {
+    getBlueprints().items.collect { "${it.Blueprints.blueprint_name.padRight(PAD)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]" }.join("\n")
   }
 
-  def blueprints() {
+  def getBlueprints() {
     slurp("blueprints", "Blueprints")
   }
 
-  def Map blueprintById(id) {
-    try {
-      slurp("blueprints/$id", "host_groups,Blueprints")
-    } catch (e) {
-      LOGGER.error("Error during requesting blueprint: $id", e)
-    }
+  def List<String> getHostGroups(String blueprint) {
+    def result = getBlueprint(blueprint)
+    result != null ? result.host_groups.collect { it.name } : new ArrayList<String>()
   }
 
-  def String getClusterBlueprint() {
+  def String showClusterBlueprint() {
     ambari.get(path: "clusters/$clusterName", query: ['format': "blueprint"]).data.text
   }
 
@@ -118,10 +102,6 @@ class AmbariClient {
     }
   }
 
-  def String blueprintList() {
-    blueprints().items.collect { "${it.Blueprints.blueprint_name.padRight(PAD)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]" }.join("\n")
-  }
-
   def String createCluster(String clusterName, String blueprintName, Map hostGroups) {
     def json = createClusterJson(blueprintName, hostGroups)
     try {
@@ -133,59 +113,71 @@ class AmbariClient {
     }
   }
 
-  def clusters() {
+  def getClusters() {
     slurp("clusters", "Clusters")
   }
 
-  def String clusterList() {
-    clusters().items.collect { "[$it.Clusters.cluster_id] $it.Clusters.cluster_name:$it.Clusters.version" }.join("\n")
+  def String showClusterList() {
+    getClusters().items.collect { "[$it.Clusters.cluster_id] $it.Clusters.cluster_name:$it.Clusters.version" }.join("\n")
   }
 
-  def tasks(request = 1) {
+  def getTasks(request = 1) {
     getAllResources("requests/$request", "tasks/Tasks")
   }
 
-  def String taskList(request = 1) {
-    tasks(request).tasks.collect { "${it.Tasks.command_detail.padRight(PAD)} [${it.Tasks.status}]" }.join("\n")
+  def String showTaskList(request = 1) {
+    getTasks(request).tasks.collect { "${it.Tasks.command_detail.padRight(PAD)} [${it.Tasks.status}]" }.join("\n")
   }
 
-  def hosts() {
+  def getHosts() {
     getAllResources("hosts", "Hosts")
   }
 
-  def String hostList() {
-    hosts().items.collect { "$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch" }.join("\n")
+  def String showHostList() {
+    getHosts().items.collect { "$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch" }.join("\n")
   }
 
-  def serviceComponents(service) {
+  def getServiceComponents(service) {
     getAllResources("services/$service/components", "ServiceComponentInfo")
   }
 
-  def String allServiceComponents() {
-    services().items.collect {
+  def String showServiceComponents() {
+    getServices().items.collect {
       def name = it.ServiceInfo.service_name
       def state = it.ServiceInfo.state
-      def componentList = serviceComponents(name).items.collect {
+      def componentList = getServiceComponents(name).items.collect {
         "    ${it.ServiceComponentInfo.component_name.padRight(PAD)}  [$it.ServiceComponentInfo.state]"
       }.join("\n")
       "${name.padRight(PAD)} [$state]\n$componentList"
     }.join("\n")
   }
 
-  def services() {
+  def getServices() {
     getAllResources("services", "ServiceInfo")
   }
 
-  def String serviceList() {
-    services().items.collect { "${it.ServiceInfo.service_name.padRight(PAD)} [$it.ServiceInfo.state]" }.join("\n")
+  def String showServiceList() {
+    getServices().items.collect { "${it.ServiceInfo.service_name.padRight(PAD)} [$it.ServiceInfo.state]" }.join("\n")
   }
 
-  def hostComponents(host) {
+  def getHostComponents(host) {
     getAllResources("hosts/$host/host_components", "HostRoles")
   }
 
-  def String hostComponentList(host) {
-    hostComponents(host).items.collect { "${it.HostRoles.component_name.padRight(PAD)} [$it.HostRoles.state]" }.join("\n")
+  def String showHostComponentList(host) {
+    getHostComponents(host).items.collect { "${it.HostRoles.component_name.padRight(PAD)} [$it.HostRoles.state]" }.join("\n")
+  }
+
+  def getAllResources(resourceName, fields) {
+    slurp("clusters/$clusterName/$resourceName", "$fields/*")
+  }
+
+  def Map getBlueprint(id) {
+    try {
+      slurp("blueprints/$id", "host_groups,Blueprints")
+    } catch (e) {
+      LOGGER.error("Error during requesting blueprint: $id", e)
+    }
   }
 
   /**
@@ -214,5 +206,13 @@ class AmbariClient {
     }
     builder { "blueprint" name; "host-groups" groups }
     builder.toPrettyString()
+  }
+
+  private def slurp(path, fields) {
+    if (debugEnabled) {
+      def baseUri = ambari.getUri();
+      println "[DEBUG] ${baseUri}${path}?fields=$fields"
+    }
+    slurper.parseText(ambari.get(path: "$path", query: ['fields': "$fields"]).data.text)
   }
 }
