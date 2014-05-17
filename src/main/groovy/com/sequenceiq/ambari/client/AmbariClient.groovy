@@ -96,6 +96,11 @@ class AmbariClient {
     }
   }
 
+  def boolean addDefaultBlueprints() {
+    return addBlueprint(getResourceContent("blueprints/multi-node-hdfs-yarn")) &&
+      addBlueprint(getResourceContent("blueprints/single-node-hdfs-yarn"))
+  }
+
   def boolean createCluster(String clusterName, String blueprintName, Map hostGroups) {
     def result = true
     try {
@@ -220,5 +225,9 @@ class AmbariClient {
       println "[DEBUG] ${baseUri}${path}?fields=$fields"
     }
     slurper.parseText(ambari.get(path: "$path", query: ['fields': "$fields"]).data.text)
+  }
+
+  private String getResourceContent(name) {
+    getClass().getClassLoader().getResourceAsStream(name)?.text
   }
 }
