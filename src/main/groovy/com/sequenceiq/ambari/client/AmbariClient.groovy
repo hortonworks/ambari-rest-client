@@ -28,10 +28,10 @@ class AmbariClient {
   private static final Logger LOGGER = LoggerFactory.getLogger(AmbariClient.class)
   private static final int PAD = 30
   private static final int OK_RESPONSE = 200
-  def slurper = new JsonSlurper();
-  def RESTClient ambari
-  def clusterName
   boolean debugEnabled = false;
+  def RESTClient ambari
+  def slurper = new JsonSlurper();
+  def clusterName
 
   AmbariClient(host = 'localhost', port = '8080', user = 'admin', password = 'admin') {
     ambari = new RESTClient("http://${host}:${port}/api/v1/" as String)
@@ -83,7 +83,7 @@ class AmbariClient {
 
   def List<String> getHostGroups(String blueprint) {
     def result = getBlueprint(blueprint)
-    result != null ? result.host_groups.collect { it.name } : new ArrayList<String>()
+    result ? result.host_groups.collect { it.name } : new ArrayList<String>()
   }
 
   def String showClusterBlueprint() {
@@ -136,7 +136,7 @@ class AmbariClient {
   }
 
   def String showTaskList(request = 1) {
-    getTasks(request).tasks.collect { "${it.Tasks.command_detail.padRight(PAD)} [${it.Tasks.status}]" }.join("\n")
+    getTasks(request)?.tasks.collect { "${it.Tasks.command_detail.padRight(PAD)} [${it.Tasks.status}]" }.join("\n")
   }
 
   def getHosts() {
@@ -183,11 +183,7 @@ class AmbariClient {
   }
 
   def Map getBlueprint(id) {
-    try {
-      slurp("blueprints/$id", "host_groups,Blueprints")
-    } catch (e) {
-      LOGGER.error("Error during requesting blueprint: $id", e)
-    }
+    slurp("blueprints/$id", "host_groups,Blueprints")
   }
 
   /**
@@ -220,11 +216,17 @@ class AmbariClient {
   }
 
   private def slurp(path, fields) {
+    def baseUri = ambari.getUri();
     if (debugEnabled) {
-      def baseUri = ambari.getUri();
       println "[DEBUG] ${baseUri}${path}?fields=$fields"
     }
-    slurper.parseText(ambari.get(path: "$path", query: ['fields': "$fields"]).data.text)
+    def result = new HashMap()
+    try {
+      result = slurper.parseText(ambari.get(path: "$path", query: ['fields': "$fields"]).data.text)
+    } catch (e) {
+      LOGGER.error("Error occurred during GET request to $baseUri/$path", e)
+    }
+    return result
   }
 
   private String getResourceContent(name) {
