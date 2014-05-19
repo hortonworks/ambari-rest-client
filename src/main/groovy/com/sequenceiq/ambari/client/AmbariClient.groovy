@@ -34,7 +34,7 @@ class AmbariClient {
   private static final int OK_RESPONSE = 200
   boolean debugEnabled = false;
   def RESTClient ambari
-  def slurper = new JsonSlurper();
+  def slurper = new JsonSlurper()
   def clusterName
 
   /**
@@ -49,6 +49,11 @@ class AmbariClient {
     ambari = new RESTClient("http://${host}:${port}/api/v1/" as String)
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
     ambari.headers['X-Requested-By'] = 'ambari'
+  }
+
+  AmbariClient(RESTClient restClient, JsonSlurper slurper) {
+    this.ambari = restClient
+    this.slurper = slurper
   }
 
   /**
