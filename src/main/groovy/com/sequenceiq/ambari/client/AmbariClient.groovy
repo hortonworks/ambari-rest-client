@@ -19,6 +19,7 @@ package com.sequenceiq.ambari.client
 
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -169,12 +170,11 @@ class AmbariClient {
   }
 
   /**
-   * Adds a blueprint to the Ambari server.
+   * Adds a blueprint to the Ambari server. Exception is thrown if fails.
    *
    * @param json blueprint as json
-   * @return true if the operation was successful false otherwise
    */
-  def boolean addBlueprint(String json) {
+  def void addBlueprint(String json) throws HttpResponseException {
     if (json) {
       postBlueprint(json)
     }
@@ -183,11 +183,11 @@ class AmbariClient {
   /**
    * Adds 2 default blueprints.
    *
-   * @return true if both added false otherwise
+   * @return true if both added, exception is thrown if any of it fails
    */
-  def boolean addDefaultBlueprints() {
-    return addBlueprint(getResourceContent("blueprints/multi-node-hdfs-yarn")) &&
-      addBlueprint(getResourceContent("blueprints/single-node-hdfs-yarn"))
+  def void addDefaultBlueprints() throws HttpResponseException {
+    addBlueprint(getResourceContent("blueprints/multi-node-hdfs-yarn"))
+    addBlueprint(getResourceContent("blueprints/single-node-hdfs-yarn"))
   }
 
   /**
@@ -407,7 +407,7 @@ class AmbariClient {
    * Returns the blueprint json as String.
    *
    * @param id id of the blueprint
-   * @return json as String
+   * @return json as String, exception if thrown is it fails
    */
   def String getBlueprintAsJson(id) {
     ambari.get(path: "blueprints/$id", query: ['fields': "host_groups,Blueprints"]).data.text
@@ -425,15 +425,8 @@ class AmbariClient {
    * @param blueprint json
    * @return response message
    */
-  private boolean postBlueprint(String blueprint) {
-    def result = true
-    try {
-      ambari.post(path: "blueprints/bp", body: blueprint, { it })
-    } catch (e) {
-      LOGGER.error("Error during blueprint post", e)
-      result = false
-    }
-    return result
+  private void postBlueprint(String blueprint) {
+    ambari.post(path: "blueprints/bp", body: blueprint, { it })
   }
 
   private def createClusterJson(String name, Map hostGroups) {
