@@ -173,6 +173,7 @@ class AmbariClient {
    * Adds a blueprint to the Ambari server. Exception is thrown if fails.
    *
    * @param json blueprint as json
+   * @throws HttpResponseException in case of error
    */
   def void addBlueprint(String json) throws HttpResponseException {
     if (json) {
@@ -183,7 +184,7 @@ class AmbariClient {
   /**
    * Adds 2 default blueprints.
    *
-   * @return true if both added, exception is thrown if any of it fails
+   * @throws HttpResponseException in case of error
    */
   def void addDefaultBlueprints() throws HttpResponseException {
     addBlueprint(getResourceContent("blueprints/multi-node-hdfs-yarn"))
