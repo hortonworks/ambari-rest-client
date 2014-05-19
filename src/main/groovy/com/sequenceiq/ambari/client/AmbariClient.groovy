@@ -73,8 +73,18 @@ class AmbariClient {
     return "Not found"
   }
 
+  def Map<String, List<String>> getBlueprintMap(String id) {
+    def result = getBlueprint(id).host_groups?.collectEntries { [(it.name): it.components.collect { it.name }] }
+    result ? result : new HashMap()
+  }
+
   def String showBlueprints() {
     getBlueprints().items.collect { "${it.Blueprints.blueprint_name.padRight(PAD)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]" }.join("\n")
+  }
+
+  def Map<String, String> getBlueprintsMap() {
+    def result = getBlueprints().items?.collectEntries { [(it.Blueprints.blueprint_name): it.Blueprints.stack_name + ":" + it.Blueprints.stack_version] }
+    result ? result : new HashMap()
   }
 
   def getBlueprints() {
@@ -139,6 +149,11 @@ class AmbariClient {
     getTasks(request)?.tasks.collect { "${it.Tasks.command_detail.padRight(PAD)} [${it.Tasks.status}]" }.join("\n")
   }
 
+  def Map<String, String> getTaskMap(request = 1) {
+    def result = getTasks(request).tasks?.collectEntries { [(it.Tasks.command_detail): it.Tasks.status] }
+    result ? result : new HashMap()
+  }
+
   def getHosts() {
     getAllResources("hosts", "Hosts")
   }
@@ -162,6 +177,15 @@ class AmbariClient {
     }.join("\n")
   }
 
+  def Map<String, Map<String, String>> getServiceComponentsMap() {
+    def result = getServices().items?.collectEntries {
+      def name = it.ServiceInfo.service_name
+      def componentList = getServiceComponents(name).items?.collectEntries { [(it.ServiceComponentInfo.component_name): it.ServiceComponentInfo.state] }
+      [(name): componentList]
+    }
+    result ? result : new HashMap()
+  }
+
   def getServices() {
     getAllResources("services", "ServiceInfo")
   }
@@ -170,12 +194,22 @@ class AmbariClient {
     getServices().items.collect { "${it.ServiceInfo.service_name.padRight(PAD)} [$it.ServiceInfo.state]" }.join("\n")
   }
 
+  def Map<String, String> getServicesMap() {
+    def result = getServices().items?.collectEntries { [(it.ServiceInfo.service_name): it.ServiceInfo.state] }
+    result ? result : new HashMap()
+  }
+
   def getHostComponents(host) {
     getAllResources("hosts/$host/host_components", "HostRoles")
   }
 
   def String showHostComponentList(host) {
     getHostComponents(host).items.collect { "${it.HostRoles.component_name.padRight(PAD)} [$it.HostRoles.state]" }.join("\n")
+  }
+
+  def Map<String, String> getHostComponentsMap(host) {
+    def result = getHostComponents(host).items?.collectEntries { [(it.HostRoles.component_name): it.HostRoles.state] }
+    result ? result : new HashMap()
   }
 
   def getAllResources(resourceName, fields) {
