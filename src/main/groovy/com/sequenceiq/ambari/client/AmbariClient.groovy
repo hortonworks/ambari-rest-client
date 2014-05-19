@@ -198,33 +198,20 @@ class AmbariClient {
    * @param blueprintName blueprint id used to create this cluster
    * @param hostGroups Map<String, List<String> key - host group, value - host list
    * @return true if the creation was successful false otherwise
+   * @throws HttpResponseException in case of error
    */
-  def boolean createCluster(String clusterName, String blueprintName, Map hostGroups) {
-    def result = true
-    try {
-      ambari.post(path: "clusters/$clusterName", body: createClusterJson(blueprintName, hostGroups), { it })
-    } catch (e) {
-      LOGGER.error("Error during create cluster post", e)
-      result = false
-    }
-    return result
+  def void createCluster(String clusterName, String blueprintName, Map hostGroups) throws HttpResponseException {
+    ambari.post(path: "clusters/$clusterName", body: createClusterJson(blueprintName, hostGroups), { it })
   }
 
   /**
    * Deletes the cluster.
    *
    * @param clusterName name of the cluster
-   * @return true if the operation was successful false otherwise
+   * @throws HttpResponseException in case of error
    */
-  def boolean deleteCluster(String clusterName) {
-    def result = true
-    try {
-      ambari.delete(path: "clusters/$clusterName")
-    } catch (e) {
-      LOGGER.error("Error during delete cluster $clusterName", e)
-      result = false
-    }
-    return result
+  def void deleteCluster(String clusterName) throws HttpResponseException {
+    ambari.delete(path: "clusters/$clusterName")
   }
 
   /**
