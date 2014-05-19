@@ -91,10 +91,10 @@ class AmbariClient {
   }
 
   /**
-   * Returns a pre-formatted string of the blueprint.
+   * Returns a pre-formatted String of the blueprint.
    *
    * @param id id of the blueprint
-   * @return formatted string
+   * @return formatted String
    */
   def String showBlueprint(String id) {
     def resp = getBlueprint(id)
@@ -121,7 +121,7 @@ class AmbariClient {
   }
 
   /**
-   * Returns a pre-formatted string of the blueprints.
+   * Returns a pre-formatted String of the blueprints.
    *
    * @return formatted blueprint list
    */
@@ -160,9 +160,9 @@ class AmbariClient {
   }
 
   /**
-   * Returns a pre-formatted string of a blueprint used by the cluster.
+   * Returns a pre-formatted String of a blueprint used by the cluster.
    *
-   * @return formatted string
+   * @return formatted String
    */
   def String showClusterBlueprint() {
     ambari.get(path: "clusters/${getClusterName()}", query: ['format': "blueprint"]).data.text
@@ -236,7 +236,7 @@ class AmbariClient {
   }
 
   /**
-   * Returns a pre-formatted string of the clusters.
+   * Returns a pre-formatted String of the clusters.
    *
    * @return pre-formatted cluster list
    */
@@ -287,7 +287,7 @@ class AmbariClient {
   /**
    * Returns a pre-formatted list of the hosts.
    *
-   * @return pre-formatted string
+   * @return pre-formatted String
    */
   def String showHostList() {
     getHosts().items.collect { "$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch" }.join("\n")
@@ -306,7 +306,7 @@ class AmbariClient {
   /**
    * Returns a pre-formatted list of the service components.
    *
-   * @return pre-formatted string
+   * @return pre-formatted String
    */
   def String showServiceComponents() {
     getServices().items.collect {
@@ -346,7 +346,7 @@ class AmbariClient {
   /**
    * Returns a pre-formatted service list.
    *
-   * @return formatted string
+   * @return formatted String
    */
   def String showServiceList() {
     getServices().items.collect { "${it.ServiceInfo.service_name.padRight(PAD)} [$it.ServiceInfo.state]" }.join("\n")
@@ -376,7 +376,7 @@ class AmbariClient {
    * Returns a pre-formatted component list of a host.
    *
    * @param host which host's components are requested
-   * @return formatted string
+   * @return formatted String
    */
   def String showHostComponentList(host) {
     getHostComponents(host).items.collect { "${it.HostRoles.component_name.padRight(PAD)} [$it.HostRoles.state]" }.join("\n")
@@ -401,6 +401,16 @@ class AmbariClient {
    */
   def Map getBlueprint(id) {
     slurp("blueprints/$id", "host_groups,Blueprints")
+  }
+
+  /**
+   * Returns the blueprint json as String.
+   *
+   * @param id id of the blueprint
+   * @return json as String
+   */
+  def String getBlueprintAsJson(id) {
+    ambari.get(path: "blueprints/$id", query: ['fields': "host_groups,Blueprints"]).data.text
   }
 
   private def getAllResources(resourceName, fields) {
