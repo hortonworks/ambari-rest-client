@@ -19,6 +19,7 @@ package com.sequenceiq.ambari.client
 
 import groovy.json.JsonSlurper
 import groovyx.net.http.HttpResponseDecorator
+import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 import spock.lang.Specification
 
@@ -114,5 +115,71 @@ class AmbariClientTest extends Specification {
 
     then:
     [:] == response
+  }
+
+  def "test get host groups"() {
+    given:
+    def request = [path: "blueprints/bp", query: [fields: "host_groups,Blueprints"]]
+    rest.get(request) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> [host_groups: [[name: "group1"], [name: "group2"]]]
+
+    when:
+    def result = ambari.getHostGroups("bp")
+
+    then:
+    ["group1", "group2"] == result
+  }
+
+  def "test get host groups for no groups"() {
+    given:
+    def request = [path: "blueprints/bp", query: [fields: "host_groups,Blueprints"]]
+    rest.get(request) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> null
+
+    when:
+    def result = ambari.getHostGroups("bp")
+
+    then:
+    [] == result
+  }
+
+  def "test add blueprint for success"() {
+    given:
+    def json = getClass().getResourceAsStream("blueprint.json")
+    def request = [path: "blueprints/bp", body: json]
+    rest.post(request, { it })
+
+    when:
+    ambari.addBlueprint(json)
+
+    then:
+    notThrown(HttpResponseException)
+  }
+
+  def "test add blueprint for empty json"() {
+    given:
+    def request = [path: "blueprints/bp", body: ""]
+    rest.post(request, { it })
+
+    when:
+    ambari.addBlueprint("")
+
+    then:
+    notThrown(HttpResponseException)
+  }
+
+  def "test create cluster json"() {
+    given:
+    def json = getClass().getResourceAsStream("/cluster.json").text
+    def groups = [host_group_1: ["server.ambari.com", "server2.ambari.com"]]
+    def request = [path: "clusters/c1", body: json]
+
+    when:
+    ambari.createCluster("c1", "c1", groups)
+
+    then:
+    1 * rest.post(request, { it })
   }
 }

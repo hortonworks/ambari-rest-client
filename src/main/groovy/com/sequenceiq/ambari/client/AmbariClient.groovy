@@ -49,11 +49,19 @@ class AmbariClient {
     ambari = new RESTClient("http://${host}:${port}/api/v1/" as String)
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
     ambari.headers['X-Requested-By'] = 'ambari'
+    getClusterName()
   }
 
+  /**
+   * Connects to the ambari server.
+   *
+   * @param restClient underlying client
+   * @param slurper slurper to parse responses
+   */
   AmbariClient(RESTClient restClient, JsonSlurper slurper) {
     this.ambari = restClient
     this.slurper = slurper
+    getClusterName()
   }
 
   /**
@@ -226,6 +234,26 @@ class AmbariClient {
    */
   def getClusters() {
     slurp("clusters", "Clusters")
+  }
+
+  /**
+   * Returns the active cluster as json
+   *
+   * @return cluster as json String
+   * @throws HttpResponseException in case of error
+   */
+  def String getClusterAsJson() throws HttpResponseException {
+    getRequest("clusters/$clusterName")
+  }
+
+  /**
+   * Returns all clusters as json
+   *
+   * @return json String
+   * @throws HttpResponseException in case of error
+   */
+  def getClustersAsJson() throws HttpResponseException {
+    getRequest("clusters")
   }
 
   /**
@@ -403,7 +431,7 @@ class AmbariClient {
    * @return json as String, exception if thrown is it fails
    */
   def String getBlueprintAsJson(id) {
-    ambari.get(path: "blueprints/$id", query: ['fields': "host_groups,Blueprints"]).data.text
+    return getRequest("blueprints/$id", "host_groups,Blueprints")
   }
 
   private def getAllResources(resourceName, fields) {
@@ -439,11 +467,19 @@ class AmbariClient {
     }
     def result = new HashMap()
     try {
-      result = slurper.parseText(ambari.get(path: "$path", query: ['fields': "$fields"]).data.text)
+      result = slurper.parseText(getRequest(path, fields))
     } catch (e) {
       LOGGER.error("Error occurred during GET request to $baseUri/$path", e)
     }
     return result
+  }
+
+  private String getRequest(path, fields = "") {
+    if (fields) {
+      ambari.get(path: "$path", query: ['fields': "$fields"]).data.text
+    } else {
+      ambari.get(path: "$path").data.text
+    }
   }
 
   private String getResourceContent(name) {

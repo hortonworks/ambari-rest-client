@@ -1,5 +1,5 @@
 {
-    "blueprint": "single-node-hdfs-yarn",
+    "blueprint": "c1",
     "host-groups": [
         {
             "name": "host_group_1",
