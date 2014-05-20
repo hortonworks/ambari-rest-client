@@ -129,7 +129,7 @@ class AmbariClient {
    */
   def Map<String, List<String>> getBlueprintMap(String id) {
     def result = getBlueprint(id).host_groups?.collectEntries { [(it.name): it.components.collect { it.name }] }
-    result ? result : new HashMap()
+    result ?: new HashMap()
   }
 
   /**
@@ -148,7 +148,7 @@ class AmbariClient {
    */
   def Map<String, String> getBlueprintsMap() {
     def result = getBlueprints().items?.collectEntries { [(it.Blueprints.blueprint_name): it.Blueprints.stack_name + ":" + it.Blueprints.stack_version] }
-    result ? result : new HashMap()
+    result ?: new HashMap()
   }
 
   /**
@@ -291,7 +291,7 @@ class AmbariClient {
    */
   def Map<String, String> getTaskMap(request = 1) {
     def result = getTasks(request).tasks?.collectEntries { [(it.Tasks.command_detail): it.Tasks.status] }
-    result ? result : new HashMap()
+    result ?: new HashMap()
   }
 
   /**
@@ -350,7 +350,7 @@ class AmbariClient {
       def componentList = getServiceComponents(name).items?.collectEntries { [(it.ServiceComponentInfo.component_name): it.ServiceComponentInfo.state] }
       [(name): componentList]
     }
-    result ? result : new HashMap()
+    result ?: new HashMap()
   }
 
   /**
@@ -378,7 +378,7 @@ class AmbariClient {
    */
   def Map<String, String> getServicesMap() {
     def result = getServices().items?.collectEntries { [(it.ServiceInfo.service_name): it.ServiceInfo.state] }
-    result ? result : new HashMap()
+    result ?: new HashMap()
   }
 
   /**
@@ -409,7 +409,7 @@ class AmbariClient {
    */
   def Map<String, String> getHostComponentsMap(host) {
     def result = getHostComponents(host).items?.collectEntries { [(it.HostRoles.component_name): it.HostRoles.state] }
-    result ? result : new HashMap()
+    result ?: new HashMap()
   }
 
   /**
