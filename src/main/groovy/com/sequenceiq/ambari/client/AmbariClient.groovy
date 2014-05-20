@@ -304,12 +304,21 @@ class AmbariClient {
   }
 
   /**
+   * Returns the available host names.
+   *
+   * @return list of host names
+   */
+  def List<String> getHostNames() {
+    getHosts().items.collect { "$it.Hosts.host_name" }
+  }
+
+  /**
    * Returns the available hosts properties as a Map.
    *
    * @return Map containing the hosts properties
    */
   def getHosts() {
-    getAllResources("hosts", "Hosts")
+    slurp("hosts", "Hosts")
   }
 
   /**
