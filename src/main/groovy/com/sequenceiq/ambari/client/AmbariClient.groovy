@@ -49,7 +49,6 @@ class AmbariClient {
     ambari = new RESTClient("http://${host}:${port}/api/v1/" as String)
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
     ambari.headers['X-Requested-By'] = 'ambari'
-    getClusterName()
   }
 
   /**
@@ -61,7 +60,6 @@ class AmbariClient {
   AmbariClient(RESTClient restClient, JsonSlurper slurper) {
     this.ambari = restClient
     this.slurper = slurper
-    getClusterName()
   }
 
   /**
