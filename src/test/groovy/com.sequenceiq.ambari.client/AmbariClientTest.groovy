@@ -60,4 +60,59 @@ class AmbariClientTest extends Specification {
     then:
     null == result
   }
+
+  def "test if blueprint does not exists"() {
+    given:
+    decorator.status >> 500
+    def request = [path: "blueprints/bp", query: ['fields': "Blueprints"]]
+    rest.get(request) >> decorator
+
+    when:
+    def result = ambari.doesBlueprintExists("bp")
+
+    then:
+    result == false
+  }
+
+  def "test if blueprint exists"() {
+    given:
+    decorator.status >> 200
+    def request = [path: "blueprints/bp", query: ['fields': "Blueprints"]]
+    rest.get(request) >> decorator
+
+    when:
+    def result = ambari.doesBlueprintExists("bp")
+
+    then:
+    result == true
+  }
+
+  def "test get blueprint as map"() {
+    given:
+    def request = [path: "blueprints/bp", query: [fields: "host_groups,Blueprints"]]
+    rest.get(request) >> decorator
+    decorator.data >> [text: "map"]
+    def mockResponse = [host_groups: [[name: "bp", components: [[name: "hdfs"], [name: "yarn"]]]]]
+    slurper.parseText("map") >> mockResponse
+
+    when:
+    def response = ambari.getBlueprintMap("bp")
+
+    then:
+    [bp: ["hdfs", "yarn"]] == response
+  }
+
+  def "test get blueprint as map for empty result"() {
+    given:
+    def request = [path: "blueprints/bp", query: [fields: "host_groups,Blueprints"]]
+    rest.get(request) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> [:]
+
+    when:
+    def response = ambari.getBlueprintMap("bp")
+
+    then:
+    [:] == response
+  }
 }
