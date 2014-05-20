@@ -309,7 +309,7 @@ class AmbariClient {
    * @return list of host names
    */
   def List<String> getHostNames() {
-    getHosts().items.collect { "$it.Hosts.host_name" }
+    getHosts().items.collect { it.Hosts.host_name }
   }
 
   /**
