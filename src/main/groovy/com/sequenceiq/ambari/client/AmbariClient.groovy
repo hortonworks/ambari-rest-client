@@ -103,6 +103,15 @@ class AmbariClient {
   }
 
   /**
+   * Checks whether there are available blueprints or not.
+   *
+   * @return true if blueprints are available false otherwise
+   */
+  def boolean isBlueprintAvailable() {
+    return getBlueprints().items?.size > 0
+  }
+
+  /**
    * Returns a pre-formatted String of the blueprint.
    *
    * @param id id of the blueprint
@@ -458,7 +467,7 @@ class AmbariClient {
     builder.toPrettyString()
   }
 
-  private def slurp(path, fields) {
+  private def slurp(path, fields = "") {
     def baseUri = ambari.getUri();
     if (debugEnabled) {
       println "[DEBUG] ${baseUri}${path}?fields=$fields"
