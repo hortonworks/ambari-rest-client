@@ -211,7 +211,7 @@ class AmbariClient {
    * @return true if the creation was successful false otherwise
    * @throws HttpResponseException in case of error
    */
-  def void createCluster(String clusterName, String blueprintName, Map hostGroups) throws HttpResponseException {
+  def void createCluster(String clusterName, String blueprintName, Map<String, List<String>> hostGroups) throws HttpResponseException {
     ambari.post(path: "clusters/$clusterName", body: createClusterJson(blueprintName, hostGroups), { it })
   }
 

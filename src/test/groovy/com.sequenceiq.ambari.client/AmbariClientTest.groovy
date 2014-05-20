@@ -30,7 +30,7 @@ class AmbariClientTest extends Specification {
   def decorator = Mock(HttpResponseDecorator)
   def ambari = new AmbariClient(rest, slurper)
 
-  def "get the name of the cluster"() {
+  def "test get the name of the cluster"() {
     given:
     def request = [path: "clusters", query: [fields: "Clusters"]]
     def items = new ArrayList()
@@ -47,7 +47,7 @@ class AmbariClientTest extends Specification {
     "cluster1" == result
   }
 
-  def "get the name when there is no cluster"() {
+  def "test get the name when there is no cluster"() {
     given:
     def request = [path: "clusters", query: [fields: "Clusters"]]
     def mockResponse = ["items": new ArrayList()]
@@ -181,5 +181,137 @@ class AmbariClientTest extends Specification {
 
     then:
     1 * rest.post(request, { it })
+  }
+
+  def "test get task as map"() {
+    given:
+    //get the name of the cluster
+    def req1 = [path: "clusters", query: [fields: "Clusters"]]
+    def items = new ArrayList()
+    items.add([Clusters: [cluster_name: "cluster1"]])
+    def mockResponse = ["items": items]
+    rest.get(req1) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> mockResponse
+    // get the actual tasks
+    def req2 = [path: "clusters/cluster1/requests/1", query: ['fields': "tasks/Tasks/*"]]
+    def decorator2 = Mock(HttpResponseDecorator)
+    rest.get(req2) >> decorator2
+    decorator2.data >> [text: "map2"]
+    def sluper1 = new JsonSlurper()
+    def json = sluper1.parseText(getClass().getResourceAsStream("/tasks.json").text)
+    slurper.parseText("map2") >> json
+
+    when:
+    def result = ambari.getTaskMap()
+
+    then:
+    ["DATANODE INSTALL"          : "COMPLETED",
+     "DATANODE START"            : "COMPLETED",
+     "HDFS_CLIENT INSTALL"       : "COMPLETED",
+     "HISTORYSERVER INSTALL"     : "COMPLETED",
+     "HISTORYSERVER START"       : "COMPLETED",
+     "MAPREDUCE2_CLIENT INSTALL" : "COMPLETED",
+     "NAMENODE INSTALL"          : "COMPLETED",
+     "NAMENODE START"            : "COMPLETED",
+     "NODEMANAGER INSTALL"       : "COMPLETED",
+     "NODEMANAGER START"         : "COMPLETED",
+     "RESOURCEMANAGER INSTALL"   : "COMPLETED",
+     "RESOURCEMANAGER START"     : "COMPLETED",
+     "SECONDARY_NAMENODE INSTALL": "COMPLETED",
+     "SECONDARY_NAMENODE START"  : "COMPLETED",
+     "YARN_CLIENT INSTALL"       : "COMPLETED",
+     "ZOOKEEPER_CLIENT INSTALL"  : "COMPLETED",
+     "ZOOKEEPER_SERVER INSTALL"  : "COMPLETED",
+     "ZOOKEEPER_SERVER START"    : "COMPLETED"
+    ] == result
+  }
+
+  def "test get task as map for no task"() {
+    given:
+    //get the name of the cluster
+    def req1 = [path: "clusters", query: [fields: "Clusters"]]
+    def items = new ArrayList()
+    items.add([Clusters: [cluster_name: "cluster1"]])
+    def mockResponse = ["items": items]
+    rest.get(req1) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> mockResponse
+    // get the actual tasks
+    def req2 = [path: "clusters/cluster1/requests/1", query: ['fields': "tasks/Tasks/*"]]
+    def decorator2 = Mock(HttpResponseDecorator)
+    rest.get(req2) >> decorator2
+    decorator2.data >> [text: "map2"]
+    slurper.parseText("map2") >> [:]
+
+    when:
+    def result = ambari.getTaskMap()
+
+    then:
+    [:] == result
+  }
+
+  def "test get service components map"() {
+    given:
+    // get the name of the cluster
+    def req1 = [path: "clusters", query: [fields: "Clusters"]]
+    def items = new ArrayList()
+    items.add([Clusters: [cluster_name: "cluster1"]])
+    def mockResponse = ["items": items]
+    rest.get(req1) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> mockResponse
+    // get the services
+    def req2 = [path: "clusters/cluster1/services", query: ['fields': "ServiceInfo/*"]]
+    def decorator2 = Mock(HttpResponseDecorator)
+    rest.get(req2) >> decorator2
+    decorator2.data >> [text: "dec"]
+    def sluper1 = new JsonSlurper()
+    def json = sluper1.parseText(getClass().getResourceAsStream("/services.json").text)
+    slurper.parseText("dec") >> json
+    // get service components
+    def req3 = [path: "clusters/cluster1/services/HDFS/components", query: ['fields': "ServiceComponentInfo/*"]]
+    def decorator3 = Mock(HttpResponseDecorator)
+    rest.get(req3) >> decorator3
+    decorator3.data >> [text: "dec3"]
+    def json2 = sluper1.parseText(getClass().getResourceAsStream("/hdfsServiceComponents.json").text)
+    slurper.parseText("dec3") >> json2
+
+    when:
+    def Map result = ambari.getServiceComponentsMap()
+
+    then:
+    [HDFS: [
+      DATANODE          : "STARTED",
+      HDFS_CLIENT       : "INSTALLED",
+      NAMENODE          : "STARTED",
+      SECONDARY_NAMENODE: "STARTED"]
+    ] == result
+  }
+
+  def "test get services as map"() {
+    given:
+    // get the name of the cluster
+    def req1 = [path: "clusters", query: [fields: "Clusters"]]
+    def items = new ArrayList()
+    items.add([Clusters: [cluster_name: "cluster1"]])
+    def mockResponse = ["items": items]
+    rest.get(req1) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> mockResponse
+    // get the services
+    def req2 = [path: "clusters/cluster1/services", query: ['fields': "ServiceInfo/*"]]
+    def decorator2 = Mock(HttpResponseDecorator)
+    rest.get(req2) >> decorator2
+    decorator2.data >> [text: "dec"]
+    def sluper1 = new JsonSlurper()
+    def json = sluper1.parseText(getClass().getResourceAsStream("/services.json").text)
+    slurper.parseText("dec") >> json
+
+    when:
+    def result = ambari.getServicesMap()
+
+    then:
+    [HDFS: "STARTED"] == result
   }
 }
