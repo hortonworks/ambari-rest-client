@@ -29,6 +29,7 @@ class AmbariClientTest extends Specification {
   def slurper = Mock(JsonSlurper)
   def decorator = Mock(HttpResponseDecorator)
   def ambari = new AmbariClient(rest, slurper)
+  def realSlurper = new JsonSlurper()
 
   def "test get the name of the cluster"() {
     given:
@@ -145,6 +146,37 @@ class AmbariClientTest extends Specification {
     [] == result
   }
 
+  def "test get host names"() {
+    given:
+    def request = [path: "hosts", query: [fields: "Hosts"]]
+    rest.get(request) >> decorator
+    decorator.data >> [text: "map"]
+    def hosts = [[Hosts: [host_name: "server.ambari.com"]]]
+    def mapResponse = [items: hosts]
+    slurper.parseText("map") >> mapResponse
+
+    when:
+    def result = ambari.getHostNames()
+
+    then:
+    "server.ambari.com" == result[0]
+    1 == result.size()
+  }
+
+  def "test get host names for empty result"() {
+    given:
+    def request = [path: "hosts", query: [fields: "Hosts"]]
+    rest.get(request) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> []
+
+    when:
+    def result = ambari.getHostNames()
+
+    then:
+    [] == result
+  }
+
   def "test add blueprint for success"() {
     given:
     def json = getClass().getResourceAsStream("blueprint.json")
@@ -198,8 +230,7 @@ class AmbariClientTest extends Specification {
     def decorator2 = Mock(HttpResponseDecorator)
     rest.get(req2) >> decorator2
     decorator2.data >> [text: "map2"]
-    def sluper1 = new JsonSlurper()
-    def json = sluper1.parseText(getClass().getResourceAsStream("/tasks.json").text)
+    def json = realSlurper.parseText(getClass().getResourceAsStream("/tasks.json").text)
     slurper.parseText("map2") >> json
 
     when:
@@ -266,15 +297,14 @@ class AmbariClientTest extends Specification {
     def decorator2 = Mock(HttpResponseDecorator)
     rest.get(req2) >> decorator2
     decorator2.data >> [text: "dec"]
-    def sluper1 = new JsonSlurper()
-    def json = sluper1.parseText(getClass().getResourceAsStream("/services.json").text)
+    def json = realSlurper.parseText(getClass().getResourceAsStream("/services.json").text)
     slurper.parseText("dec") >> json
     // get service components
     def req3 = [path: "clusters/cluster1/services/HDFS/components", query: ['fields': "ServiceComponentInfo/*"]]
     def decorator3 = Mock(HttpResponseDecorator)
     rest.get(req3) >> decorator3
     decorator3.data >> [text: "dec3"]
-    def json2 = sluper1.parseText(getClass().getResourceAsStream("/hdfsServiceComponents.json").text)
+    def json2 = realSlurper.parseText(getClass().getResourceAsStream("/hdfsServiceComponents.json").text)
     slurper.parseText("dec3") >> json2
 
     when:
@@ -304,8 +334,7 @@ class AmbariClientTest extends Specification {
     def decorator2 = Mock(HttpResponseDecorator)
     rest.get(req2) >> decorator2
     decorator2.data >> [text: "dec"]
-    def sluper1 = new JsonSlurper()
-    def json = sluper1.parseText(getClass().getResourceAsStream("/services.json").text)
+    def json = realSlurper.parseText(getClass().getResourceAsStream("/services.json").text)
     slurper.parseText("dec") >> json
 
     when:

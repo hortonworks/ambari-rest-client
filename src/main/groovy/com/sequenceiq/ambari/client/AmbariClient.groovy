@@ -161,15 +161,6 @@ class AmbariClient {
   }
 
   /**
-   * Returns a Map containing the blueprint's properties parsed from the Ambari response json.
-   *
-   * @return blueprint's properties as Map or empty Map
-   */
-  def getBlueprints() {
-    slurp("blueprints", "Blueprints")
-  }
-
-  /**
    * Returns the name of the host groups for a given blueprint.
    *
    * @param blueprint id of the blueprint
@@ -235,22 +226,13 @@ class AmbariClient {
   }
 
   /**
-   * Returns a Map containing the cluster's properties parsed from the Ambari response json.
-   *
-   * @return cluster's properties as Map or empty Map
-   */
-  def getClusters() {
-    slurp("clusters", "Clusters")
-  }
-
-  /**
    * Returns the active cluster as json
    *
    * @return cluster as json String
    * @throws HttpResponseException in case of error
    */
   def String getClusterAsJson() throws HttpResponseException {
-    getRequest("clusters/$clusterName")
+    getRequest("clusters/${getClusterName()}")
   }
 
   /**
@@ -313,31 +295,12 @@ class AmbariClient {
   }
 
   /**
-   * Returns the available hosts properties as a Map.
-   *
-   * @return Map containing the hosts properties
-   */
-  def getHosts() {
-    slurp("hosts", "Hosts")
-  }
-
-  /**
    * Returns a pre-formatted list of the hosts.
    *
    * @return pre-formatted String
    */
   def String showHostList() {
     getHosts().items.collect { "$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch" }.join("\n")
-  }
-
-  /**
-   * Returns the service components properties as Map.
-   *
-   * @param service id of the service
-   * @return service component properties as Map
-   */
-  def getServiceComponents(service) {
-    getAllResources("services/$service/components", "ServiceComponentInfo")
   }
 
   /**
@@ -372,15 +335,6 @@ class AmbariClient {
   }
 
   /**
-   * Returns the services properties as Map parsed from Ambari response json.
-   *
-   * @return service properties as Map
-   */
-  def getServices() {
-    getAllResources("services", "ServiceInfo")
-  }
-
-  /**
    * Returns a pre-formatted service list.
    *
    * @return formatted String
@@ -397,16 +351,6 @@ class AmbariClient {
   def Map<String, String> getServicesMap() {
     def result = getServices().items?.collectEntries { [(it.ServiceInfo.service_name): it.ServiceInfo.state] }
     result ?: new HashMap()
-  }
-
-  /**
-   * Returns the properties of the host components as a Map parsed from the Ambari response json.
-   *
-   * @param host which host's components are requested
-   * @return component properties as Map
-   */
-  def getHostComponents(host) {
-    getAllResources("hosts/$host/host_components", "HostRoles")
   }
 
   /**
@@ -428,16 +372,6 @@ class AmbariClient {
   def Map<String, String> getHostComponentsMap(host) {
     def result = getHostComponents(host).items?.collectEntries { [(it.HostRoles.component_name): it.HostRoles.state] }
     result ?: new HashMap()
-  }
-
-  /**
-   * Return the blueprint's properties as a Map.
-   *
-   * @param id id of the blueprint
-   * @return properties as Map
-   */
-  def Map getBlueprint(id) {
-    slurp("blueprints/$id", "host_groups,Blueprints")
   }
 
   /**
@@ -488,6 +422,72 @@ class AmbariClient {
       LOGGER.error("Error occurred during GET request to $baseUri/$path", e)
     }
     return result
+  }
+
+  /**
+   * Return the blueprint's properties as a Map.
+   *
+   * @param id id of the blueprint
+   * @return properties as Map
+   */
+  private def getBlueprint(id) {
+    slurp("blueprints/$id", "host_groups,Blueprints")
+  }
+
+  /**
+   * Returns a Map containing the blueprint's properties parsed from the Ambari response json.
+   *
+   * @return blueprint's properties as Map or empty Map
+   */
+  private def getBlueprints() {
+    slurp("blueprints", "Blueprints")
+  }
+
+  /**
+   * Returns a Map containing the cluster's properties parsed from the Ambari response json.
+   *
+   * @return cluster's properties as Map or empty Map
+   */
+  private def getClusters() {
+    slurp("clusters", "Clusters")
+  }
+
+  /**
+   * Returns the available hosts properties as a Map.
+   *
+   * @return Map containing the hosts properties
+   */
+  private def getHosts() {
+    slurp("hosts", "Hosts")
+  }
+
+  /**
+   * Returns the service components properties as Map.
+   *
+   * @param service id of the service
+   * @return service component properties as Map
+   */
+  private def getServiceComponents(service) {
+    getAllResources("services/$service/components", "ServiceComponentInfo")
+  }
+
+  /**
+   * Returns the services properties as Map parsed from Ambari response json.
+   *
+   * @return service properties as Map
+   */
+  private def getServices() {
+    getAllResources("services", "ServiceInfo")
+  }
+
+  /**
+   * Returns the properties of the host components as a Map parsed from the Ambari response json.
+   *
+   * @param host which host's components are requested
+   * @return component properties as Map
+   */
+  private def getHostComponents(host) {
+    getAllResources("hosts/$host/host_components", "HostRoles")
   }
 
   private String getRequest(path, fields = "") {
