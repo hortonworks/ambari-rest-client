@@ -151,7 +151,7 @@ class AmbariClientTest extends Specification {
     def request = [path: "hosts", query: [fields: "Hosts"]]
     rest.get(request) >> decorator
     decorator.data >> [text: "map"]
-    def hosts = [[Hosts: [host_name: "server.ambari.com"]]]
+    def hosts = [[Hosts: [host_name: "server.ambari.com", host_status: "HEALTHY"]]]
     def mapResponse = [items: hosts]
     slurper.parseText("map") >> mapResponse
 
@@ -159,7 +159,7 @@ class AmbariClientTest extends Specification {
     def result = ambari.getHostNames()
 
     then:
-    "server.ambari.com" == result[0]
+    "HEALTHY" == result["server.ambari.com"]
     1 == result.size()
   }
 
@@ -174,7 +174,7 @@ class AmbariClientTest extends Specification {
     def result = ambari.getHostNames()
 
     then:
-    [] == result
+    [:] == result
   }
 
   def "test add blueprint for success"() {
@@ -319,6 +319,61 @@ class AmbariClientTest extends Specification {
     ] == result
   }
 
+  def "test get service components map for empty services"() {
+    given:
+    // get the name of the cluster
+    def req1 = [path: "clusters", query: [fields: "Clusters"]]
+    def items = new ArrayList()
+    items.add([Clusters: [cluster_name: "cluster1"]])
+    def mockResponse = ["items": items]
+    rest.get(req1) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> mockResponse
+    // get the services
+    def req2 = [path: "clusters/cluster1/services", query: ['fields': "ServiceInfo/*"]]
+    def decorator2 = Mock(HttpResponseDecorator)
+    rest.get(req2) >> decorator2
+    decorator2.data >> [text: "dec"]
+    slurper.parseText("dec") >> []
+
+    when:
+    def Map result = ambari.getServiceComponentsMap()
+
+    then:
+    [:] == result
+  }
+
+  def "test get service components map for empty components"() {
+    given:
+    // get the name of the cluster
+    def req1 = [path: "clusters", query: [fields: "Clusters"]]
+    def items = new ArrayList()
+    items.add([Clusters: [cluster_name: "cluster1"]])
+    def mockResponse = ["items": items]
+    rest.get(req1) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> mockResponse
+    // get the services
+    def req2 = [path: "clusters/cluster1/services", query: ['fields': "ServiceInfo/*"]]
+    def decorator2 = Mock(HttpResponseDecorator)
+    rest.get(req2) >> decorator2
+    decorator2.data >> [text: "dec"]
+    def json = realSlurper.parseText(getClass().getResourceAsStream("/services.json").text)
+    slurper.parseText("dec") >> json
+    // get service components
+    def req3 = [path: "clusters/cluster1/services/HDFS/components", query: ['fields': "ServiceComponentInfo/*"]]
+    def decorator3 = Mock(HttpResponseDecorator)
+    rest.get(req3) >> decorator3
+    decorator3.data >> [text: "dec3"]
+    slurper.parseText("dec3") >> []
+
+    when:
+    def Map result = ambari.getServiceComponentsMap()
+
+    then:
+    [HDFS: [:]] == result
+  }
+
   def "test get services as map"() {
     given:
     // get the name of the cluster
@@ -342,5 +397,29 @@ class AmbariClientTest extends Specification {
 
     then:
     [HDFS: "STARTED"] == result
+  }
+
+  def "test get services as map for empty result"() {
+    given:
+    // get the name of the cluster
+    def req1 = [path: "clusters", query: [fields: "Clusters"]]
+    def items = new ArrayList()
+    items.add([Clusters: [cluster_name: "cluster1"]])
+    def mockResponse = ["items": items]
+    rest.get(req1) >> decorator
+    decorator.data >> [text: "map"]
+    slurper.parseText("map") >> mockResponse
+    // get the services
+    def req2 = [path: "clusters/cluster1/services", query: ['fields': "ServiceInfo/*"]]
+    def decorator2 = Mock(HttpResponseDecorator)
+    rest.get(req2) >> decorator2
+    decorator2.data >> [text: "dec"]
+    slurper.parseText("dec") >> []
+
+    when:
+    def result = ambari.getServicesMap()
+
+    then:
+    [:] == result
   }
 }

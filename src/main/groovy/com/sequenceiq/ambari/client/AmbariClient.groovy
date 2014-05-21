@@ -286,12 +286,12 @@ class AmbariClient {
   }
 
   /**
-   * Returns the available host names.
+   * Returns the available host names and its states.
    *
-   * @return list of host names
+   * @return hostname state association
    */
-  def List<String> getHostNames() {
-    getHosts().items.collect { it.Hosts.host_name }
+  def Map<String, String> getHostNames() {
+    getHosts().items.collectEntries { [(it.Hosts.host_name): it.Hosts.host_status] }
   }
 
   /**
@@ -326,9 +326,9 @@ class AmbariClient {
    * @return service name - [component name - status]
    */
   def Map<String, Map<String, String>> getServiceComponentsMap() {
-    def result = getServices().items?.collectEntries {
+    def result = getServices().items.collectEntries {
       def name = it.ServiceInfo.service_name
-      def componentList = getServiceComponents(name).items?.collectEntries { [(it.ServiceComponentInfo.component_name): it.ServiceComponentInfo.state] }
+      def componentList = getServiceComponents(name).items.collectEntries { [(it.ServiceComponentInfo.component_name): it.ServiceComponentInfo.state] }
       [(name): componentList]
     }
     result ?: new HashMap()
@@ -349,7 +349,7 @@ class AmbariClient {
    * @return service name - service state association as Map
    */
   def Map<String, String> getServicesMap() {
-    def result = getServices().items?.collectEntries { [(it.ServiceInfo.service_name): it.ServiceInfo.state] }
+    def result = getServices().items.collectEntries { [(it.ServiceInfo.service_name): it.ServiceInfo.state] }
     result ?: new HashMap()
   }
 
