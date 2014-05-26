@@ -22,6 +22,7 @@ import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
+import org.apache.http.NoHttpResponseException
 
 /**
  * Basic client to send requests to the Ambari server.
@@ -96,7 +97,7 @@ class AmbariClient {
     try {
       result = ambari.get(path: "blueprints/$id", query: ['fields': "Blueprints"]).status == OK_RESPONSE
     } catch (e) {
-      LOGGER.info("Blueprint does not exist", e)
+      log.info("Blueprint does not exist", e)
     }
     return result
   }
@@ -344,6 +345,19 @@ class AmbariClient {
   }
 
   /**
+   * Performs a health check on the Ambari server.
+   *
+   * @return status
+   */
+  def String healthCheck() {
+    try {
+      ambari.get(path: "check").data
+    } catch (NoHttpResponseException e) {
+      throw new AmbariConnectionException("Cannot connect to ambari server: ${ambari.getUri()}");
+    }
+  }
+
+  /**
    * Returns a pre-formatted service list.
    *
    * @return formatted String
@@ -508,6 +522,8 @@ class AmbariClient {
     def result = new HashMap()
     try {
       result = slurper.parseText(getRequest(path, fields))
+    } catch (NoHttpResponseException ne) {
+      throw new AmbariConnectionException("Cannot connect to ambari server: $baseUri");
     } catch (e) {
       log.error("Error occurred during GET request to $baseUri/$path", e)
     }
