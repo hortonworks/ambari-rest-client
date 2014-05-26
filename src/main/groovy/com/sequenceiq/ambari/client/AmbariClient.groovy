@@ -404,27 +404,25 @@ class AmbariClient {
     def Map<String, Integer> serviceToTags = new HashMap<>()
 
     //get services and last versions configurations
-    slurp("clusters/${getClusterName()}/configurations", "").items.collect {
-      object ->
-        // selecting the latest versions
-        processServiceVersions(serviceToTags, object.type, Integer.valueOf(object.tag))
-    }
-    if (log.isDebugEnabled()) {
-      log.debug("Services to latest versions {}", serviceToTags)
+    Map<String, ?> configsResourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations", [:])
+    def rawConfigs = getResource(configsResourceRequestMap)
+
+    rawConfigs?.items.collect { object ->
+      // selecting the latest versions
+      processServiceVersions(serviceToTags, object.type, Integer.valueOf(object.tag))
     }
 
     // collect properties for every service
-    def finalMap = serviceToTags.collectEntries {
-      entry ->
-        // collect config props for every service
-        def propsMap = collectConfigPropertiesForService(entry.getKey(), entry.getValue())
-        // put them in the final map
-        [(entry.key): propsMap]
+    def finalMap = serviceToTags.collectEntries { entry ->
+      // collect config props for every service
+      def propsMap = collectConfigPropertiesForService(entry.getKey(), entry.getValue())
+      // put them in the final map
+      [(entry.key): propsMap]
     }
     return finalMap
   }
 
-  private def processServiceVersions(Map<String, Integer> serviceToVersions, String service, Integer version) {
+  protected def processServiceVersions(Map<String, Integer> serviceToVersions, String service, Integer version) {
     boolean change = false
     log.debug("Handling service version <{}:{}>", service, version)
     if (serviceToVersions.containsKey(service)) {
@@ -439,16 +437,15 @@ class AmbariClient {
     }
   }
 
-  private def Map<String, String> collectConfigPropertiesForService(String service, Integer tag) {
+  protected def Map<String, String> collectConfigPropertiesForService(String service, Integer tag) {
     Map<String, String> serviceConfigProperties
 
-    def String resourcePathPart = "clusters/${getClusterName()}/configurations"
-    def queryPart = ['type': "$service", 'tag': "$tag"]
-    def Map resourceRequestMap = getResourceRequestMap(resourcePathPart, queryPart)
+    def Map resourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations",
+      ['type': "$service", 'tag': "$tag"])
+    def rawResource = getResource(resourceRequestMap);
 
-    def resourceObject = getResource(resourceRequestMap);
-    if (resourceObject) {
-      serviceConfigProperties = resourceObject.items?.collectEntries { it -> it.properties }
+    if (rawResource) {
+      serviceConfigProperties = rawResource.items?.collectEntries { it -> it.properties }
     } else {
       log.debug("No resource object has been returned for the resource request map: {}", resourceRequestMap)
     }
