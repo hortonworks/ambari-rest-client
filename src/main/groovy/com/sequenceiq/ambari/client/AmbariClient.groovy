@@ -22,8 +22,6 @@ import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 /**
  * Basic client to send requests to the Ambari server.
@@ -148,7 +146,9 @@ class AmbariClient {
    * @return formatted blueprint list
    */
   def String showBlueprints() {
-    getBlueprints().items.collect { "${it.Blueprints.blueprint_name.padRight(PAD)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]" }.join("\n")
+    getBlueprints().items.collect {
+      "${it.Blueprints.blueprint_name.padRight(PAD)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]"
+    }.join("\n")
   }
 
   /**
@@ -157,7 +157,9 @@ class AmbariClient {
    * @return Map where the key is the blueprint's name value is the used stack
    */
   def Map<String, String> getBlueprintsMap() {
-    def result = getBlueprints().items?.collectEntries { [(it.Blueprints.blueprint_name): it.Blueprints.stack_name + ":" + it.Blueprints.stack_version] }
+    def result = getBlueprints().items?.collectEntries {
+      [(it.Blueprints.blueprint_name): it.Blueprints.stack_name + ":" + it.Blueprints.stack_version]
+    }
     result ?: new HashMap()
   }
 
@@ -252,7 +254,9 @@ class AmbariClient {
    * @return pre-formatted cluster list
    */
   def String showClusterList() {
-    getClusters().items.collect { "[$it.Clusters.cluster_id] $it.Clusters.cluster_name:$it.Clusters.version" }.join("\n")
+    getClusters().items.collect {
+      "[$it.Clusters.cluster_id] $it.Clusters.cluster_name:$it.Clusters.version"
+    }.join("\n")
   }
 
   /**
@@ -301,7 +305,9 @@ class AmbariClient {
    * @return pre-formatted String
    */
   def String showHostList() {
-    getHosts().items.collect { "$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch" }.join("\n")
+    getHosts().items.collect {
+      "$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch"
+    }.join("\n")
   }
 
   /**
@@ -329,7 +335,9 @@ class AmbariClient {
   def Map<String, Map<String, String>> getServiceComponentsMap() {
     def result = getServices().items.collectEntries {
       def name = it.ServiceInfo.service_name
-      def componentList = getServiceComponents(name).items.collectEntries { [(it.ServiceComponentInfo.component_name): it.ServiceComponentInfo.state] }
+      def componentList = getServiceComponents(name).items.collectEntries {
+        [(it.ServiceComponentInfo.component_name): it.ServiceComponentInfo.state]
+      }
       [(name): componentList]
     }
     result ?: new HashMap()
@@ -361,7 +369,9 @@ class AmbariClient {
    * @return formatted String
    */
   def String showHostComponentList(host) {
-    getHostComponents(host).items.collect { "${it.HostRoles.component_name.padRight(PAD)} [$it.HostRoles.state]" }.join("\n")
+    getHostComponents(host).items.collect {
+      "${it.HostRoles.component_name.padRight(PAD)} [$it.HostRoles.state]"
+    }.join("\n")
   }
 
   /**
@@ -390,53 +400,85 @@ class AmbariClient {
  *
  * @return a Map with entries of format <servicename, Map<property, value>>
  */
-def Map<String, Map<String,String>> getServiceConfigMap(){
+  def Map<String, Map<String, String>> getServiceConfigMap() {
     def Map<String, Integer> serviceToTags = new HashMap<>()
 
     //get services and last versions configurations
-    slurp("clusters/${getClusterName()}/configurations", "").items.collect{
-                        object ->
-                        // selecting the latest versions
-                        processServiceVersions(serviceToTags, object.type, Integer.valueOf(object.tag))
+    slurp("clusters/${getClusterName()}/configurations", "").items.collect {
+      object ->
+        // selecting the latest versions
+        processServiceVersions(serviceToTags, object.type, Integer.valueOf(object.tag))
     }
-    if(log.isDebugEnabled()){log.debug("Services to latest versions {}",serviceToTags)}
+    if (log.isDebugEnabled()) {
+      log.debug("Services to latest versions {}", serviceToTags)
+    }
 
     // collect properties for every service
-    def finalMap = serviceToTags.collectEntries{
-                        entry ->
-                        // collect config props for every service
-                        def propsMap = collectConfigPropertiesForService(entry.getKey(), entry.getValue())
-                        // put them in the final map
-                        [(entry.key) : propsMap]
-     }
+    def finalMap = serviceToTags.collectEntries {
+      entry ->
+        // collect config props for every service
+        def propsMap = collectConfigPropertiesForService(entry.getKey(), entry.getValue())
+        // put them in the final map
+        [(entry.key): propsMap]
+    }
     return finalMap
-    }
-    private def processServiceVersions(Map<String, Integer> serviceToVersions, String service,  Integer version){
-        boolean change = false
-        log.debug("Handling service version <{}:{}>", service, version)
-        if (serviceToVersions.containsKey(service)){
-            log.debug("Entry already added, checking versions ...")
-            change = serviceToVersions.get(service).intValue() < version ? true : false;
-        } else {
-            change = true;
-        }
-        if (change){
-            log.debug("Adding / updating service version <{}:{}>", service, version)
-            serviceToVersions.put(service, version);
-        }
-    }
+  }
 
-    private def Map<String, String> collectConfigPropertiesForService(String service, Integer tag){
-        def baseUri = ambari.getUri();
-        def path =  "${ambari.getUri()}" + "clusters/${getClusterName()}/configurations"
-        def String configPropRawJson = ambari.get(path: "$path", query: ['type': "$service", 'tag':"$tag"]).data.text
-        Map<String, String> props = slurper.parseText(configPropRawJson).items.collectEntries{it -> it.properties}
-        return props
+  private def processServiceVersions(Map<String, Integer> serviceToVersions, String service, Integer version) {
+    boolean change = false
+    log.debug("Handling service version <{}:{}>", service, version)
+    if (serviceToVersions.containsKey(service)) {
+      log.debug("Entry already added, checking versions ...")
+      change = serviceToVersions.get(service).intValue() < version ? true : false;
+    } else {
+      change = true;
     }
+    if (change) {
+      log.debug("Adding / updating service version <{}:{}>", service, version)
+      serviceToVersions.put(service, version);
+    }
+  }
+
+  private def Map<String, String> collectConfigPropertiesForService(String service, Integer tag) {
+    Map<String, String> serviceConfigProperties
+
+    def String resourcePathPart = "clusters/${getClusterName()}/configurations"
+    def queryPart = ['type': "$service", 'tag': "$tag"]
+    def Map resourceRequestMap = getResourceRequestMap(resourcePathPart, queryPart)
+
+    def resourceObject = getResource(resourceRequestMap);
+    if (resourceObject) {
+      serviceConfigProperties = resourceObject.items?.collectEntries { it -> it.properties }
+    } else {
+      log.debug("No resource object has been returned for the resource request map: {}", resourceRequestMap)
+    }
+    return serviceConfigProperties
+  }
+
+  private Map<String, ?> getResourceRequestMap(String path, Map<String, String> queryParams) {
+    def Map requestMap = [:]
+    if (queryParams) {
+      requestMap = ['path': "${ambari.getUri()}" + path, 'query': queryParams]
+    } else {
+      requestMap = ['path': "${ambari.getUri()}" + path]
+    }
+    return requestMap
+  }
+
+  private def getResource(Map resourceRequestMap) {
+    def slurpedResource;
+    def rawResource = ambari.get(resourceRequestMap)?.data?.text
+    if (!rawResource) {
+      log.debug("No resource returned for the resource request map: {}", resourceRequestMap)
+    } else {
+      slurpedResource = slurper.parseText(rawResource);
+    }
+    return slurpedResource;
+  }
 
 
-    private def getAllResources(resourceName, fields) {
-        slurp("clusters/${getClusterName()}/$resourceName", "$fields/*")
+  private def getAllResources(resourceName, fields) {
+    slurp("clusters/${getClusterName()}/$resourceName", "$fields/*")
   }
 
   /**
