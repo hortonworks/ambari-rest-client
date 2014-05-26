@@ -16,9 +16,7 @@
  * limitations under the License.
  */
 package com.sequenceiq.ambari.client
-
 import groovy.json.JsonSlurper
-import groovy.util.logging.Log4j
 import groovy.util.logging.Slf4j
 import groovyx.net.http.HttpResponseDecorator
 import groovyx.net.http.HttpResponseException
@@ -454,15 +452,6 @@ class AmbariClientTest extends Specification {
 //        expect:
         // a map is returned with service names as keys and related configuration maps as values
 
-
-    }
-
-    def "test"(){
-        expect:
-        def myCli = new AmbariClient('localhost','49178', 'admin', 'admin')
-        def mymap = myCli.getServiceConfigMap()
-
-       log.info("Final map: {}", mymap.get("global"))
 
     }
 }
