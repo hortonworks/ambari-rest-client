@@ -22,7 +22,6 @@ import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
-import org.apache.http.NoHttpResponseException
 
 /**
  * Basic client to send requests to the Ambari server.
@@ -350,11 +349,7 @@ class AmbariClient {
    * @return status
    */
   def String healthCheck() {
-    try {
-      ambari.get(path: "check").data
-    } catch (NoHttpResponseException e) {
-      throw new AmbariConnectionException("Cannot connect to ambari server: ${ambari.getUri()}");
-    }
+    ambari.get(path: "check").data
   }
 
   /**
@@ -522,8 +517,6 @@ class AmbariClient {
     def result = new HashMap()
     try {
       result = slurper.parseText(getRequest(path, fields))
-    } catch (NoHttpResponseException ne) {
-      throw new AmbariConnectionException("Cannot connect to ambari server: $baseUri");
     } catch (e) {
       log.error("Error occurred during GET request to $baseUri/$path", e)
     }
