@@ -19,6 +19,7 @@ package com.sequenceiq.ambari.client
 
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+import groovy.util.logging.Slf4j
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 import org.slf4j.Logger
@@ -27,9 +28,9 @@ import org.slf4j.LoggerFactory
 /**
  * Basic client to send requests to the Ambari server.
  */
+@Slf4j
 class AmbariClient {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(AmbariClient.class)
   private static final int PAD = 30
   private static final int OK_RESPONSE = 200
   boolean debugEnabled = false;
@@ -384,8 +385,58 @@ class AmbariClient {
     return getRequest("blueprints/$id", "host_groups,Blueprints")
   }
 
-  private def getAllResources(resourceName, fields) {
-    slurp("clusters/${getClusterName()}/$resourceName", "$fields/*")
+/**
+ * Returns a map with service configurations. The keys are the service names, values are maps with <propertyName, propertyValue> entries
+ *
+ * @return a Map with entries of format <servicename, Map<property, value>>
+ */
+def Map<String, Map<String,String>> getServiceConfigMap(){
+    def Map<String, Integer> serviceToTags = new HashMap<>()
+
+    //get services and last versions configurations
+    slurp("clusters/${getClusterName()}/configurations", "").items.collect{
+                        object ->
+                        // selecting the latest versions
+                        processServiceVersions(serviceToTags, object.type, Integer.valueOf(object.tag))
+    }
+    if(log.isDebugEnabled()){log.debug("Services to latest versions {}",serviceToTags)}
+
+    // collect properties for every service
+    def finalMap = serviceToTags.collectEntries{
+                        entry ->
+                        // collect config props for every service
+                        def propsMap = collectConfigPropertiesForService(entry.getKey(), entry.getValue())
+                        // put them in the final map
+                        [(entry.key) : propsMap]
+     }
+    return finalMap
+    }
+    private def processServiceVersions(Map<String, Integer> serviceToVersions, String service,  Integer version){
+        boolean change = false
+        log.debug("Handling service version <{}:{}>", service, version)
+        if (serviceToVersions.containsKey(service)){
+            log.debug("Entry already added, checking versions ...")
+            change = serviceToVersions.get(service).intValue() < version ? true : false;
+        } else {
+            change = true;
+        }
+        if (change){
+            log.debug("Adding / updating service version <{}:{}>", service, version)
+            serviceToVersions.put(service, version);
+        }
+    }
+
+    private def Map<String, String> collectConfigPropertiesForService(String service, Integer tag){
+        def baseUri = ambari.getUri();
+        def path =  "${ambari.getUri()}" + "clusters/${getClusterName()}/configurations"
+        def String configPropRawJson = ambari.get(path: "$path", query: ['type': "$service", 'tag':"$tag"]).data.text
+        Map<String, String> props = slurper.parseText(configPropRawJson).items.collectEntries{it -> it.properties}
+        return props
+    }
+
+
+    private def getAllResources(resourceName, fields) {
+        slurp("clusters/${getClusterName()}/$resourceName", "$fields/*")
   }
 
   /**
@@ -419,7 +470,7 @@ class AmbariClient {
     try {
       result = slurper.parseText(getRequest(path, fields))
     } catch (e) {
-      LOGGER.error("Error occurred during GET request to $baseUri/$path", e)
+      log.error("Error occurred during GET request to $baseUri/$path", e)
     }
     return result
   }
