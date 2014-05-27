@@ -22,6 +22,8 @@ import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
+import org.apache.http.NoHttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 /**
  * Basic client to send requests to the Ambari server.
@@ -518,6 +520,10 @@ class AmbariClient {
     try {
       result = slurper.parseText(getRequest(path, fields))
     } catch (e) {
+      if (e instanceof NoHttpResponseException || e instanceof ConnectException || e instanceof ClientProtocolException ||
+        e instanceof UnknownHostException || (e instanceof HttpResponseException && e.message == "Bad credentials")) {
+        throw new AmbariConnectionException("Cannot connect to Ambari $baseUri")
+      }
       log.error("Error occurred during GET request to $baseUri/$path", e)
     }
     return result
