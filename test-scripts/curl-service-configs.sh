@@ -11,7 +11,7 @@ RESOURCE_BASE=http://$AMBARI_HOST:$AMBARI_PORT/$AMBARI_REST_CONTEXT_ROOT
 
 # get clustername
 clusters() {
-  curl -u $AMBARI_USER:$AMBARI_PWD $RESOURCE_BASE/clusters | jq '.items[0].Clusters.cluster_name'
+  curl -u $AMBARI_USER:$AMBARI_PWD $RESOURCE_BASE/clusters #| jq '.items[0].Clusters.cluster_name'
 }
 
 serviceConfigs(){
