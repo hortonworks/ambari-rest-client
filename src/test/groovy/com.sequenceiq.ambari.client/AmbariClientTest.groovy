@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package com.sequenceiq.ambari.client
+
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.HttpResponseDecorator
@@ -422,5 +423,14 @@ class AmbariClientTest extends Specification {
 
     then:
     [:] == result
+  }
+
+  def "test"() {
+    expect:
+    def myCli = new AmbariClient('localhost', '49178', 'admin', 'admin')
+    def mymap = myCli.getServiceConfigMap()
+
+    log.info("Final map: {}", mymap.get("yarn-site"))
+
   }
 }

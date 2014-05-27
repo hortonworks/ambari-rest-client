@@ -490,13 +490,23 @@ class AmbariClient {
    */
   private def getResource(Map resourceRequestMap) {
     def slurpedResource;
-    def rawResource = ambari.get(resourceRequestMap)?.data?.text
-    if (!rawResource) {
-      log.debug("No resource returned for the resource request map: {}", resourceRequestMap)
-    } else {
-      slurpedResource = slurper.parseText(rawResource);
+    try {
+      def rawResource = ambari.get(resourceRequestMap)?.data?.text
+      if (!rawResource) {
+        log.debug("No resource returned for the resource request map: {}", resourceRequestMap)
+      } else {
+        slurpedResource = slurper.parseText(rawResource);
+      }
+    } catch (e) {
+      def clazz = e.class
+      log.error("Error occurred during GET request to {}, exception: ", resourceRequestMap.get('path'), e)
+      if (clazz == NoHttpResponseException.class || clazz == ConnectException.class
+        || clazz == ClientProtocolException.class || clazz == NoRouteToHostException.class
+        || clazz == UnknownHostException || (clazz == HttpResponseException.class && e.message == "Bad credentials")) {
+        throw new AmbariConnectionException("Cannot connect to Ambari $baseUri")
+      }
+      return slurpedResource;
     }
-    return slurpedResource;
   }
 
 
