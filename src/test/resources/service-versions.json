@@ -1,8 +1,8 @@
 {
-  "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations",
+  "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations",
   "items" : [
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=capacity-scheduler&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=capacity-scheduler&tag=1",
       "tag" : "1",
       "type" : "capacity-scheduler",
       "Config" : {
@@ -10,7 +10,7 @@
       }
     },
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=core-site&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=core-site&tag=1",
       "tag" : "1",
       "type" : "core-site",
       "Config" : {
@@ -18,7 +18,7 @@
       }
     },
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=global&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=global&tag=1",
       "tag" : "1",
       "type" : "global",
       "Config" : {
@@ -26,7 +26,7 @@
       }
     },
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=hadoop-policy&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=hadoop-policy&tag=1",
       "tag" : "1",
       "type" : "hadoop-policy",
       "Config" : {
@@ -34,7 +34,7 @@
       }
     },
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=hdfs-log4j&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=hdfs-log4j&tag=1",
       "tag" : "1",
       "type" : "hdfs-log4j",
       "Config" : {
@@ -42,7 +42,7 @@
       }
     },
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=hdfs-site&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=hdfs-site&tag=1",
       "tag" : "1",
       "type" : "hdfs-site",
       "Config" : {
@@ -50,7 +50,7 @@
       }
     },
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=mapred-queue-acls&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=mapred-queue-acls&tag=1",
       "tag" : "1",
       "type" : "mapred-queue-acls",
       "Config" : {
@@ -58,7 +58,7 @@
       }
     },
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=mapred-site&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=mapred-site&tag=1",
       "tag" : "1",
       "type" : "mapred-site",
       "Config" : {
@@ -66,7 +66,7 @@
       }
     },
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=yarn-log4j&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=yarn-log4j&tag=1",
       "tag" : "1",
       "type" : "yarn-log4j",
       "Config" : {
@@ -74,7 +74,7 @@
       }
     },
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=yarn-site&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=yarn-site&tag=1",
       "tag" : "1",
       "type" : "yarn-site",
       "Config" : {
@@ -82,7 +82,7 @@
       }
     },
     {
-      "href" : "http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/configurations?type=zookeeper-log4j&tag=1",
+      "href" : "http://localhost:49178/api/v1/clusters/MySingleNodeCluster/configurations?type=zookeeper-log4j&tag=1",
       "tag" : "1",
       "type" : "zookeeper-log4j",
       "Config" : {
