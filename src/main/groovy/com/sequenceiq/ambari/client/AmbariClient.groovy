@@ -531,7 +531,7 @@ class AmbariClient {
       result = slurper.parseText(getRequest(path, fields))
     } catch (e) {
       def clazz = e.class
-      log.error("Error occurred during GET request to $baseUri/$path", e)
+      log.error("Error occurred during GET request to $baseUri$path", e)
       if (clazz == NoHttpResponseException.class || clazz == ConnectException.class
         || clazz == ClientProtocolException.class || clazz == NoRouteToHostException.class
         || clazz == UnknownHostException || (clazz == HttpResponseException.class && e.message == "Bad credentials")) {
