@@ -270,6 +270,16 @@ class AmbariClient {
   }
 
   /**
+   * Returns the install progress state.
+   *
+   * @param request request id; default is 1
+   * @return progress in percentage
+   */
+  def BigDecimal getInstallProgress(request = 1) {
+    getAllResources("requests/$request", "Requests").Requests?.progress_percent
+  }
+
+  /**
    * Returns a pre-formatted task list.
    *
    * @param request request id; default is 1
@@ -489,8 +499,8 @@ class AmbariClient {
   }
 
 
-  private def getAllResources(resourceName, fields) {
-    slurp("clusters/${getClusterName()}/$resourceName", "$fields/*")
+  private def getAllResources(resourceName, fields = "") {
+    slurp("clusters/${getClusterName()}/$resourceName", fields ? "$fields/*" : "")
   }
 
   /**
@@ -516,6 +526,7 @@ class AmbariClient {
   }
 
   private def slurp(path, fields = "") {
+
     def fieldsMap = fields ? ['fields': fields] : [:]
     def Map resourceReqMap = getResourceRequestMap(path, fieldsMap)
     def result = getResource(resourceReqMap)
