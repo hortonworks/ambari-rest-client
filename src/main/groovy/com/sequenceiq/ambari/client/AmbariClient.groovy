@@ -561,6 +561,7 @@ class AmbariClient {
   }
 
   private def slurp(path, fields = "") {
+
     def fieldsMap = fields ? ['fields': fields] : [:]
     def Map resourceReqMap = getResourceRequestMap(path, fieldsMap)
     def result = getResource(resourceReqMap)
