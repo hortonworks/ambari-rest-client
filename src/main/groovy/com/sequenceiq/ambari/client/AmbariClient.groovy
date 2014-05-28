@@ -91,10 +91,12 @@ class AmbariClient {
    * @param id id of the blueprint
    * @return true if exists false otherwise
    */
-  def boolean doesBlueprintExists(String id) {
+  def boolean doesBlueprintExist(String id) {
     def result = false
     try {
-      result = ambari.get(path: "blueprints/$id", query: ['fields': "Blueprints"]).status == OK_RESPONSE
+      def Map resourceRequest = getResourceRequestMap("blueprints/$id", ['fields': "Blueprints"])
+      def jsonResponse = getResource(resourceRequest)
+      result = !(jsonResponse.status)
     } catch (e) {
       log.info("Blueprint does not exist", e)
     }
@@ -476,7 +478,7 @@ class AmbariClient {
     return finalMap
   }
 
-  protected def processServiceVersions(Map<String, Integer> serviceToVersions, String service, Integer version) {
+  private def processServiceVersions(Map<String, Integer> serviceToVersions, String service, Integer version) {
     boolean change = false
     log.debug("Handling service version <{}:{}>", service, version)
     if (serviceToVersions.containsKey(service)) {
@@ -491,7 +493,7 @@ class AmbariClient {
     }
   }
 
-  protected def Map<String, String> collectConfigPropertiesForService(String service, Integer tag) {
+  private def Map<String, String> collectConfigPropertiesForService(String service, Integer tag) {
     Map<String, String> serviceConfigProperties
 
     def Map resourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations",
