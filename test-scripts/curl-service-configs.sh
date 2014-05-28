@@ -29,6 +29,14 @@ serviceConfig() {
 
 }
 
+blueprints(){
+  curl -u $AMBARI_USER:$AMBARI_PWD "$RESOURCE_BASE/blueprints/single-node-hdfs-yarn"
+}
+
+hosts(){
+  curl -u $AMBARI_USER:$AMBARI_PWD "$RESOURCE_BASE/hosts?fields=Hosts"
+}
+
 test() {
 #  curl -u $AMBARI_USER:$AMBARI_PWD "$RESOURCE_BASE/clusters/MySingleNodeCluster/configurations?type=global&tag=1"
 :

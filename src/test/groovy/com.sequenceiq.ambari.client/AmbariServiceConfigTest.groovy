@@ -7,34 +7,11 @@ import spock.lang.Specification
 @Slf4j
 class AmbariServiceConfigTest extends Specification {
 
-  enum ResourcePath {
-    CLUSTER("http://localhost:8080/api/v1/clusters"),
-    CONFIGURATIONS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/configurations")
-
-    String id;
-
-    ResourcePath(String id) {
-      this.id = id
-    }
-
-    public id() {
-      return id
-    }
-  }
-
-  enum Scenario {
+  private enum Scenario {
     DEFAULT, MULTIPLE_VERSIONS
   }
 
   def ambariClient = new AmbariClient()
-
-  def setupSpec() {
-    log.debug("Setup spec ...")
-  }
-
-  def setup() {
-    log.debug("Setup...")
-  }
 
   def "test request service configurations map"() {
     given:
@@ -44,8 +21,8 @@ class AmbariServiceConfigTest extends Specification {
     Map<String, Map<String, String>> serviceConfigMap = ambariClient.getServiceConfigMap();
 
     then:
-    assert serviceConfigMap != [:]
-    assert serviceConfigMap.get("yarn-site") != [:]
+    serviceConfigMap != [:]
+    serviceConfigMap.get("yarn-site") != [:]
   }
 
   def "test request service configurations with multiple versions"() {
@@ -56,8 +33,8 @@ class AmbariServiceConfigTest extends Specification {
     Map<String, Map<String, String>> serviceConfigMap = ambariClient.getServiceConfigMap();
 
     then:
-    assert serviceConfigMap != [:]
-    assert serviceConfigMap.get("yarn-site") != [:]
+    serviceConfigMap != [:]
+    serviceConfigMap.get("yarn-site") != [:]
   }
 
   // ---- helper method definitions
@@ -82,10 +59,10 @@ class AmbariServiceConfigTest extends Specification {
   def private String selectResponseJson(Map resourceRequestMap) {
     def thePath = resourceRequestMap.get("path");
     def query = resourceRequestMap.get("query");
-    def json
-    if (thePath == ResourcePath.CLUSTER.id()) {
+    def json = null
+    if (thePath == TestResources.CLUSTERS.uri()) {
       json = "clusters.json"
-    } else if (thePath == ResourcePath.CONFIGURATIONS.id()) {
+    } else if (thePath == TestResources.CONFIGURATIONS.uri()) {
       if (query) {
         json = "service-config.json"
       } else {
