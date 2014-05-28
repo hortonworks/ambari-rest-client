@@ -272,6 +272,16 @@ class AmbariClient {
   }
 
   /**
+   * Returns the install progress state.
+   *
+   * @param request request id; default is 1
+   * @return progress in percentage
+   */
+  def BigDecimal getInstallProgress(request = 1) {
+    getAllResources("requests/$request", "Requests").Requests?.progress_percent
+  }
+
+  /**
    * Returns a pre-formatted task list.
    *
    * @param request request id; default is 1
@@ -485,8 +495,8 @@ class AmbariClient {
   }
 
 
-  private def getAllResources(resourceName, fields) {
-    slurp("clusters/${getClusterName()}/$resourceName", "$fields/*")
+  private def getAllResources(resourceName, fields = "") {
+    slurp("clusters/${getClusterName()}/$resourceName", fields ? "$fields/*" : "")
   }
 
   /**
@@ -520,11 +530,13 @@ class AmbariClient {
     try {
       result = slurper.parseText(getRequest(path, fields))
     } catch (e) {
-      if (e instanceof NoHttpResponseException || e instanceof ConnectException || e instanceof ClientProtocolException ||
-        e instanceof UnknownHostException || (e instanceof HttpResponseException && e.message == "Bad credentials")) {
+      def clazz = e.class
+      log.error("Error occurred during GET request to $baseUri/$path", e)
+      if (clazz == NoHttpResponseException.class || clazz == ConnectException.class
+        || clazz == ClientProtocolException.class || clazz == NoRouteToHostException.class
+        || clazz == UnknownHostException || (clazz == HttpResponseException.class && e.message == "Bad credentials")) {
         throw new AmbariConnectionException("Cannot connect to Ambari $baseUri")
       }
-      log.error("Error occurred during GET request to $baseUri/$path", e)
     }
     return result
   }

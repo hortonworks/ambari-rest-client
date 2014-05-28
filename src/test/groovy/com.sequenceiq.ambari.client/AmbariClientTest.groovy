@@ -423,35 +423,4 @@ class AmbariClientTest extends Specification {
     then:
     [:] == result
   }
-
-    def "test get service configurations map" (){
-        //given:
-        // a cluster with running services
-
-
-
-
-        // mock the first response (retrieving clusters)
-        /*def clustersRequest = [path: "clusters", query: [fields: "Cluster"]]
-        def mockItems = Arrays.asList([Clusters: [cluster_name: "cluster1"]])
-        def mockResponse = ["items" : mockItems]
-
-        rest.get(clustersRequest) >> decorator
-        decorator.data >> [text: "map"]
-        slurper.parseText("map") >> mockResponse
-*/
-
-
-        // mock the second request/response (retrieving service configurations)
-
-
-        //when:
-        // the service configs are retrieved
-        //def serviceConfigMap = ambari.getServiceConfigMap()
-
-//        expect:
-        // a map is returned with service names as keys and related configuration maps as values
-
-
-    }
 }
