@@ -1,22 +1,17 @@
 package com.sequenceiq.ambari.client
 
-import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
-import spock.lang.Specification
 
 @Slf4j
-class AmbariClientBlueprintsTest extends Specification {
+class AmbariBlueprintsTest extends AbstractAmbariClientTest {
 
   private enum Scenario {
     CLUSTERS, NO_CLUSTERS, BLUEPRINT_EXISTS, NO_BLUEPRINT, HOSTS, NO_HOSTS
   }
 
-  def ambari = new AmbariClient()
-
-
   def "test get the name of the cluster"() {
     given:
-    mockResponses(Scenario.CLUSTERS)
+    mockResponses(Scenario.CLUSTERS.name())
 
     when:
     def result = ambari.getClusterName()
@@ -27,7 +22,7 @@ class AmbariClientBlueprintsTest extends Specification {
 
   def "test get the name when there is no cluster"() {
     given:
-    mockResponses(Scenario.NO_CLUSTERS)
+    mockResponses(Scenario.NO_CLUSTERS.name())
 
     when:
     def result = ambari.getClusterName()
@@ -38,7 +33,7 @@ class AmbariClientBlueprintsTest extends Specification {
 
   def "test blueprint doesn't exist"() {
     given:
-    mockResponses(Scenario.NO_BLUEPRINT)
+    mockResponses(Scenario.NO_BLUEPRINT.name())
 
     when:
     def result = ambari.doesBlueprintExist("inexistent-blueprint")
@@ -49,7 +44,7 @@ class AmbariClientBlueprintsTest extends Specification {
 
   def "test blueprint exists"() {
     given:
-    mockResponses(Scenario.BLUEPRINT_EXISTS)
+    mockResponses(Scenario.BLUEPRINT_EXISTS.name())
 
     when:
     def result = ambari.doesBlueprintExist("single-node-hdfs-yarn")
@@ -60,7 +55,7 @@ class AmbariClientBlueprintsTest extends Specification {
 
   def "test get blueprint as map"() {
     given:
-    mockResponses(Scenario.BLUEPRINT_EXISTS)
+    mockResponses(Scenario.BLUEPRINT_EXISTS.name())
 
     when:
     def response = ambari.getBlueprintMap("single-node-hdfs-yarn")
@@ -73,7 +68,7 @@ class AmbariClientBlueprintsTest extends Specification {
 
   def "test get blueprint as map when there's no blueprint"() {
     given:
-    mockResponses(Scenario.NO_BLUEPRINT)
+    mockResponses(Scenario.NO_BLUEPRINT.name())
     when:
     def response = ambari.getBlueprintMap("inexistent-blueprint")
 
@@ -83,7 +78,7 @@ class AmbariClientBlueprintsTest extends Specification {
 
   def "test get host groups"() {
     given:
-    mockResponses(Scenario.BLUEPRINT_EXISTS)
+    mockResponses(Scenario.BLUEPRINT_EXISTS.name())
 
     when:
     def result = ambari.getHostGroups("single-node-hdfs-yarn")
@@ -94,7 +89,7 @@ class AmbariClientBlueprintsTest extends Specification {
 
   def "test get host groups for no groups"() {
     given:
-    mockResponses(Scenario.NO_BLUEPRINT)
+    mockResponses(Scenario.NO_BLUEPRINT.name())
 
     when:
     def result = ambari.getHostGroups("inexistent-blueprint")
@@ -105,7 +100,7 @@ class AmbariClientBlueprintsTest extends Specification {
 
   def "test get host names"() {
     given:
-    mockResponses(Scenario.HOSTS)
+    mockResponses(Scenario.HOSTS.name())
 
     when:
     def result = ambari.getHostNames()
@@ -117,7 +112,7 @@ class AmbariClientBlueprintsTest extends Specification {
 
   def "test get host names for empty result"() {
     given:
-    mockResponses(Scenario.NO_HOSTS)
+    mockResponses(Scenario.NO_HOSTS.name())
 
     when:
     def result = ambari.getHostNames()
@@ -127,18 +122,10 @@ class AmbariClientBlueprintsTest extends Specification {
   }
 
 
-  def private mockResponses(Scenario scenario) {
-    // mocking the getResource method of the class being tested
-    ambari.metaClass.getResource = { Map resourceRequestMap ->
-      String jsonFileName = selectResponseJson(resourceRequestMap, scenario)
-      String jsonAsText = getClass().getClassLoader().getResourceAsStream(jsonFileName).text
-      return new JsonSlurper().parseText(jsonAsText)
-    }
-  }
-
-  def private String selectResponseJson(Map resourceRequestMap, Scenario scenario) {
+  def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
     def thePath = resourceRequestMap.get("path");
     def query = resourceRequestMap.get("query");
+    def Scenario scenario = Scenario.valueOf(scenarioStr)
     def json = null
     if (thePath == TestResources.CLUSTERS.uri()) {
       switch (scenario) {
