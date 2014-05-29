@@ -205,6 +205,7 @@ class AmbariClient {
   def void addDefaultBlueprints() throws HttpResponseException {
     addBlueprint(getResourceContent("blueprints/multi-node-hdfs-yarn"))
     addBlueprint(getResourceContent("blueprints/single-node-hdfs-yarn"))
+    addBlueprint(getResourceContent("blueprints/lambda-architecture"))
   }
 
   /**
