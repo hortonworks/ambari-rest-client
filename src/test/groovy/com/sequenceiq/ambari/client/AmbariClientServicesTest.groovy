@@ -5,7 +5,7 @@ import groovy.util.logging.Slf4j
 @Slf4j
 class AmbariClientServicesTest extends AbstractAmbariClientTest {
 
-  private enum Scenario implements ScenarioMarker {
+  private enum Scenario {
     SERVICES, NO_SERVICES, NO_SERVICE_COMPONENTS
   }
 
@@ -81,12 +81,12 @@ class AmbariClientServicesTest extends AbstractAmbariClientTest {
       json = "clusters.json"
     } else if (thePath == TestResources.SERVICES.uri()) {
       switch (scenario) {
-        case Scenario.SERVICES: json = "service-components.json"
+        case Scenario.SERVICES: json = "services.json"
           break
         case Scenario.NO_SERVICES: json = "no-services.json"
           break
         case Scenario.NO_SERVICE_COMPONENTS:
-          json = "service-components.json"
+          json = "services.json"
           break
       }
     } else if (thePath == TestResources.SERVICE_COMPONENTS.uri()) {
