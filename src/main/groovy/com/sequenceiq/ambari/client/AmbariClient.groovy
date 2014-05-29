@@ -186,7 +186,7 @@ class AmbariClient {
         def grouped = groups.groupBy { it.cardinality }
         if (grouped["1"].size() == 1) {
           result << [(grouped["1"][0]["name"]): [hostNames[0]]]
-          result << [(grouped["2"][0]["name"]): [hostNames.subList(1, hostSize)]]
+          result << [(grouped["2"][0]["name"]): hostNames.subList(1, hostSize)]
         }
       }
     }
