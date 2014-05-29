@@ -1,22 +1,17 @@
 package com.sequenceiq.ambari.client
 
-import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
-import spock.lang.Specification
 
 @Slf4j
-class AmbariClientTasksTest extends Specification {
+class AmbariTasksTest extends AbstractAmbariClientTest {
 
   private enum Scenario {
     TASKS, NO_TASKS
   }
 
-  def ambari = new AmbariClient()
-
-
   def "test get task as map"() {
     given:
-    mockResponses(Scenario.TASKS)
+    mockResponses(Scenario.TASKS.name())
 
     when:
     def result = ambari.getTaskMap()
@@ -49,7 +44,7 @@ class AmbariClientTasksTest extends Specification {
 
   def "test get task as map for no tasks"() {
     given:
-    mockResponses(Scenario.NO_TASKS)
+    mockResponses(Scenario.NO_TASKS.name())
 
     when:
     def result = ambari.getTaskMap()
@@ -58,18 +53,9 @@ class AmbariClientTasksTest extends Specification {
     [:] == result
   }
 
-
-  def private mockResponses(Scenario scenario) {
-    // mocking the getResource method of the class being tested
-    ambari.metaClass.getResource = { Map resourceRequestMap ->
-      String jsonFileName = selectResponseJson(resourceRequestMap, scenario)
-      String jsonAsText = getClass().getClassLoader().getResourceAsStream(jsonFileName).text
-      return new JsonSlurper().parseText(jsonAsText)
-    }
-  }
-
-  def private String selectResponseJson(Map resourceRequestMap, Scenario scenario) {
+  def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
     def thePath = resourceRequestMap.get("path");
+    def Scenario scenario = Scenario.valueOf(scenarioStr)
 
     def json = null
     if (thePath == TestResources.CLUSTERS.uri()) {

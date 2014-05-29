@@ -3,7 +3,7 @@ package com.sequenceiq.ambari.client
 import groovy.util.logging.Slf4j
 
 @Slf4j
-class AmbariClientServicesTest extends AbstractAmbariClientTest {
+class AmbariServicesTest extends AbstractAmbariClientTest {
 
   private enum Scenario {
     SERVICES, NO_SERVICES, NO_SERVICE_COMPONENTS
