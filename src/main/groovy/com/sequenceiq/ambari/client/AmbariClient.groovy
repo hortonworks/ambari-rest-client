@@ -184,9 +184,11 @@ class AmbariClient {
         result = groups.collectEntries { [(it.name): [hostNames[i++]]] }
       } else if (groupSize == 2 && hostSize > 2) {
         def grouped = groups.groupBy { it.cardinality }
-        if (grouped["1"].size() == 1) {
-          result << [(grouped["1"][0]["name"]): [hostNames[0]]]
-          result << [(grouped["2"][0]["name"]): hostNames.subList(1, hostSize)]
+        def group1 = grouped["1"]
+        def group2 = grouped["2"]
+        if (group1 && group1.size() == 1 && group2 && groupe2.size() == 1) {
+          result << [(group1[0]["name"]): [hostNames[0]]]
+          result << [(group2[0]["name"]): hostNames.subList(1, hostSize)]
         }
       }
     }
