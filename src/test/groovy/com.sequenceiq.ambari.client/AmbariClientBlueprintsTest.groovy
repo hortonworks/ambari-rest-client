@@ -5,7 +5,7 @@ import groovy.util.logging.Slf4j
 import spock.lang.Specification
 
 @Slf4j
-class AmbariClientTestX extends Specification {
+class AmbariClientBlueprintsTest extends Specification {
 
   private enum Scenario {
     CLUSTERS, NO_CLUSTERS, BLUEPRINT_EXISTS, NO_BLUEPRINT, HOSTS, NO_HOSTS
@@ -127,7 +127,7 @@ class AmbariClientTestX extends Specification {
   }
 
 
-  def mockResponses(Scenario scenario) {
+  def private mockResponses(Scenario scenario) {
     // mocking the getResource method of the class being tested
     ambari.metaClass.getResource = { Map resourceRequestMap ->
       String jsonFileName = selectResponseJson(resourceRequestMap, scenario)
