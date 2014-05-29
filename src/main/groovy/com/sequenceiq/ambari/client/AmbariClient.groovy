@@ -166,6 +166,34 @@ class AmbariClient {
   }
 
   /**
+   * Recommends a host - host group assignment based on the provided blueprint
+   * and the available hosts.
+   *
+   * @param blueprint id of the blueprint
+   * @return recommended assignments
+   */
+  def Map<String, List<String>> recommendAssignments(String blueprint) {
+    def result = [:]
+    def hostNames = getHostNames().keySet() as List
+    def groups = getBlueprint(blueprint).host_groups?.collect { ["name": it.name, "cardinality": it.cardinality] }
+    if (hostNames && groups) {
+      def groupSize = groups.size()
+      def hostSize = hostNames.size()
+      if (hostSize == groupSize) {
+        def i = 0
+        result = groups.collectEntries { [(it.name): [hostNames[i++]]] }
+      } else if (groupSize == 2 && hostSize > 2) {
+        def grouped = groups.groupBy { it.cardinality }
+        if (grouped["1"].size() == 1) {
+          result << [(grouped["1"][0]["name"]): [hostNames[0]]]
+          result << [(grouped["2"][0]["name"]): [hostNames.subList(1, hostSize)]]
+        }
+      }
+    }
+    return result
+  }
+
+  /**
    * Returns the name of the host groups for a given blueprint.
    *
    * @param blueprint id of the blueprint
@@ -198,7 +226,7 @@ class AmbariClient {
   }
 
   /**
-   * Adds 2 default blueprints.
+   * Adds the default blueprints.
    *
    * @throws HttpResponseException in case of error
    */
@@ -206,6 +234,7 @@ class AmbariClient {
     addBlueprint(getResourceContent("blueprints/multi-node-hdfs-yarn"))
     addBlueprint(getResourceContent("blueprints/single-node-hdfs-yarn"))
     addBlueprint(getResourceContent("blueprints/lambda-architecture"))
+    addBlueprint(getResourceContent("blueprints/warmup"))
   }
 
   /**
