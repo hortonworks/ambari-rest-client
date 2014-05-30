@@ -50,10 +50,10 @@ class AmbariClient {
    * @param user username of the Ambari server; default is admin
    * @param password password fom the Ambari server; default is admin
    */
-  AmbariClient(host = '172.18.0.2', port = '8080', user = 'admin', password = 'admin') {
+  AmbariClient(host = 'localhost', port = '8080', user = 'admin', password = 'admin') {
     ambari = new RESTClient("http://${host}:${port}/api/v1/" as String)
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
-    ambari.headers['X-Requested-By'] = 'X-Requested-By'
+    ambari.headers['X-Requested-By'] = 'ambari'
   }
 
   /**
