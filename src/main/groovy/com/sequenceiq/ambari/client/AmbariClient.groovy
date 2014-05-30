@@ -24,6 +24,9 @@ import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 import org.apache.http.NoHttpResponseException
 import org.apache.http.client.ClientProtocolException
+import java.net.ConnectException
+import java.net.NoRouteToHostException
+import java.net.UnknownHostException
 
 /**
  * Basic client to send requests to the Ambari server.
