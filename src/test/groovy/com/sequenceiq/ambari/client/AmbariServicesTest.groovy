@@ -103,4 +103,9 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
     return json
   }
 
+  def "test testing"() {
+    expect:
+    ambari.stopAllServices()
+  }
+
 }

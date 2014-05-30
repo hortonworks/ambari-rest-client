@@ -20,6 +20,7 @@ package com.sequenceiq.ambari.client
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
+import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 import org.apache.http.NoHttpResponseException
@@ -49,10 +50,10 @@ class AmbariClient {
    * @param user username of the Ambari server; default is admin
    * @param password password fom the Ambari server; default is admin
    */
-  AmbariClient(host = 'localhost', port = '8080', user = 'admin', password = 'admin') {
+  AmbariClient(host = '172.18.0.2', port = '8080', user = 'admin', password = 'admin') {
     ambari = new RESTClient("http://${host}:${port}/api/v1/" as String)
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
-    ambari.headers['X-Requested-By'] = 'ambari'
+    ambari.headers['X-Requested-By'] = 'X-Requested-By'
   }
 
   /**
@@ -488,6 +489,31 @@ class AmbariClient {
     return finalMap
   }
 
+  def startAllServices() {
+    log.debug("Starting all services ...")
+    manageAllServices("Start All Services", "STARTED")
+  }
+
+  def stopAllServices() {
+    log.debug("Stopping all services ...")
+    manageAllServices("Stop All Services", "INSTALLED")
+  }
+
+  def private manageAllServices(String context, String state) {
+    Map bodyMap = [
+      RequestInfo: [context: context],
+      ServiceInfo: [state: state]
+    ]
+    JsonBuilder builder = new JsonBuilder(bodyMap)
+    def Map<String, ?> putRequestMap = [:]
+    putRequestMap.put('requestContentType', ContentType.URLENC)
+    putRequestMap.put('path', "${ambari.getUri()}" + "clusters/${getClusterName()}/services")
+    putRequestMap.put('query', ['params/run_smoke_test': 'true'])
+    putRequestMap.put('body', builder.toPrettyString());
+
+    ambari.put(putRequestMap)
+  }
+
   private def processServiceVersions(Map<String, Integer> serviceToVersions, String service, Integer version) {
     boolean change = false
     log.debug("Handling service version <{}:{}>", service, version)
@@ -664,8 +690,8 @@ class AmbariClient {
     return raw?.data?.text
   }
 
-
   private String getResourceContent(name) {
     getClass().getClassLoader().getResourceAsStream(name)?.text
   }
+
 }

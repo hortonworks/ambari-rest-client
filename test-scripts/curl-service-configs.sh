@@ -50,6 +50,15 @@ services(){
 }
 
 test() {
-#  curl -u $AMBARI_USER:$AMBARI_PWD "$RESOURCE_BASE/clusters/MySingleNodeCluster/configurations?type=global&tag=1"
+#curl 'http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/services?params/run_smoke_test=true' -X PUT -H 'Cookie: AMBARISESSIONID=1bp9xcxtlk0rp1shus9quzjlho' -H 'Origin: http://172.18.0.2:8080' -H 'Accept-Encoding: gzip,deflate,sdch' -H 'Accept-Language: en-US,en;q=0.8,de;q=0.6,hu;q=0.4,it;q=0.2,ro;q=0.2' -H 'X-Requested-By: X-Requested-By' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36' -H 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: http://172.18.0.2:8080/' -H 'X-Requested-With: XMLHttpRequest' -H 'Connection: keep-alive' --data '{"RequestInfo": {"context" :"_PARSE_.START.ALL_SERVICES"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}' --compressed
+#curl 'http://172.18.0.2:8080/api/v1/clusters/MySingleNodeCluster/services?params/run_smoke_test=true' -X PUT -H 'Cookie: AMBARISESSIONID=1bp9xcxtlk0rp1shus9quzjlho' -H 'Origin: http://172.18.0.2:8080' -H 'Accept-Encoding: gzip,deflate,sdch' -H 'Accept-Language: en-US,en;q=0.8,de;q=0.6,hu;q=0.4,it;q=0.2,ro;q=0.2' -H 'X-Requested-By: X-Requested-By' -H 'User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.114 Safari/537.36' -H 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8' -H 'Accept: application/json, text/javascript, */*; q=0.01' -H 'Referer: http://172.18.0.2:8080/' -H 'X-Requested-With: XMLHttpRequest' -H 'Connection: keep-alive' --data '{"RequestInfo": {"context" :"_PARSE_.STOP.ALL_SERVICES"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}' --compressed
 :
+}
+
+startAll(){
+  curl --trace-ascii debugdump.txt -u $AMBARI_USER:$AMBARI_PWD "$RESOURCE_BASE/clusters/MySingleNodeCluster/services?params/run_smoke_test=true" -X PUT -H 'X-Requested-By: X-Requested-By' --data '{"RequestInfo": {"context": "Start All Services"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}' --verbose
+}
+
+stopAll(){
+  curl --trace-ascii debugdump.txt -u $AMBARI_USER:$AMBARI_PWD "$RESOURCE_BASE/clusters/MySingleNodeCluster/services?params/run_smoke_test=true"  -X PUT -H 'X-Requested-By: X-Requested-By' --data '{"RequestInfo": {"context": "Stop All Services"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}' --verbose
 }
