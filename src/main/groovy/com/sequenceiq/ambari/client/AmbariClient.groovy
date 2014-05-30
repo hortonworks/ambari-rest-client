@@ -549,7 +549,7 @@ class AmbariClient {
       if (clazz == NoHttpResponseException.class || clazz == ConnectException.class
         || clazz == ClientProtocolException.class || clazz == NoRouteToHostException.class
         || clazz == UnknownHostException.class || (clazz == HttpResponseException.class && e.message == "Bad credentials")) {
-        throw new AmbariConnectionException("Cannot connect to Ambari $baseUri")
+        throw new AmbariConnectionException("Cannot connect to Ambari ${ambari.getUri()}")
       }
       return slurpedResource;
     }
