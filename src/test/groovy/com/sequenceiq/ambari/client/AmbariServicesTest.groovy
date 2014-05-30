@@ -102,5 +102,4 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
     }
     return json
   }
-
 }
