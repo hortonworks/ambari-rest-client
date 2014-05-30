@@ -22,8 +22,6 @@ import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
-import org.apache.http.NoHttpResponseException
-import org.apache.http.client.ClientProtocolException
 
 /**
  * Basic client to send requests to the Ambari server.
@@ -93,10 +91,12 @@ class AmbariClient {
    * @param id id of the blueprint
    * @return true if exists false otherwise
    */
-  def boolean doesBlueprintExists(String id) {
+  def boolean doesBlueprintExist(String id) {
     def result = false
     try {
-      result = ambari.get(path: "blueprints/$id", query: ['fields': "Blueprints"]).status == OK_RESPONSE
+      def Map resourceRequest = getResourceRequestMap("blueprints/$id", ['fields': "Blueprints"])
+      def jsonResponse = getResource(resourceRequest)
+      result = !(jsonResponse.status)
     } catch (e) {
       log.info("Blueprint does not exist", e)
     }
@@ -478,7 +478,7 @@ class AmbariClient {
     return finalMap
   }
 
-  protected def processServiceVersions(Map<String, Integer> serviceToVersions, String service, Integer version) {
+  private def processServiceVersions(Map<String, Integer> serviceToVersions, String service, Integer version) {
     boolean change = false
     log.debug("Handling service version <{}:{}>", service, version)
     if (serviceToVersions.containsKey(service)) {
@@ -493,7 +493,7 @@ class AmbariClient {
     }
   }
 
-  protected def Map<String, String> collectConfigPropertiesForService(String service, Integer tag) {
+  private def Map<String, String> collectConfigPropertiesForService(String service, Integer tag) {
     Map<String, String> serviceConfigProperties
 
     def Map resourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations",
@@ -518,15 +518,31 @@ class AmbariClient {
     return requestMap
   }
 
+  /**
+   * Performs a GET request to the Ambari server and slurps the response as an object.
+   *
+   * @param resourceRequestMap a map holding the resource path and the query parameters
+   * @return the response of the GET call as a  JSON
+   */
   private def getResource(Map resourceRequestMap) {
     def slurpedResource;
-    def rawResource = ambari.get(resourceRequestMap)?.data?.text
-    if (!rawResource) {
-      log.debug("No resource returned for the resource request map: {}", resourceRequestMap)
-    } else {
-      slurpedResource = slurper.parseText(rawResource);
+    try {
+      def rawResource = ambari.get(resourceRequestMap)?.data?.text
+      if (!rawResource) {
+        log.debug("No resource returned for the resource request map: {}", resourceRequestMap)
+      } else {
+        slurpedResource = slurper.parseText(rawResource);
+      }
+    } catch (e) {
+      def clazz = e.class
+      log.error("Error occurred during GET request to {}, exception: ", resourceRequestMap.get('path'), e)
+      if (clazz == NoHttpResponseException.class || clazz == ConnectException.class
+        || clazz == ClientProtocolException.class || clazz == NoRouteToHostException.class
+        || clazz == UnknownHostException || (clazz == HttpResponseException.class && e.message == "Bad credentials")) {
+        throw new AmbariConnectionException("Cannot connect to Ambari $baseUri")
+      }
+      return slurpedResource;
     }
-    return slurpedResource;
   }
 
 
@@ -557,22 +573,11 @@ class AmbariClient {
   }
 
   private def slurp(path, fields = "") {
-    def baseUri = ambari.getUri();
-    if (debugEnabled) {
-      println "[DEBUG] ${baseUri}${path}?fields=$fields"
-    }
-    def result = new HashMap()
-    try {
-      result = slurper.parseText(getRequest(path, fields))
-    } catch (e) {
-      def clazz = e.class
-      log.error("Error occurred during GET request to $baseUri$path", e)
-      if (clazz == NoHttpResponseException.class || clazz == ConnectException.class
-        || clazz == ClientProtocolException.class || clazz == NoRouteToHostException.class
-        || clazz == UnknownHostException || (clazz == HttpResponseException.class && e.message == "Bad credentials")) {
-        throw new AmbariConnectionException("Cannot connect to Ambari $baseUri")
-      }
-    }
+
+    def fieldsMap = fields ? ['fields': fields] : [:]
+    def Map resourceReqMap = getResourceRequestMap(path, fieldsMap)
+    def result = getResource(resourceReqMap)
+
     return result
   }
 
@@ -643,12 +648,12 @@ class AmbariClient {
   }
 
   private String getRequest(path, fields = "") {
-    if (fields) {
-      ambari.get(path: "$path", query: ['fields': "$fields"]).data.text
-    } else {
-      ambari.get(path: "$path").data.text
-    }
+    def fieldsMap = fields ? ['fields': fields] : [:]
+    def Map resourceReqMap = getResourceRequestMap(path, fieldsMap)
+    def raw = getResource(resourceReqMap)
+    return raw?.data?.text
   }
+
 
   private String getResourceContent(name) {
     getClass().getClassLoader().getResourceAsStream(name)?.text
