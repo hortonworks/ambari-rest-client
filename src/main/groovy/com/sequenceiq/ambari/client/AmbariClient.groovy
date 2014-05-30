@@ -307,13 +307,18 @@ class AmbariClient {
   }
 
   /**
-   * Returns the install progress state.
+   * Returns the install progress state. If the install failed -1 returned.
    *
    * @param request request id; default is 1
    * @return progress in percentage
    */
   def BigDecimal getInstallProgress(request = 1) {
-    getAllResources("requests/$request", "Requests").Requests?.progress_percent
+    def response = getAllResources("requests/$request", "Requests")
+    def String status = response.Requests?.request_status
+    if (status && status.equals("FAILED")) {
+      return new BigDecimal(-1)
+    }
+    return response.Requests?.progress_percent
   }
 
   /**
