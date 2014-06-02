@@ -407,7 +407,7 @@ class AmbariClient {
    * @return status
    */
   def String healthCheck() {
-    ambari.get(['path': "check", "contentType": ContentType.TEXT]).data.text
+    ambari.get(path: "check", headers: ["Accept": ContentType.TEXT]).data.text
   }
 
   /**
