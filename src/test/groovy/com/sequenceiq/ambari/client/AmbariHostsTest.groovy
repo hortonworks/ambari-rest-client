@@ -20,64 +20,60 @@ package com.sequenceiq.ambari.client
 import groovy.util.logging.Slf4j
 
 @Slf4j
-class AmbariServiceConfigurationTest extends AbstractAmbariClientTest {
+class AmbariHostsTest extends AbstractAmbariClientTest {
 
   private enum Scenario {
-    CONFIGURATIONS, MULTIPLE_VERSIONS
+    CLUSTERS
   }
 
-  def "test request service configurations map"() {
+  def "test get host components as map when there is no cluster yet"() {
     given:
-    mockResponses(Scenario.CONFIGURATIONS.name())
+    ambari.metaClass.getHostComponenets = { return null }
 
     when:
-    Map<String, Map<String, String>> serviceConfigMap = ambari.getServiceConfigMap();
+    def result = ambari.getHostComponentsMap("host")
 
     then:
-    serviceConfigMap != [:]
-    serviceConfigMap.get("yarn-site") != [:]
+    [:] == result
   }
 
-  def "test request service configurations with multiple versions"() {
+  def "test get host components as map when there is a cluster"() {
     given:
-    mockResponses(Scenario.MULTIPLE_VERSIONS.name())
+    mockResponses(Scenario.CLUSTERS.name())
 
     when:
-    Map<String, Map<String, String>> serviceConfigMap = ambari.getServiceConfigMap();
+    def result = ambari.getHostComponentsMap("host")
 
     then:
-    serviceConfigMap != [:]
-    serviceConfigMap.get("yarn-site") != [:]
+    ["DATANODE"          : "STARTED",
+     "HDFS_CLIENT"       : "INSTALLED",
+     "HISTORYSERVER"     : "STARTED",
+     "MAPREDUCE2_CLIENT" : "INSTALLED",
+     "NAMENODE"          : "STARTED",
+     "NODEMANAGER"       : "STARTED",
+     "RESOURCEMANAGER"   : "STARTED",
+     "SECONDARY_NAMENODE": "STARTED",
+     "YARN_CLIENT"       : "INSTALLED",
+     "ZOOKEEPER_CLIENT"  : "INSTALLED",
+     "ZOOKEEPER_SERVER"  : "STARTED"
+    ] == result
   }
-
-  // ---- helper method definitions
 
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
-    def thePath = resourceRequestMap.get("path")
-    def theQuery = resourceRequestMap.get("query")
+    def thePath = resourceRequestMap.get("path");
+    def query = resourceRequestMap.get("query");
     def Scenario scenario = Scenario.valueOf(scenarioStr)
-
     def json = null
     if (thePath == TestResources.CLUSTERS.uri()) {
-      json = "clusters.json"
-    } else if (thePath == TestResources.CONFIGURATIONS.uri()) {
-      if (!theQuery) {
-        switch (scenario) {
-          case Scenario.MULTIPLE_VERSIONS:
-            json = "service-versions-multiple.json"
-            break
-          case Scenario.CONFIGURATIONS:
-            json = "service-versions.json"
-            break
-        }
-      } else {
-        json = "service-config.json"
+      switch (scenario) {
+        case Scenario.CLUSTERS: json = "clusters.json"
+          break
       }
-
+    } else if (thePath == TestResources.HOST_COMPONENTS.uri()) {
+      json = "host-components.json"
     } else {
       log.error("Unsupported resource path: {}", thePath)
     }
     return json
   }
-
 }
