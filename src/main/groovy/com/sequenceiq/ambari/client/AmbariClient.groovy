@@ -448,7 +448,7 @@ class AmbariClient {
    * @return component name - state association
    */
   def Map<String, String> getHostComponentsMap(host) {
-    def result = getHostComponents(host).items?.collectEntries { [(it.HostRoles.component_name): it.HostRoles.state] }
+    def result = getHostComponents(host)?.items?.collectEntries { [(it.HostRoles.component_name): it.HostRoles.state] }
     result ?: new HashMap()
   }
 
