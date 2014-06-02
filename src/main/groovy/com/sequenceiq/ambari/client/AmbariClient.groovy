@@ -278,7 +278,9 @@ class AmbariClient {
    * @throws HttpResponseException in case of error
    */
   def String getClusterAsJson() throws HttpResponseException {
-    getRequest("clusters/${getClusterName()}")
+    String path = "clusters/" + getClusterName();
+    Map resourceRequestMap = getResourceRequestMap(path, null)
+    return getResource(resourceRequestMap)
   }
 
   /**
@@ -288,7 +290,8 @@ class AmbariClient {
    * @throws HttpResponseException in case of error
    */
   def getClustersAsJson() throws HttpResponseException {
-    getRequest("clusters")
+    Map resourceRequestMap = getResourceRequestMap("clusters", null)
+    return getResource(resourceRequestMap)
   }
 
   /**

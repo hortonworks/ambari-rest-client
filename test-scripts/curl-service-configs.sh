@@ -1,7 +1,8 @@
 #!/bin/bash
 
 # curl requests for retrieving service configurations from ambari
-AMBARI_HOST=172.18.0.2
+# AMBARI_HOST=172.18.0.2
+AMBARI_HOST=54.76.147.101
 AMBARI_PORT=8080
 AMBARI_USER=admin
 AMBARI_PWD=admin
