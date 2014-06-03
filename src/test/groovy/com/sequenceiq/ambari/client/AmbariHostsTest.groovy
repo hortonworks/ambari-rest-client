@@ -76,4 +76,5 @@ class AmbariHostsTest extends AbstractAmbariClientTest {
     }
     return json
   }
+
 }
