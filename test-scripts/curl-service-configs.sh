@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # curl requests for retrieving service configurations from ambari
-# AMBARI_HOST=172.18.0.2
-AMBARI_HOST=54.76.147.101
+AMBARI_HOST=172.18.0.2
+#AMBARI_HOST=54.76.147.101
 AMBARI_PORT=8080
 AMBARI_USER=admin
 AMBARI_PWD=admin
@@ -13,6 +13,10 @@ RESOURCE_BASE=http://$AMBARI_HOST:$AMBARI_PORT/$AMBARI_REST_CONTEXT_ROOT
 # get clustername
 clusters() {
   curl -u $AMBARI_USER:$AMBARI_PWD $RESOURCE_BASE/clusters #| jq '.items[0].Clusters.cluster_name'
+}
+
+cluster() {
+  curl -u $AMBARI_USER:$AMBARI_PWD $RESOURCE_BASE/clusters/single-node-hdfs-yarn #| jq '.items[0].Clusters.cluster_name'
 }
 
 serviceConfigs(){

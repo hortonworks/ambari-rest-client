@@ -26,12 +26,27 @@ abstract class AbstractAmbariClientTest extends Specification {
 
   def protected ambari = new AmbariClient()
 
-  def protected mockResponses(String scenarioStr) {
+  /**
+   * Use the raw version instead (the slurper is callee specific!)
+   * @param scenarioStr
+   * @return
+   */
+  @Deprecated
+  def protected Closure<Object> mockResponses(String scenarioStr) {
     // mocking the getResource method of the class being tested
     ambari.metaClass.getResource = { Map resourceRequestMap ->
       String jsonFileName = selectResponseJson(resourceRequestMap, scenarioStr)
       String jsonAsText = getClass().getClassLoader().getResourceAsStream(jsonFileName).text
       return new JsonSlurper().parseText(jsonAsText)
+    }
+  }
+
+  def protected mockRawResponses(String scenarioStr) {
+    // mocking the getRawResource method of the class being tested
+    ambari.metaClass.getRawResource = { Map resourceRequestMap ->
+      String jsonFileName = selectResponseJson(resourceRequestMap, scenarioStr)
+      String jsonAsText = getClass().getClassLoader().getResourceAsStream(jsonFileName).text
+      return jsonAsText;
     }
   }
 
