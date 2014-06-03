@@ -280,7 +280,7 @@ class AmbariClient {
   def String getClusterAsJson() throws HttpResponseException {
     String path = "clusters/" + getClusterName();
     Map resourceRequestMap = getResourceRequestMap(path, null)
-    return getResource(resourceRequestMap)
+    return getRawResource(resourceRequestMap)
   }
 
   /**
@@ -291,7 +291,7 @@ class AmbariClient {
    */
   def getClustersAsJson() throws HttpResponseException {
     Map resourceRequestMap = getResourceRequestMap("clusters", null)
-    return getResource(resourceRequestMap)
+    return getRawResource(resourceRequestMap)
   }
 
   /**
@@ -462,7 +462,8 @@ class AmbariClient {
    * @return json as String, exception if thrown is it fails
    */
   def String getBlueprintAsJson(id) {
-    return getRequest("blueprints/$id", "host_groups,Blueprints")
+    Map resourceRequestMap = getResourceRequestMap("blueprints/$id", ['fields': "host_groups,Blueprints"])
+    return getRawResource(resourceRequestMap)
   }
 
 /**
@@ -584,6 +585,15 @@ class AmbariClient {
     }
   }
 
+  /**
+   * Gets the resource as a text, without slurping it.
+   *
+   * @param resourceRequestMap
+   */
+  private getRawResource(Map resourceRequestMap) {
+    def rawResource = ambari.get(resourceRequestMap)?.data?.text
+  }
+
 
   private def getAllResources(resourceName, fields = "") {
     slurp("clusters/${getClusterName()}/$resourceName", fields ? "$fields/*" : "")
@@ -684,13 +694,6 @@ class AmbariClient {
    */
   private def getHostComponents(host) {
     getAllResources("hosts/$host/host_components", "HostRoles")
-  }
-
-  private String getRequest(path, fields = "") {
-    def fieldsMap = fields ? ['fields': fields] : [:]
-    def Map resourceReqMap = getResourceRequestMap(path, fieldsMap)
-    def raw = getResource(resourceReqMap)
-    return raw?.data?.text
   }
 
   private String getResourceContent(name) {
