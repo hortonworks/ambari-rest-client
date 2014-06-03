@@ -138,7 +138,6 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
     [:] == result
   }
 
-
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
     def thePath = resourceRequestMap.get("path");
     def query = resourceRequestMap.get("query");
@@ -183,7 +182,6 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
         case Scenario.NO_HOSTS: json = "no-hosts.json"
           break
       }
-
     } else {
       log.error("Unsupported resource path: {}", thePath)
     }

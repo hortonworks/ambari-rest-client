@@ -11,8 +11,7 @@ class AmbariClustersTest extends AbstractAmbariClientTest {
 
   def "test get cluster as JSON"() {
     given:
-    mockResponses(Scenario.CLUSTERS.name()) // for the clustername
-    mockRawResponses(Scenario.CLUSTER.name())
+    mockResponses(Scenario.CLUSTER.name())
 
     expect:
     String json = ambari.getClusterAsJson();
@@ -22,13 +21,12 @@ class AmbariClustersTest extends AbstractAmbariClientTest {
 
   def "test get clusters as JSON"() {
     given:
-    mockRawResponses(Scenario.CLUSTERS.name())
+    mockResponses(Scenario.CLUSTERS.name())
 
     expect:
     String json = ambari.getClustersAsJson();
     log.debug("JSON: {}", json)
   }
-
 
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
     def thePath = resourceRequestMap.get("path");
@@ -36,10 +34,7 @@ class AmbariClustersTest extends AbstractAmbariClientTest {
     def Scenario scenario = Scenario.valueOf(scenarioStr)
     def json = null
     if (thePath == TestResources.CLUSTERS.uri()) {
-      switch (scenario) {
-        case Scenario.CLUSTERS: json = "clusters.json"
-          break
-      }
+      json = "clusters.json"
     } else if (thePath == TestResources.CLUSTER.uri()) {
       switch (scenario) {
         case Scenario.CLUSTER: json = "clusterAll.json"
