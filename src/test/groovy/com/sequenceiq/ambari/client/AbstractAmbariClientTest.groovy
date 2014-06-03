@@ -34,7 +34,7 @@ abstract class AbstractAmbariClientTest extends Specification {
   @Deprecated
   def protected Closure<Object> mockResponses(String scenarioStr) {
     // mocking the getResource method of the class being tested
-    ambari.metaClass.getResource = { Map resourceRequestMap ->
+    ambari.metaClass.getSlurpedResource = { Map resourceRequestMap ->
       String jsonFileName = selectResponseJson(resourceRequestMap, scenarioStr)
       String jsonAsText = getClass().getClassLoader().getResourceAsStream(jsonFileName).text
       return new JsonSlurper().parseText(jsonAsText)

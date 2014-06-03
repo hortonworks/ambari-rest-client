@@ -101,7 +101,7 @@ class AmbariClient {
     def result = false
     try {
       def Map resourceRequest = getResourceRequestMap("blueprints/$id", ['fields': "Blueprints"])
-      def jsonResponse = getResource(resourceRequest)
+      def jsonResponse = getSlurpedResource(resourceRequest)
       result = !(jsonResponse.status)
     } catch (e) {
       log.info("Blueprint does not exist", e)
@@ -476,7 +476,7 @@ class AmbariClient {
 
     //get services and last versions configurations
     Map<String, ?> configsResourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations", [:])
-    def rawConfigs = getResource(configsResourceRequestMap)
+    def rawConfigs = getSlurpedResource(configsResourceRequestMap)
 
     rawConfigs?.items.collect { object ->
       // selecting the latest versions
@@ -538,7 +538,7 @@ class AmbariClient {
 
     def Map resourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations",
       ['type': "$service", 'tag': "$tag"])
-    def rawResource = getResource(resourceRequestMap);
+    def rawResource = getSlurpedResource(resourceRequestMap);
 
     if (rawResource) {
       serviceConfigProperties = rawResource.items?.collectEntries { it -> it.properties }
@@ -559,20 +559,14 @@ class AmbariClient {
   }
 
   /**
-   * Performs a GET request to the Ambari server and slurps the response as an object.
+   * Gets the resource as a text as it;s returned by the server.
    *
-   * @param resourceRequestMap a map holding the resource path and the query parameters
-   * @return the response of the GET call as a  JSON
+   * @param resourceRequestMap
    */
-  private def getResource(Map resourceRequestMap) {
-    def slurpedResource;
+  private getRawResource(Map resourceRequestMap) {
+    def rawResource = null;
     try {
-      def rawResource = ambari.get(resourceRequestMap)?.data?.text
-      if (!rawResource) {
-        log.debug("No resource returned for the resource request map: {}", resourceRequestMap)
-      } else {
-        slurpedResource = slurper.parseText(rawResource);
-      }
+      rawResource = ambari.get(resourceRequestMap)?.data?.text
     } catch (e) {
       def clazz = e.class
       log.error("Error occurred during GET request to {}, exception: ", resourceRequestMap.get('path'), e)
@@ -581,17 +575,20 @@ class AmbariClient {
         || clazz == UnknownHostException.class || (clazz == HttpResponseException.class && e.message == "Bad credentials")) {
         throw new AmbariConnectionException("Cannot connect to Ambari ${ambari.getUri()}")
       }
-      return slurpedResource;
     }
+    return rawResource
   }
 
   /**
-   * Gets the resource as a text, without slurping it.
+   * Slurps the response text.
    *
-   * @param resourceRequestMap
+   * @param resourceRequestMap a map wrapping the resource request components
+   * @return an Object as it's created by the JsonSlurper
    */
-  private getRawResource(Map resourceRequestMap) {
-    def rawResource = ambari.get(resourceRequestMap)?.data?.text
+  private getSlurpedResource(Map resourceRequestMap) {
+    def rawResource = getRawResource(resourceRequestMap)
+    def slurpedResource = (rawResource) ? slurper.parseText(rawResource) : null
+    return slurpedResource
   }
 
 
@@ -625,7 +622,7 @@ class AmbariClient {
 
     def fieldsMap = fields ? ['fields': fields] : [:]
     def Map resourceReqMap = getResourceRequestMap(path, fieldsMap)
-    def result = getResource(resourceReqMap)
+    def result = getSlurpedResource(resourceReqMap)
 
     return result
   }
