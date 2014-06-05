@@ -511,7 +511,7 @@ class AmbariClient {
     return serviceStatus(false)
   }
 
-  def boolean servicesStatus(boolean starting) {
+  def private boolean servicesStatus(boolean starting) {
     def String status = (starting) ? "STARTED" : "INSTALLED"
     Map serviceComponents = getServiceComponentsMap();
     boolean allInState = true;
