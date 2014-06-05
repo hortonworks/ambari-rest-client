@@ -508,7 +508,7 @@ class AmbariClient {
   }
 
   def boolean servicesStopped() {
-    return serviceStatus(false)
+    return servicesStatus(false)
   }
 
   def private boolean servicesStatus(boolean starting) {
@@ -517,7 +517,7 @@ class AmbariClient {
     boolean allInState = true;
     serviceComponents.values().each { val ->
       log.debug("Service: {}", val)
-      allInState = allInState && val.value.equals(status)
+      allInState = allInState && val.equals(status)
     }
     return allInState;
   }

@@ -99,7 +99,7 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
     def boolean result = ambari.servicesStarted()
 
     then:
-    !result
+    result
   }
 
   def "test services stopped"() {
@@ -108,7 +108,7 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
     super.mockResponses(Scenario.SERVICES.name())
 
     when:
-    def boolean result = ambari.servicesStarted()
+    def boolean result = ambari.servicesStopped()
 
     then:
     !result
