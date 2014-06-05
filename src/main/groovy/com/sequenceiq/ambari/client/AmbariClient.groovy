@@ -507,7 +507,7 @@ class AmbariClient {
     return servicesStatus(true)
   }
 
-  def servicesStopped() {
+  def boolean servicesStopped() {
     return serviceStatus(false)
   }
 
