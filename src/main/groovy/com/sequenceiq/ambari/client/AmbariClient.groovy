@@ -503,6 +503,29 @@ class AmbariClient {
     manageAllServices("Stop All Services", "INSTALLED")
   }
 
+  def boolean servicesStarted() {
+    return servicesStatus(true)
+  }
+
+  def servicesStopped() {
+    return serviceStatus(false)
+  }
+
+  def boolean servicesStatus(boolean starting) {
+    def String status = (starting) ? "STARTED" : "INSTALLED"
+    Map serviceComponents = getServiceComponentsMap();
+    boolean allInState = true;
+    serviceComponents.values().each { val ->
+      log.debug("Service: {}", val)
+      val.entrySet().each { comp ->
+        log.debug("Component: {}", comp)
+        allInState = allInState && comp.value.equals(status)
+      };
+    }
+
+    return allInState;
+  }
+
   def private manageAllServices(String context, String state) {
     Map bodyMap = [
       RequestInfo: [context: context],
@@ -512,7 +535,7 @@ class AmbariClient {
     def Map<String, ?> putRequestMap = [:]
     putRequestMap.put('requestContentType', ContentType.URLENC)
     putRequestMap.put('path', "${ambari.getUri()}" + "clusters/${getClusterName()}/services")
-    putRequestMap.put('query', ['params/run_smoke_test': 'true'])
+    putRequestMap.put('query', ['params/run_smoke_test': 'false'])
     putRequestMap.put('body', builder.toPrettyString());
 
     ambari.put(putRequestMap)

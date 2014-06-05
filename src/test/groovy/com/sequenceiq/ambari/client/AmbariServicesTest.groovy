@@ -89,6 +89,31 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
     [:] == result
   }
 
+
+  def "test services started"() {
+    given:
+    // get the name of the cluster
+    super.mockResponses(Scenario.SERVICES.name())
+
+    when:
+    def boolean result = ambari.servicesStarted()
+
+    then:
+    !result
+  }
+
+  def "test services stopped"() {
+    given:
+    // get the name of the cluster
+    super.mockResponses(Scenario.SERVICES.name())
+
+    when:
+    def boolean result = ambari.servicesStarted()
+
+    then:
+    !result
+  }
+
   def private String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
     def thePath = resourceRequestMap.get("path");
     def Scenario scenario = Scenario.valueOf(scenarioStr)
