@@ -513,16 +513,12 @@ class AmbariClient {
 
   def private boolean servicesStatus(boolean starting) {
     def String status = (starting) ? "STARTED" : "INSTALLED"
-    Map serviceComponents = getServiceComponentsMap();
+    Map serviceComponents = getServicesMap();
     boolean allInState = true;
     serviceComponents.values().each { val ->
       log.debug("Service: {}", val)
-      val.entrySet().each { comp ->
-        log.debug("Component: {}", comp)
-        allInState = allInState && comp.value.equals(status)
-      };
+      allInState = allInState && val.value.equals(status)
     }
-
     return allInState;
   }
 
