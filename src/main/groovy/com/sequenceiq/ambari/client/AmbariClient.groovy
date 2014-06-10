@@ -480,7 +480,8 @@ class AmbariClient {
 
     rawConfigs?.items.collect { object ->
       // selecting the latest versions
-      processServiceVersions(serviceToTags, object.type, Integer.valueOf(object.tag))
+      def version = object.tag.minus("version")
+      processServiceVersions(serviceToTags, object.type, Long.valueOf(version).longValue())
     }
 
     // collect properties for every service
@@ -537,12 +538,12 @@ class AmbariClient {
     ambari.put(putRequestMap)
   }
 
-  private def processServiceVersions(Map<String, Integer> serviceToVersions, String service, Integer version) {
+  private def processServiceVersions(Map<String, Integer> serviceToVersions, String service, long version) {
     boolean change = false
     log.debug("Handling service version <{}:{}>", service, version)
     if (serviceToVersions.containsKey(service)) {
       log.debug("Entry already added, checking versions ...")
-      change = serviceToVersions.get(service).intValue() < version ? true : false;
+      change = serviceToVersions.get(service) < version
     } else {
       change = true;
     }
@@ -552,7 +553,7 @@ class AmbariClient {
     }
   }
 
-  private def Map<String, String> collectConfigPropertiesForService(String service, Integer tag) {
+  private def Map<String, String> collectConfigPropertiesForService(String service, long tag) {
     Map<String, String> serviceConfigProperties
 
     def Map resourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations",
