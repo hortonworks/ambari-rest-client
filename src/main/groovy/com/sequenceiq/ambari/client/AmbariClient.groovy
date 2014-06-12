@@ -144,8 +144,8 @@ class AmbariClient {
    * @return Map where the key is the host group and the value is the list of components
    */
   def Map<String, List<String>> getBlueprintMap(String id) {
-    def result = getBlueprint(id).host_groups?.collectEntries { [(it.name): it.components.collect { it.name }] }
-    result ?: new HashMap()
+    def result = getBlueprint(id)?.host_groups?.collectEntries { [(it.name): it.components.collect { it.name }] }
+    result ?: [:]
   }
 
   /**
