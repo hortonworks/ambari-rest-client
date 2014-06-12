@@ -181,7 +181,7 @@ class AmbariClient {
   def Map<String, List<String>> recommendAssignments(String blueprint) {
     def result = [:]
     def hostNames = getHostNames().keySet() as List
-    def groups = getBlueprint(blueprint).host_groups?.collect { ["name": it.name, "cardinality": it.cardinality] }
+    def groups = getBlueprint(blueprint)?.host_groups?.collect { ["name": it.name, "cardinality": it.cardinality] }
     if (hostNames && groups) {
       def groupSize = groups.size()
       def hostSize = hostNames.size()
