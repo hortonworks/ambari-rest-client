@@ -258,6 +258,9 @@ class AmbariClient {
    * @throws HttpResponseException in case of error
    */
   def void createCluster(String clusterName, String blueprintName, Map<String, List<String>> hostGroups) throws HttpResponseException {
+    if (debugEnabled) {
+      println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
+    }
     ambari.post(path: "clusters/$clusterName", body: createClusterJson(blueprintName, hostGroups), { it })
   }
 
@@ -268,6 +271,9 @@ class AmbariClient {
    * @throws HttpResponseException in case of error
    */
   def void deleteCluster(String clusterName) throws HttpResponseException {
+    if (debugEnabled) {
+      println "[DEBUG] DELETE ${ambari.getUri()}clusters/$clusterName"
+    }
     ambari.delete(path: "clusters/$clusterName")
   }
 
@@ -587,6 +593,9 @@ class AmbariClient {
   private getRawResource(Map resourceRequestMap) {
     def rawResource = null;
     try {
+      if (debugEnabled) {
+        println "[DEBUG] GET ${resourceRequestMap.get('path')}"
+      }
       rawResource = ambari.get(resourceRequestMap)?.data?.text
     } catch (e) {
       def clazz = e.class
@@ -626,6 +635,9 @@ class AmbariClient {
    * @return response message
    */
   private void postBlueprint(String blueprint) {
+    if (debugEnabled) {
+      println "[DEBUG] POST ${ambari.getUri()}blueprints/bp"
+    }
     ambari.post(path: "blueprints/bp", body: blueprint, { it })
   }
 
