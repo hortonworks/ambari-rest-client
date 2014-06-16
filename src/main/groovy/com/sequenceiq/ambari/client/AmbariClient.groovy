@@ -647,7 +647,7 @@ class AmbariClient {
       def hostList = it.value.collect { ['fqdn': it] }
       [name: it.key, hosts: hostList]
     }
-    builder { "blueprint" name; "host_groups" groups }
+    builder { "blueprint" name; "default_password" "admin"; "host_groups" groups }
     builder.toPrettyString()
   }
 
