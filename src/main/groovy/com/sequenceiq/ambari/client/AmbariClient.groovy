@@ -37,6 +37,7 @@ class AmbariClient {
 
   private static final int PAD = 30
   private static final int OK_RESPONSE = 200
+  private static final String SLAVE = "slave_"
   boolean debugEnabled = false;
   def RESTClient ambari
   def slurper = new JsonSlurper()
@@ -178,27 +179,34 @@ class AmbariClient {
    * @param blueprint id of the blueprint
    * @return recommended assignments
    */
-  def Map<String, List<String>> recommendAssignments(String blueprint) {
+  def Map<String, List<String>> recommendAssignments(String blueprint) throws InvalidHostGroupHostAssociation {
     def result = [:]
     def hostNames = getHostNames().keySet() as List
     def groups = getBlueprint(blueprint)?.host_groups?.collect { ["name": it.name, "cardinality": it.cardinality] }
     if (hostNames && groups) {
       def groupSize = groups.size()
       def hostSize = hostNames.size()
-      if (hostSize == groupSize) {
-        def i = 0
-        result = groups.collectEntries { [(it.name): [hostNames[i++]]] }
-      } else if (groupSize == 2 && hostSize > 2) {
-        def grouped = groups.groupBy { it.cardinality }
-        if (grouped["1"] && grouped["1"].size() == 1) {
-          groups.each {
-            if (it["cardinality"] == "1") {
-              result << [(it["name"]): [hostNames[0]]]
-            } else {
-              result << [(it["name"]): hostNames.subList(1, hostSize)]
-            }
-          }
+      if (hostSize == 1 && groupSize == 1) {
+        result = [(groups[0].name): hostNames[0]]
+      } else if (hostSize >= groupSize) {
+        int i = 0
+        groups.findAll { !it.name.startsWith(SLAVE) }.each {
+          result << [(it.name): hostNames[i++]]
         }
+        def slaves = groups.findAll { it.name.startsWith(SLAVE) }
+        if (slaves) {
+          int k = 0
+          for (int j = i; j < hostSize; j++) {
+            result[slaves[k].name] = result[slaves[k].name] ?: []
+            result[slaves[k].name] << hostNames[j]
+            result << [(slaves[k].name): result[slaves[k++].name]]
+            k = k == slaves.size ? 0 : k
+          }
+        } else {
+          throw new InvalidHostGroupHostAssociation("At least one '$SLAVE' is required", groupSize)
+        }
+      } else {
+        throw new InvalidHostGroupHostAssociation("At least $groupSize host is required", groupSize)
       }
     }
     return result
@@ -233,6 +241,27 @@ class AmbariClient {
   def void addBlueprint(String json) throws HttpResponseException {
     if (json) {
       postBlueprint(json)
+    }
+  }
+
+  /**
+   * Only validates the multinode blueprints, at least 1 slave host group must exist.
+   * Throws an exception if the blueprint is not valid.
+   *
+   * @param json blueprint json
+   * @throws InvalidBlueprintException if the blueprint is not valid
+   */
+  def void validateBlueprint(String json) throws InvalidBlueprintException {
+    if (json) {
+      def bpMap = slurper.parseText(json)
+      if (bpMap?.host_groups?.size > 1) {
+        def find = bpMap.host_groups.find { it.name.startsWith(SLAVE) }
+        if (!find) {
+          throw new InvalidBlueprintException("At least one '$SLAVE' host group is required.")
+        }
+      }
+    } else {
+      throw new InvalidBlueprintException("No blueprint specified")
     }
   }
 

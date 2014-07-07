@@ -15,27 +15,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.sequenceiq.ambari.main
+package com.sequenceiq.ambari.client
 
-import com.sequenceiq.ambari.client.AmbariClient
+/**
+ * Thrown when the blueprint validation fails.
+ */
+public class InvalidBlueprintException extends Exception {
 
-class AmbariClientMain {
-  public static void main(String[] args) {
-    def host = '172.24.0.2'
-    def port = '8080'
-    if (args.size == 2) {
-      host = args[0]
-      port = args[1]
-    }
-
-    AmbariClient client = new AmbariClient(host, port)
-    println client.recommendAssignments("multi-node-hdfs-yarn")
-//    println "\n  clusterList: \n${client.showClusterList()}"
-//    println "\n  hostsList: \n${client.showHostList()}"
-//    println "\n  tasksList: \n${client.showTaskList()}"
-//    println "\n  serviceList: \n${client.showServiceList()}"
-//    println "\n  blueprintList: \n${client.showBlueprints()}"
-//    println "\n  clusterBlueprint: \n${client.showClusterBlueprint()}"
-
+  public InvalidBlueprintException(String message) {
+    super(message)
   }
 }
