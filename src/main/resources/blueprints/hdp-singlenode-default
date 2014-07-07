@@ -8,7 +8,7 @@
     ],
     "host_groups" : [
         {
-            "name" : "host_group_1",
+            "name" : "slaves_1",
             "components" : [
                 {
                     "name" : "STORM_REST_API"
