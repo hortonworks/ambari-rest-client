@@ -190,10 +190,10 @@ class AmbariClient {
         result = [(groups[0].name): hostNames[0]]
       } else if (hostSize >= groupSize) {
         int i = 0
-        groups.findAll { !it.name.startsWith(SLAVE) }.each {
+        groups.findAll { !it.name.toLowerCase().startsWith(SLAVE) }.each {
           result << [(it.name): hostNames[i++]]
         }
-        def slaves = groups.findAll { it.name.startsWith(SLAVE) }
+        def slaves = groups.findAll { it.name.toLowerCase().startsWith(SLAVE) }
         if (slaves) {
           int k = 0
           for (int j = i; j < hostSize; j++) {
@@ -255,7 +255,7 @@ class AmbariClient {
     if (json) {
       def bpMap = slurper.parseText(json)
       if (bpMap?.host_groups?.size > 1) {
-        def find = bpMap.host_groups.find { it.name.startsWith(SLAVE) }
+        def find = bpMap.host_groups.find { it.name.toLowerCase().startsWith(SLAVE) }
         if (!find) {
           throw new InvalidBlueprintException("At least one '$SLAVE' host group is required.")
         }
