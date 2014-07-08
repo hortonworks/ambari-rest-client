@@ -100,9 +100,56 @@ class AmbariClient {
    */
   def addHost(String hostName) throws HttpResponseException {
     if (debugEnabled) {
-      println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName/hosts/$hostName"
+      println "[DEBUG] POST ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName"
     }
     ambari.post(path: "clusters/${getClusterName()}/hosts/$hostName", { it })
+  }
+
+  /**
+   * Install all the components from a given blueprint's host group. The services must be installed
+   * in order to install its components. It is recommended to use the same blueprint's host group from which
+   * the cluster was created.
+   *
+   * @param hostName components will be installed on this host
+   * @param blueprint id of the blueprint
+   * @param hostGroup host group of the blueprint
+   * @return list of the installed components
+   */
+  def List<String> installComponentsToHost(String hostName, String blueprint, String hostGroup) throws HttpResponseException {
+    def bpMap = getBlueprint(blueprint)
+    def components = bpMap?.host_groups?.find { it.name.equals(hostGroup) }?.components?.collect { it.name }
+    if (components) {
+      installComponentsToHost(hostName, components)
+      return components
+    } else {
+      return []
+    }
+  }
+
+  /**
+   * Installs the given components to the given host.
+   * Only existing service components can be installed.
+   *
+   * @param hostName host to install the component to
+   * @param components components to be installed
+   * @throws HttpResponseException in case the component's service is not installed
+   */
+  def installComponentsToHost(String hostName, List<String> components) throws HttpResponseException {
+    components.each {
+      addComponentToHost(hostName, it)
+      setComponentState(hostName, it, "INSTALLED")
+    }
+  }
+
+  /**
+   * Starts the given component on a host.
+   *
+   * @throws HttpResponseException in case the component is not found
+   */
+  def startComponentsOnHost(String hostName, List<String> components) throws HttpResponseException {
+    components.each {
+      setComponentState(hostName, it, "STARTED")
+    }
   }
 
   /**
@@ -758,6 +805,28 @@ class AmbariClient {
    */
   private def getServices() {
     getAllResources("services", "ServiceInfo")
+  }
+
+  private def addComponentToHost(String hostName, String component) {
+    if (debugEnabled) {
+      println "[DEBUG] POST ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components"
+    }
+    ambari.post(path: "clusters/${getClusterName()}/hosts/$hostName/host_components/${component.toUpperCase()}", { it })
+  }
+
+  private def setComponentState(String hostName, String component, String state) {
+    if (debugEnabled) {
+      println "[DEBUG] PUT ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components/$component"
+    }
+    Map bodyMap = [
+      HostRoles  : [state: state.toUpperCase()],
+      RequestInfo: [context: "${component.toUpperCase()} ${state.toUpperCase()}"]
+    ]
+    def Map<String, ?> putRequestMap = [:]
+    putRequestMap.put('requestContentType', ContentType.URLENC)
+    putRequestMap.put('path', "clusters/${getClusterName()}/hosts/$hostName/host_components/${component.toUpperCase()}")
+    putRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
+    ambari.put(putRequestMap)
   }
 
   /**
