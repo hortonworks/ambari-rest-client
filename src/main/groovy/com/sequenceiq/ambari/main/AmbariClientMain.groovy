@@ -21,7 +21,7 @@ import com.sequenceiq.ambari.client.AmbariClient
 
 class AmbariClientMain {
   public static void main(String[] args) {
-    def host = '172.24.0.2'
+    def host = 'localhost'
     def port = '8080'
     if (args.size == 2) {
       host = args[0]
@@ -29,13 +29,12 @@ class AmbariClientMain {
     }
 
     AmbariClient client = new AmbariClient(host, port)
-    println client.recommendAssignments("multi-node-hdfs-yarn")
-//    println "\n  clusterList: \n${client.showClusterList()}"
-//    println "\n  hostsList: \n${client.showHostList()}"
-//    println "\n  tasksList: \n${client.showTaskList()}"
-//    println "\n  serviceList: \n${client.showServiceList()}"
-//    println "\n  blueprintList: \n${client.showBlueprints()}"
-//    println "\n  clusterBlueprint: \n${client.showClusterBlueprint()}"
+    println "\n  clusterList: \n${client.showClusterList()}"
+    println "\n  hostsList: \n${client.showHostList()}"
+    println "\n  tasksList: \n${client.showTaskList()}"
+    println "\n  serviceList: \n${client.showServiceList()}"
+    println "\n  blueprintList: \n${client.showBlueprints()}"
+    println "\n  clusterBlueprint: \n${client.showClusterBlueprint()}"
 
   }
 }
