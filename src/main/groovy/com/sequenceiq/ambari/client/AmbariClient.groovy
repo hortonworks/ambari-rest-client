@@ -93,6 +93,19 @@ class AmbariClient {
   }
 
   /**
+   * Adds a registered node to the cluster.
+   *
+   * @param hostName new node's hostname
+   * @throws HttpResponseException if the node is not registered with ambari
+   */
+  def addHost(String hostName) throws HttpResponseException {
+    if (debugEnabled) {
+      println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName/hosts/$hostName"
+    }
+    ambari.post(path: "clusters/${getClusterName()}/hosts/$hostName", { it })
+  }
+
+  /**
    * Checks whether the blueprint exists or not.
    *
    * @param id id of the blueprint
