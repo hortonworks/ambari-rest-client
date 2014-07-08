@@ -126,7 +126,7 @@
             "cardinality" : "${slavesCount}"
         },
         {
-                    "name" : "slave_2",
+                    "name" : "SLAVE_2",
                     "components" : [
                         {
                             "name" : "HBASE_REGIONSERVER"
