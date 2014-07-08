@@ -108,24 +108,6 @@
             "cardinality" : "1"
         },
         {
-            "name" : "slave_1",
-            "components" : [
-                {
-                    "name" : "HBASE_REGIONSERVER"
-                },
-                {
-                    "name" : "NODEMANAGER"
-                },
-                {
-                    "name" : "DATANODE"
-                },
-                {
-                    "name" : "GANGLIA_MONITOR"
-                }
-            ],
-            "cardinality" : "${slavesCount}"
-        },
-        {
             "name" : "gateway",
             "components" : [
                 {
