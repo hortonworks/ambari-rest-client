@@ -247,11 +247,11 @@ class AmbariClient {
       def groupSize = groups.size()
       def hostSize = hostNames.size()
       if (hostSize == 1 && groupSize == 1) {
-        result = [(groups[0].name): hostNames[0]]
+        result = [(groups[0].name): [hostNames[0]]]
       } else if (hostSize >= groupSize) {
         int i = 0
         groups.findAll { !it.name.toLowerCase().startsWith(SLAVE) }.each {
-          result << [(it.name): hostNames[i++]]
+          result << [(it.name): [hostNames[i++]]]
         }
         def slaves = groups.findAll { it.name.toLowerCase().startsWith(SLAVE) }
         if (slaves) {

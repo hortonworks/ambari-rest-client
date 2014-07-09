@@ -35,7 +35,7 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
     def result = ambari.recommendAssignments("single-node-hdfs-yarn")
 
     then:
-    [host_group_1: "amb0"] == result
+    [host_group_1: ["amb0"]] == result
   }
 
   def "test recommend for invalid host number"() {
@@ -120,11 +120,11 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
     def result = ambari.recommendAssignments("hdp-multinode-default")
 
     then:
-    [master_1: "amb0",
-     master_2: "amb1",
-     master_3: "amb2",
-     master_4: "amb3",
-     gateway : "amb4",
+    [master_1: ["amb0"],
+     master_2: ["amb1"],
+     master_3: ["amb2"],
+     master_4: ["amb3"],
+     gateway : ["amb4"],
      slave_1 : ["amb5", "amb7", "amb9", "am20", "am40"],
      SLAVE_2 : ["amb6", "amb8", "am10", "am30"]
     ] == result
