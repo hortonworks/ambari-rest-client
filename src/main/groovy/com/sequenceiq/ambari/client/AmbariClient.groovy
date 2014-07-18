@@ -423,7 +423,7 @@ class AmbariClient {
     def String status = response?.Requests?.request_status
     if (status && status.equals("FAILED")) {
       return new BigDecimal(-1)
-    }
+    } 
     return response?.Requests?.progress_percent
   }
 
