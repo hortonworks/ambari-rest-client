@@ -420,11 +420,11 @@ class AmbariClient {
    */
   def BigDecimal getInstallProgress(request = 1) {
     def response = getAllResources("requests/$request", "Requests")
-    def String status = response.Requests?.request_status
+    def String status = response?.Requests?.request_status
     if (status && status.equals("FAILED")) {
       return new BigDecimal(-1)
-    }
-    return response.Requests?.progress_percent
+    } 
+    return response?.Requests?.progress_percent
   }
 
   /**
@@ -708,7 +708,7 @@ class AmbariClient {
    */
   private getSlurpedResource(Map resourceRequestMap) {
     def rawResource = getRawResource(resourceRequestMap)
-    def slurpedResource = (rawResource) ? slurper.parseText(rawResource) : null
+    def slurpedResource = (rawResource != null) ? slurper.parseText(rawResource) : rawResource
     return slurpedResource
   }
 
