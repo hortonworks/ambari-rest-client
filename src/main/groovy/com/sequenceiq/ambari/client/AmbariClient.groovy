@@ -299,8 +299,15 @@ class AmbariClient {
    * @throws HttpResponseException in case of error
    */
   def void addBlueprint(String json) throws HttpResponseException {
+    addBlueprint(json, [:])
+  }
+
+  def void addBlueprint(String json, Map<String, Map<String, String>> configurations) throws HttpResponseException {
     if (json) {
-      postBlueprint(json)
+      def text = slurper.parseText(json)
+      def bpMap = extendBlueprintConfiguration(text, configurations)
+      def builder = new JsonBuilder(bpMap)
+      postBlueprint(builder.toPrettyString())
     }
   }
 
@@ -423,7 +430,7 @@ class AmbariClient {
     def String status = response?.Requests?.request_status
     if (status && status.equals("FAILED")) {
       return new BigDecimal(-1)
-    } 
+    }
     return response?.Requests?.progress_percent
   }
 
@@ -841,6 +848,38 @@ class AmbariClient {
 
   private String getResourceContent(name) {
     getClass().getClassLoader().getResourceAsStream(name)?.text
+  }
+
+  private def extendBlueprintConfiguration(Map blueprintMap, Map newConfigs) {
+    def configurations = blueprintMap.configurations
+    if (!configurations) {
+      if (newConfigs) {
+        blueprintMap << ["configurations": [newConfigs]]
+      }
+      return blueprintMap
+    }
+    newConfigs.each {
+      def site = it.key
+      def index = indexOfConfig(configurations, site)
+      if (index == -1) {
+        configurations << ["$site": it.value]
+      } else {
+        def existingConf = configurations.get(index)
+        existingConf."$site" << it.value
+      }
+    }
+    blueprintMap
+  }
+
+  private int indexOfConfig(List<Map> configurations, String site) {
+    def index = 0
+    for (Map conf : configurations) {
+      if (conf.containsKey(site)) {
+        return index;
+      }
+      index++
+    }
+    return -1;
   }
 
 }
