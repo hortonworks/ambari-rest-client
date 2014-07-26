@@ -17,10 +17,13 @@
  */
 package com.sequenceiq.ambari.client
 
+import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 
 @Slf4j
 class AmbariBlueprintsTest extends AbstractAmbariClientTest {
+
+  def slurper = new JsonSlurper()
 
   private enum Scenario {
     CLUSTERS, NO_CLUSTERS, BLUEPRINT_EXISTS, NO_BLUEPRINT, HOSTS, NO_HOSTS
@@ -177,6 +180,57 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
 
     then:
     thrown(InvalidBlueprintException)
+  }
+
+  def "test add blueprint with configuration"() {
+    given:
+    def json = getClass().getClassLoader().getResourceAsStream("blueprint.json").text
+    ambari.metaClass.postBlueprint = { String blueprint -> return }
+
+    when:
+    def config = [
+      "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
+      "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
+    ]
+    def blueprint = ambari.addBlueprint(json, config)
+
+    then:
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("blueprint-config.json").text)
+    def actual = slurper.parseText(blueprint)
+    actual == expected
+  }
+
+  def "test add blueprint with existing configuration"() {
+    given:
+    def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn.json").text
+    ambari.metaClass.postBlueprint = { String blueprint -> return }
+
+    when:
+    def config = [
+      "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "apple"],
+      "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"],
+      "core-site": ["fs.defaultFS": "localhost:9000"]
+    ]
+    def blueprint = ambari.addBlueprint(json, config)
+
+    then:
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-config.json").text)
+    def actual = slurper.parseText(blueprint)
+    actual == expected
+  }
+
+  def "test add blueprint with empty configuration"() {
+    given:
+    def json = getClass().getClassLoader().getResourceAsStream("blueprint.json").text
+    ambari.metaClass.postBlueprint = { String blueprint -> return }
+
+    when:
+    def blueprint = ambari.addBlueprint(json, [:])
+
+    then:
+    def expected = slurper.parseText(json)
+    def actual = slurper.parseText(blueprint)
+    actual == expected
   }
 
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
