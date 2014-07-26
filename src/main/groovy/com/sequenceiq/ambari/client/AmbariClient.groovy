@@ -298,16 +298,18 @@ class AmbariClient {
    * @param json blueprint as json
    * @throws HttpResponseException in case of error
    */
-  def void addBlueprint(String json) throws HttpResponseException {
+  def String addBlueprint(String json) throws HttpResponseException {
     addBlueprint(json, [:])
   }
 
-  def void addBlueprint(String json, Map<String, Map<String, String>> configurations) throws HttpResponseException {
+  def String addBlueprint(String json, Map<String, Map<String, String>> configurations) throws HttpResponseException {
     if (json) {
       def text = slurper.parseText(json)
       def bpMap = extendBlueprintConfiguration(text, configurations)
       def builder = new JsonBuilder(bpMap)
-      postBlueprint(builder.toPrettyString())
+      def resultJson = builder.toPrettyString()
+      postBlueprint(resultJson)
+      resultJson
     }
   }
 
@@ -854,7 +856,9 @@ class AmbariClient {
     def configurations = blueprintMap.configurations
     if (!configurations) {
       if (newConfigs) {
-        blueprintMap << ["configurations": [newConfigs]]
+        def conf = []
+        newConfigs.each { conf << [(it.key): it.value] }
+        blueprintMap << ["configurations": conf]
       }
       return blueprintMap
     }
