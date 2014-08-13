@@ -617,6 +617,18 @@ class AmbariClient {
     return servicesStatus(false)
   }
 
+  /**
+   * Returns the public hostname of the host which the host component is installed to.
+   */
+  def String getPublicHostName(String hostComponent) {
+    def internalName = getHostNames().find { getHostComponentsMap(it.key).keySet().contains(hostComponent) }?.key
+    if (internalName) {
+      return resolveInternalHostName(internalName)
+    } else {
+      return ""
+    }
+  }
+
   def private boolean servicesStatus(boolean starting) {
     def String status = (starting) ? "STARTED" : "INSTALLED"
     Map serviceComponents = getServicesMap();
@@ -836,6 +848,10 @@ class AmbariClient {
     putRequestMap.put('path', "clusters/${getClusterName()}/hosts/$hostName/host_components/${component.toUpperCase()}")
     putRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
     ambari.put(putRequestMap)
+  }
+
+  private def String resolveInternalHostName(String internalHostName) {
+    slurp("clusters/${getClusterName()}/hosts/$internalHostName")?.Hosts?.public_host_name
   }
 
   /**
