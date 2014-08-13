@@ -629,6 +629,13 @@ class AmbariClient {
     }
   }
 
+  /**
+   * Resolves an internal hostname to a public one.
+   */
+  def String resolveInternalHostName(String internalHostName) {
+    slurp("clusters/${getClusterName()}/hosts/$internalHostName")?.Hosts?.public_host_name
+  }
+
   def private boolean servicesStatus(boolean starting) {
     def String status = (starting) ? "STARTED" : "INSTALLED"
     Map serviceComponents = getServicesMap();
@@ -848,10 +855,6 @@ class AmbariClient {
     putRequestMap.put('path', "clusters/${getClusterName()}/hosts/$hostName/host_components/${component.toUpperCase()}")
     putRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
     ambari.put(putRequestMap)
-  }
-
-  private def String resolveInternalHostName(String internalHostName) {
-    slurp("clusters/${getClusterName()}/hosts/$internalHostName")?.Hosts?.public_host_name
   }
 
   /**
