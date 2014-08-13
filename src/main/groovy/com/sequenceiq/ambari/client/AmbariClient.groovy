@@ -401,6 +401,24 @@ class AmbariClient {
   }
 
   /**
+   * Modify an existing configuration. Be ware you'll have to provide the whole configuration
+   * otherwise properties might get lost.
+   *
+   * @param type type of the configuration e.g capacity-scheduler
+   * @param properties properties to be used
+   */
+  def modifyConfiguration(String type, Map<String, String> properties) {
+    Map bodyMap = [
+      "Clusters": ["desired_config": ["type": type, "tag": "version${System.currentTimeMillis()}", "properties": properties]]
+    ]
+    def Map<String, ?> putRequestMap = [:]
+    putRequestMap.put('requestContentType', ContentType.URLENC)
+    putRequestMap.put('path', "clusters/${getClusterName()}")
+    putRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
+    ambari.put(putRequestMap)
+  }
+
+  /**
    * Returns a pre-formatted String of the clusters.
    *
    * @return pre-formatted cluster list
