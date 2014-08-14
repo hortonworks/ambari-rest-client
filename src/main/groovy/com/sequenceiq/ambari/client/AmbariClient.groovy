@@ -638,12 +638,17 @@ class AmbariClient {
   /**
    * Returns the public hostname of the host which the host component is installed to.
    */
-  def String getPublicHostName(String hostComponent) {
-    def internalName = getHostNames().find { getHostComponentsMap(it.key).keySet().contains(hostComponent) }?.key
-    if (internalName) {
-      return resolveInternalHostName(internalName)
+  def List<String> getPublicHostNames(String hostComponent) {
+    def hosts = []
+    getHostNames().each {
+      if (getHostComponentsMap(it.key).keySet().contains(hostComponent)) {
+        hosts << it.key
+      }
+    }
+    if (hosts) {
+      return hosts.collect() { resolveInternalHostName(it) }
     } else {
-      return ""
+      return []
     }
   }
 
