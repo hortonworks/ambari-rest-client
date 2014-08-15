@@ -636,20 +636,42 @@ class AmbariClient {
   }
 
   /**
-   * Returns the public hostname of the host which the host component is installed to.
+   * Returns the public hostnames of the hosts which the host components are installed to.
    */
   def List<String> getPublicHostNames(String hostComponent) {
+    def hosts = getInternalHostNames(hostComponent)
+    if (hosts) {
+      return hosts.collect() { resolveInternalHostName(it) }
+    } else {
+      return []
+    }
+  }
+
+  /**
+   * Returns the internal hostnames of the hosts which the host components are installed to.
+   */
+  def List<String> getInternalHostNames(String hostComponent) {
     def hosts = []
     getHostNames().each {
       if (getHostComponentsMap(it.key).keySet().contains(hostComponent)) {
         hosts << it.key
       }
     }
-    if (hosts) {
-      return hosts.collect() { resolveInternalHostName(it) }
-    } else {
-      return []
+    hosts
+  }
+
+  /**
+   * Restarts the given components of a service.
+   */
+  def restartServiceComponents(String service, List<String> components) {
+    def filter = components.collect {
+      ["service_name": service, "component_name": it, "hosts": getInternalHostNames(it).join(",")]
     }
+    Map bodyMap = [
+      "RequestInfo"              : [command: "RESTART", context: "Restart $service components $components"],
+      "Requests/resource_filters": filter
+    ]
+    ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), { it })
   }
 
   /**
