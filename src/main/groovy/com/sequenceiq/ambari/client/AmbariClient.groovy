@@ -273,6 +273,18 @@ class AmbariClient {
   }
 
   /**
+   * Returns the names of the hosts which have been added to Ambari,
+   * but not to the cluster.
+   *
+   * @return list of hostnames
+   */
+  def List<String> getUnregisteredHostNames() {
+    def clusterHosts = getClusterHosts() as List
+    def allHosts = getHostNames().keySet() as List
+    return allHosts.minus(clusterHosts)
+  }
+
+  /**
    * Returns the name of the host groups for a given blueprint.
    *
    * @param blueprint id of the blueprint
@@ -948,6 +960,10 @@ class AmbariClient {
       index++
     }
     return -1;
+  }
+
+  private def getClusterHosts() {
+    slurp("clusters/${getClusterName()}")?.hosts?.Hosts?.host_name
   }
 
 }
