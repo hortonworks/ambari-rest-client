@@ -113,16 +113,15 @@ class AmbariClient {
    * @param hostName components will be installed on this host
    * @param blueprint id of the blueprint
    * @param hostGroup host group of the blueprint
-   * @return list of the installed components
+   * @return map of the component names and their request id since its an async call
    */
-  def List<String> installComponentsToHost(String hostName, String blueprint, String hostGroup) throws HttpResponseException {
+  def Map<String, Integer> installComponentsToHost(String hostName, String blueprint, String hostGroup) throws HttpResponseException {
     def bpMap = getBlueprint(blueprint)
     def components = bpMap?.host_groups?.find { it.name.equals(hostGroup) }?.components?.collect { it.name }
     if (components) {
-      installComponentsToHost(hostName, components)
-      return components
+      return installComponentsToHost(hostName, components)
     } else {
-      return []
+      return [:]
     }
   }
 
@@ -133,12 +132,15 @@ class AmbariClient {
    * @param hostName host to install the component to
    * @param components components to be installed
    * @throws HttpResponseException in case the component's service is not installed
+   * @return map of the component names and their request id since its an async call
    */
-  def installComponentsToHost(String hostName, List<String> components) throws HttpResponseException {
+  def Map<String, Integer> installComponentsToHost(String hostName, List<String> components) throws HttpResponseException {
+    def resp = [:]
     components.each {
       addComponentToHost(hostName, it)
-      setComponentState(hostName, it, "INSTALLED")
+      resp << [(it): setComponentState(hostName, it, "INSTALLED")]
     }
+    resp
   }
 
   /**
@@ -911,7 +913,8 @@ class AmbariClient {
     putRequestMap.put('requestContentType', ContentType.URLENC)
     putRequestMap.put('path', "clusters/${getClusterName()}/hosts/$hostName/host_components/${component.toUpperCase()}")
     putRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
-    ambari.put(putRequestMap)
+    def reponse = ambari.put(putRequestMap)
+    slurper.parseText(reponse.getAt("responseData")?.getAt("str"))?.Requests?.id
   }
 
   /**
