@@ -709,11 +709,11 @@ class AmbariClient {
     return getRawResource(resourceRequestMap)
   }
 
-/**
- * Returns a map with service configurations. The keys are the service names, values are maps with <propertyName, propertyValue> entries
- *
- * @return a Map with entries of format <servicename, Map<property, value>>
- */
+  /**
+   * Returns a map with service configurations. The keys are the service names, values are maps with <propertyName, propertyValue> entries
+   *
+   * @return a Map with entries of format <servicename, Map<property, value>>
+   */
   def Map<String, Map<String, String>> getServiceConfigMap() {
     def Map<String, Integer> serviceToTags = new HashMap<>()
 
