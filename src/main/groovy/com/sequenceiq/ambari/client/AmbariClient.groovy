@@ -106,6 +106,102 @@ class AmbariClient {
   }
 
   /**
+   * Decommission and remove a host from the cluster.
+   *
+   * Steps:
+   *  1, decommission services
+   *  2, stop services
+   *  3, delete host components
+   *  4, delete host
+   *  5, restart services
+   *
+   * @param hostName host to be deleted
+   */
+  def removeHost(String hostName) {
+    def components = getHostComponentsMap(hostName).keySet() as List
+
+    // decommission
+    decommissionNodeManager(hostName)
+    if (components.contains("DATANODE")) {
+      decommissionDataNode(hostName)
+    }
+
+    // stop services
+    def requests = stopComponentsOnHost(hostName, components)
+    waitForRequestsToFinish(requests.values() as List)
+
+    // delete host components
+    deleteHostComponents(hostName, components)
+
+    // delete host
+    deleteHost(hostName)
+
+    // restart zookeper
+    restartServiceComponents("ZOOKEEPER", ["ZOOKEEPER_SERVER"])
+
+    // restart nagios
+    if (getServiceComponentsMap().containsKey("NAGIOS")) {
+      restartServiceComponents("NAGIOS", ["NAGIOS_SERVER"])
+    }
+  }
+
+  /**
+   * Does not return until all the requests are finished.
+   * @param requestIds ids of the requests
+   */
+  def waitForRequestsToFinish(List<Integer> requestIds) {
+    def stopped = false
+    while (!stopped) {
+      def state = true
+      for (int id : requestIds) {
+        if (getInstallProgress(id) != 100.0) {
+          state = false;
+          break;
+        }
+      }
+      stopped = state
+      Thread.sleep(2000)
+    }
+  }
+
+  /**
+   * Decommission the data node on a given host.
+   */
+  def decommissionDataNode(String host) {
+    decommission(host, "DATANODE", "HDFS", "NAMENODE")
+  }
+
+  /**
+   * Decommission the node manager on a given host.
+   */
+  def decommissionNodeManager(String host) {
+    decommission(host, "NODEMANAGER", "YARN", "RESOURCEMANAGER")
+  }
+
+  /**
+   * Decommission a host component on a given host.
+   * @param host hostName where the component is installed to
+   * @param slaveName slave to be decommissioned
+   * @param serviceName where the slave belongs to
+   * @param componentName where the slave belongs to
+   */
+  def decommission(String host, String slaveName, String serviceName, String componentName) {
+    def requestInfo = [
+      command   : "DECOMMISSION",
+      context   : "Decommission $slaveName",
+      parameters: ["slave_type": slaveName, "excluded_hosts": host]
+    ]
+    def filter = [
+      ["service_name": serviceName, "component_name": componentName]
+    ]
+    Map bodyMap = [
+      "RequestInfo"              : requestInfo,
+      "Requests/resource_filters": filter
+    ]
+    ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), { it })
+  }
+
+  /**
    * Install all the components from a given blueprint's host group. The services must be installed
    * in order to install its components. It is recommended to use the same blueprint's host group from which
    * the cluster was created.
@@ -144,14 +240,23 @@ class AmbariClient {
   }
 
   /**
-   * Starts the given component on a host.
+   * Starts the given components on a host.
    *
+   * @return map of the component names and their request id since its an async call
    * @throws HttpResponseException in case the component is not found
    */
-  def startComponentsOnHost(String hostName, List<String> components) throws HttpResponseException {
-    components.each {
-      setComponentState(hostName, it, "STARTED")
-    }
+  def Map<String, Integer> startComponentsOnHost(String hostName, List<String> components) throws HttpResponseException {
+    setComponentsState(hostName, components, "STARTED")
+  }
+
+  /**
+   * Stops the given components on a host.
+   *
+   * @return map of the component names and their request id since its an async call
+   * @throws HttpResponseException in case the component is not found
+   */
+  def Map<String, Integer> stopComponentsOnHost(String hostName, List<String> components) throws HttpResponseException {
+    setComponentsState(hostName, components, "INSTALLED")
   }
 
   /**
@@ -901,6 +1006,15 @@ class AmbariClient {
     ambari.post(path: "clusters/${getClusterName()}/hosts/$hostName/host_components/${component.toUpperCase()}", { it })
   }
 
+  private def Map<String, Integer> setComponentsState(String hostName, List<String> components, String state)
+    throws HttpResponseException {
+    def resp = [:]
+    components.each {
+      resp << [(it): setComponentState(hostName, it, state)]
+    }
+    return resp
+  }
+
   private def setComponentState(String hostName, String component, String state) {
     if (debugEnabled) {
       println "[DEBUG] PUT ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components/$component"
@@ -967,6 +1081,16 @@ class AmbariClient {
 
   private def getClusterHosts() {
     slurp("clusters/${getClusterName()}")?.hosts?.Hosts?.host_name
+  }
+
+  private def deleteHostComponents(String hostName, List<String> components) {
+    components.each {
+      ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName/host_components/$it")
+    }
+  }
+
+  private def deleteHost(String hostName) {
+    ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName")
   }
 
 }
