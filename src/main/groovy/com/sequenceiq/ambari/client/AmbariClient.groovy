@@ -202,6 +202,22 @@ class AmbariClient {
   }
 
   /**
+   * Deletes the components from the host.
+   */
+  def deleteHostComponents(String hostName, List<String> components) {
+    components.each {
+      ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName/host_components/$it")
+    }
+  }
+
+  /**
+   * Deletes the host from the cluster.
+   */
+  def deleteHost(String hostName) {
+    ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName")
+  }
+
+  /**
    * Install all the components from a given blueprint's host group. The services must be installed
    * in order to install its components. It is recommended to use the same blueprint's host group from which
    * the cluster was created.
@@ -1092,16 +1108,6 @@ class AmbariClient {
 
   private def getClusterHosts() {
     slurp("clusters/${getClusterName()}")?.hosts?.Hosts?.host_name
-  }
-
-  private def deleteHostComponents(String hostName, List<String> components) {
-    components.each {
-      ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName/host_components/$it")
-    }
-  }
-
-  private def deleteHost(String hostName) {
-    ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName")
   }
 
 }
