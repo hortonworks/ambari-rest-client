@@ -154,7 +154,7 @@ class AmbariClient {
     while (!stopped) {
       def state = true
       for (int id : requestIds) {
-        if (getInstallProgress(id) != 100.0) {
+        if (getRequestProgress(id) != 100.0) {
           state = false;
           break;
         }
@@ -564,7 +564,7 @@ class AmbariClient {
    * @param request request id; default is 1
    * @return progress in percentage
    */
-  def BigDecimal getInstallProgress(request = 1) {
+  def BigDecimal getRequestProgress(request = 1) {
     def response = getAllResources("requests/$request", "Requests")
     def String status = response?.Requests?.request_status
     if (status && status.equals("FAILED")) {
@@ -736,12 +736,22 @@ class AmbariClient {
     return finalMap
   }
 
-  def startAllServices() {
+  /**
+   * Starts all the services.
+   *
+   * @return id of the request since its an async call
+   */
+  def int startAllServices() {
     log.debug("Starting all services ...")
     manageAllServices("Start All Services", "STARTED")
   }
 
-  def stopAllServices() {
+  /**
+   * Stops all the services.
+   *
+   * @return id of the request since its an async call
+   */
+  def int stopAllServices() {
     log.debug("Stopping all services ...")
     manageAllServices("Stop All Services", "INSTALLED")
   }
@@ -823,7 +833,8 @@ class AmbariClient {
     putRequestMap.put('query', ['params/run_smoke_test': 'false'])
     putRequestMap.put('body', builder.toPrettyString());
 
-    ambari.put(putRequestMap)
+    def reponse = ambari.put(putRequestMap)
+    slurper.parseText(reponse.getAt("responseData")?.getAt("str"))?.Requests?.id
   }
 
   private def processServiceVersions(Map<String, Integer> serviceToVersions, String service, def version) {
