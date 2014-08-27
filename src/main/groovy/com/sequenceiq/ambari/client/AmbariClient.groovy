@@ -121,7 +121,9 @@ class AmbariClient {
     def components = getHostComponentsMap(hostName).keySet() as List
 
     // decommission
-    decommissionNodeManager(hostName)
+    if (components.contains("NODEMANAGER")) {
+      decommissionNodeManager(hostName)
+    }
     if (components.contains("DATANODE")) {
       decommissionDataNode(hostName)
     }
