@@ -23,6 +23,7 @@ import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
+import org.apache.commons.io.IOUtils
 import org.apache.http.NoHttpResponseException
 import org.apache.http.client.ClientProtocolException
 import java.net.ConnectException
@@ -169,14 +170,14 @@ class AmbariClient {
   /**
    * Decommission the data node on a given host.
    */
-  def decommissionDataNode(String host) {
+  def int decommissionDataNode(String host) {
     decommission(host, "DATANODE", "HDFS", "NAMENODE")
   }
 
   /**
    * Decommission the node manager on a given host.
    */
-  def decommissionNodeManager(String host) {
+  def int decommissionNodeManager(String host) {
     decommission(host, "NODEMANAGER", "YARN", "RESOURCEMANAGER")
   }
 
@@ -187,7 +188,7 @@ class AmbariClient {
    * @param serviceName where the slave belongs to
    * @param componentName where the slave belongs to
    */
-  def decommission(String host, String slaveName, String serviceName, String componentName) {
+  def int decommission(String host, String slaveName, String serviceName, String componentName) {
     def requestInfo = [
       command   : "DECOMMISSION",
       context   : "Decommission $slaveName",
@@ -200,7 +201,9 @@ class AmbariClient {
       "RequestInfo"              : requestInfo,
       "Requests/resource_filters": filter
     ]
-    ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), { it })
+    ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), {
+      getRequestId(it)
+    })
   }
 
   /**
@@ -810,7 +813,7 @@ class AmbariClient {
   /**
    * Restarts the given components of a service.
    */
-  def restartServiceComponents(String service, List<String> components) {
+  def int restartServiceComponents(String service, List<String> components) {
     def filter = components.collect {
       ["service_name": service, "component_name": it, "hosts": getInternalHostNames(it).join(",")]
     }
@@ -818,7 +821,9 @@ class AmbariClient {
       "RequestInfo"              : [command: "RESTART", context: "Restart $service components $components"],
       "Requests/resource_filters": filter
     ]
-    ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), { it })
+    ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), {
+      getRequestId(it)
+    })
   }
 
   /**
@@ -1110,6 +1115,11 @@ class AmbariClient {
 
   private def getClusterHosts() {
     slurp("clusters/${getClusterName()}")?.hosts?.Hosts?.host_name
+  }
+
+  private def int getRequestId(def responseDecorator) {
+    def resp = IOUtils.toString(new InputStreamReader(responseDecorator.entity.content.wrappedStream))
+    slurper.parseText(resp)?.Requests?.id
   }
 
 }
