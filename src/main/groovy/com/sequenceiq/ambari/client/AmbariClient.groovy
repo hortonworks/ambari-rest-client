@@ -716,7 +716,7 @@ class AmbariClient {
    */
   def Map<String, String> getHostComponentsMap(host) {
     def result = getHostComponents(host)?.items?.collectEntries { [(it.HostRoles.component_name): it.HostRoles.state] }
-    result ?: new HashMap()
+    result ?: [:]
   }
 
   /**
@@ -802,9 +802,9 @@ class AmbariClient {
    */
   def List<String> getInternalHostNames(String hostComponent) {
     def hosts = []
-    getHostNames().each {
-      if (getHostComponentsMap(it.key).keySet().contains(hostComponent)) {
-        hosts << it.key
+    getClusterHosts().each {
+      if (getHostComponentsMap(it).keySet().contains(hostComponent)) {
+        hosts << it
       }
     }
     hosts
