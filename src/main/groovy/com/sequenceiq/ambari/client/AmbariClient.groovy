@@ -827,6 +827,13 @@ class AmbariClient {
   }
 
   /**
+   * Returns the names of the hosts which are in the cluster.
+   */
+  def List<String> getClusterHosts() {
+    slurp("clusters/${getClusterName()}")?.hosts?.Hosts?.host_name
+  }
+
+  /**
    * Resolves an internal hostname to a public one.
    */
   def String resolveInternalHostName(String internalHostName) {
@@ -1111,10 +1118,6 @@ class AmbariClient {
       index++
     }
     return -1;
-  }
-
-  private def getClusterHosts() {
-    slurp("clusters/${getClusterName()}")?.hosts?.Hosts?.host_name
   }
 
   private def int getRequestId(def responseDecorator) {
