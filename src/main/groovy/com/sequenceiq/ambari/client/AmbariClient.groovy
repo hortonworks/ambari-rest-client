@@ -625,6 +625,13 @@ class AmbariClient {
   }
 
   /**
+   * Returns the names of the hosts which has the given state.
+   */
+  def Map<String, String> getHostNamesByState(String state) {
+    getHostNames().findAll { it.value == state }
+  }
+
+  /**
    * Returns a pre-formatted list of the hosts.
    *
    * @return pre-formatted String
