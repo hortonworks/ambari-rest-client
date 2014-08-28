@@ -108,6 +108,8 @@ class AmbariClient {
 
   /**
    * Decommission and remove a host from the cluster.
+   * NOTE: this is a synchronous call, it wont return until all
+   * requests are finished
    *
    * Steps:
    *  1, decommission services
@@ -140,11 +142,13 @@ class AmbariClient {
     deleteHost(hostName)
 
     // restart zookeper
-    restartServiceComponents("ZOOKEEPER", ["ZOOKEEPER_SERVER"])
+    def id = restartServiceComponents("ZOOKEEPER", ["ZOOKEEPER_SERVER"])
+    waitForRequestsToFinish([id])
 
     // restart nagios
     if (getServiceComponentsMap().containsKey("NAGIOS")) {
-      restartServiceComponents("NAGIOS", ["NAGIOS_SERVER"])
+      id = restartServiceComponents("NAGIOS", ["NAGIOS_SERVER"])
+      waitForRequestsToFinish([id])
     }
   }
 
@@ -401,18 +405,6 @@ class AmbariClient {
   }
 
   /**
-   * Returns the names of the hosts which have been added to Ambari,
-   * but not to the cluster.
-   *
-   * @return list of hostnames
-   */
-  def List<String> getUnregisteredHostNames() {
-    def clusterHosts = getClusterHosts() as List
-    def allHosts = getHostNames().keySet() as List
-    return allHosts.minus(clusterHosts)
-  }
-
-  /**
    * Returns the name of the host groups for a given blueprint.
    *
    * @param blueprint id of the blueprint
@@ -616,7 +608,9 @@ class AmbariClient {
   }
 
   /**
-   * Returns the available host names and its states.
+   * Returns the available host names and their states. It also
+   * contains hosts which are not part of the cluster, but are connected
+   * to ambari.
    *
    * @return hostname state association
    */
@@ -625,7 +619,9 @@ class AmbariClient {
   }
 
   /**
-   * Returns the names of the hosts which has the given state.
+   * Returns the names of the hosts which have the given state. It also
+   * contains hosts which are not part of the cluster, but are connected
+   * to ambari.
    */
   def Map<String, String> getHostNamesByState(String state) {
     getHostNames().findAll { it.value == state }
