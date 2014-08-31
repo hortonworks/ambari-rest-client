@@ -738,11 +738,12 @@ class AmbariClient {
    *
    * @return a Map with entries of format <servicename, Map<property, value>>
    */
-  def Map<String, Map<String, String>> getServiceConfigMap() {
+  def Map<String, Map<String, String>> getServiceConfigMap(String type = "") {
     def Map<String, Integer> serviceToTags = new HashMap<>()
 
     //get services and last versions configurations
-    Map<String, ?> configsResourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations", [:])
+    def path = "clusters/${getClusterName()}/configurations"
+    Map<String, ?> configsResourceRequestMap = getResourceRequestMap(path, type ? ["type": type] : [:])
     def rawConfigs = getSlurpedResource(configsResourceRequestMap)
 
     rawConfigs?.items.collect { object ->
