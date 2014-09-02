@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.sequenceiq.ambari.client.AmbariBlueprintsTest" tests="17" skipped="0" failures="0" errors="0" timestamp="2014-09-02T08:23:42" hostname="Richards-MacBook-Pro.local" time="0.837">
+  <properties/>
+  <testcase name="test get the name of the cluster" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.498"/>
+  <testcase name="test get the name when there is no cluster" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.006"/>
+  <testcase name="test blueprint doesn't exist" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.02"/>
+  <testcase name="test blueprint exists" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.008"/>
+  <testcase name="test get blueprint as map" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.032"/>
+  <testcase name="test get blueprint as map when there's no blueprint" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.009"/>
+  <testcase name="test get host groups" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.012"/>
+  <testcase name="test get host groups for no groups" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.016"/>
+  <testcase name="test get host names" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.02"/>
+  <testcase name="test get host names for empty result" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.008"/>
+  <testcase name="test validate blueprint" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.037"/>
+  <testcase name="test validate blueprint no slaves_" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.027"/>
+  <testcase name="test validate blueprint with uppercase SLAVE_" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.013"/>
+  <testcase name="test validate blueprint for null json" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.002"/>
+  <testcase name="test add blueprint with configuration" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.067"/>
+  <testcase name="test add blueprint with existing configuration" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.031"/>
+  <testcase name="test add blueprint with empty configuration" classname="com.sequenceiq.ambari.client.AmbariBlueprintsTest" time="0.018"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+]]></system-err>
+</testsuite>
