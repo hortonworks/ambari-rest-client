@@ -822,7 +822,7 @@ class AmbariClient {
   }
 
   /**
-   * Returns the internal hostnames of the hosts which the host components are installed to.
+   * Returns the internal host names of the hosts which the host components are installed to.
    */
   def List<String> getInternalHostNames(String hostComponent) {
     def hosts = []
