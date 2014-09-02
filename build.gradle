@@ -1,0 +1,104 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+def env = project.hasProperty('env') ? project.getProperty('env') : 'local'
+
+apply plugin: 'groovy'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'maven'
+
+sourceCompatibility = 1.7
+group = 'com.sequenceiq'
+
+allprojects {
+    systemProperties = System.properties
+    apply from: "$rootDir/gradle/versioning.gradle"
+    ext.config = new ConfigSlurper(env).parse(file("$rootDir/gradle/config/buildConfig.groovy").toURL())
+}
+
+jar {
+    baseName = 'ambari-client'
+}
+
+configurations {
+    deployerJars
+    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            configuration = configurations.deployerJars
+            repository(url: "s3://maven.sequenceiq.com/releases") {
+                authentication(userName: "$System.env.AWS_ACCESS_KEY", passphrase: "$System.env.AWS_SECRET_ACCESS_KEY")
+            }
+            snapshotRepository(url: "s3://maven.sequenceiq.com/snapshots") {
+                authentication(userName: "$System.env.AWS_ACCESS_KEY", passphrase: "$System.env.AWS_SECRET_ACCESS_KEY")
+            }
+        }
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url "http://maven.sequenceiq.com/snapshots" }
+    maven { url "http://maven.sequenceiq.com/release" }
+    maven { url "http://seq-repo.s3-website-eu-west-1.amazonaws.com/releases" }
+    maven { url "http://seq-repo.s3-website-eu-west-1.amazonaws.com/snapshots" }
+}
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:1.7.7'
+    compile 'org.slf4j:slf4j-log4j12:1.7.7'
+    compile 'org.codehaus.groovy:groovy-all:2.1.8'
+    compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+    compile 'commons-io:commons-io:2.4'
+
+    testCompile 'org.easymock:easymock:3.2'
+    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
+
+    deployerJars 'org.springframework.build.aws:org.springframework.build.aws.maven:3.0.0.RELEASE'
+}
+
+task wrapper(type: Wrapper) { gradleVersion = "1.12" }
+
+task buildInfo(type: BuildInfoTask) {
+    systemProperties = System.properties
+    destination = file("$buildDir")
+    applicationPropertiesPath = "$buildDir"
+    basename = jar.baseName
+    buildVersion = version
+}
+
+compileJava.dependsOn buildInfo
+
+class BuildInfoTask extends DefaultTask {
+    File destination = new File("build.info")
+    String applicationPropertiesPath
+    String basename
+    String buildVersion
+
+    @TaskAction
+    def writeBuildInfo() {
+        destination.mkdirs()
+        File applicationDestination = new File(applicationPropertiesPath + "/resources/main")
+        applicationDestination.mkdirs()
+        new File(destination, "build.info").withWriter { out ->
+            [
+                    "ARTIFACT_BASENAME=" + basename,
+                    "ARTIFACT_VERSION=" + buildVersion,
+            ].each { out.println it }
+        }
+        new File(applicationDestination, "application.properties").withWriter { out ->
+            [
+                    "info.app.name=" + basename,
+                    "info.app.version=" + buildVersion,
+                    "management.contextPath=" + "\${CB_MANAGEMENT_CONTEXT_PATH}"
+            ].each { out.println it }
+        }
+    }
+}

@@ -3,6 +3,16 @@
 .project
 target
 lib
+/build
+/bin
+.settings
+.project
+.classpath
+.gradle
 .idea
 *.iml
-.idea
+.apib
+*.iml
+.DS_Store
+atlassian*
+out/
