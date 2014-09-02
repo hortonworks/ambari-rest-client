@@ -45,7 +45,7 @@ if(jobName != null) {
       }
       f.delete()
     } catch (Exception ex) {
-       versionNum = "0.1.1"
+       versionNum = "1"
     }
 }
 
