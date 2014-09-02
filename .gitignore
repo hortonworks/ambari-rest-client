@@ -5,6 +5,7 @@ target
 lib
 /build
 /bin
+target
 .settings
 .project
 .classpath
