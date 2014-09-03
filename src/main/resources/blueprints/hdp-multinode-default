@@ -1,8 +1,14 @@
 {
     "configurations" : [
         {
-            "global" : {
-                "nagios_contact" : "admin@localhost"
+            "nagios-env" : {
+                "nagios_contact" : "admin@localhost",
+                "nagios_web_password" : "admin"
+            }
+        },
+        {
+            "hive-site" : {
+                "javax.jdo.option.ConnectionPassword" : "admin"
             }
         }
     ],
@@ -133,9 +139,6 @@
                 },
                 {
                     "name" : "NAGIOS_SERVER"
-                },
-                {
-                    "name" : "GANGLIA_SERVER"
                 },
                 {
                     "name" : "ZOOKEEPER_CLIENT"

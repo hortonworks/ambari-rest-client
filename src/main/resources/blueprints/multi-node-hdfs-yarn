@@ -1,8 +1,9 @@
 {
   "configurations": [
     {
-      "global": {
-        "nagios_contact": ""
+      "nagios-env": {
+        "nagios_contact": "admin@localhost",
+        "nagios_web_password" : "admin"
       }
     }
   ],
