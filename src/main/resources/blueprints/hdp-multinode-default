@@ -135,9 +135,6 @@
                     "name" : "NAGIOS_SERVER"
                 },
                 {
-                    "name" : "GANGLIA_SERVER"
-                },
-                {
                     "name" : "ZOOKEEPER_CLIENT"
                 },
                 {
