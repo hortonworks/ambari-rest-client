@@ -813,7 +813,7 @@ class AmbariClient {
    * Returns the public hostnames of the hosts which the host components are installed to.
    */
   def List<String> getPublicHostNames(String hostComponent) {
-    def hosts = getInternalHostNames(hostComponent)
+    def hosts = getHostNamesByComponent(hostComponent)
     if (hosts) {
       return hosts.collect() { resolveInternalHostName(it) }
     } else {
@@ -822,16 +822,15 @@ class AmbariClient {
   }
 
   /**
-   * Returns the internal hostnames of the hosts which the host components are installed to.
+   * Returns the internal host names of the hosts which the host components are installed to.
    */
-  def List<String> getInternalHostNames(String hostComponent) {
-    def hosts = []
-    getClusterHosts().each {
-      if (getHostComponentsMap(it).keySet().contains(hostComponent)) {
-        hosts << it
-      }
+  def List<String> getHostNamesByComponent(String component) {
+    def serviceName = getAllResources("host_components/$component")?.component?.ServiceComponentInfo?.service_name?.getAt(0)
+    if (serviceName) {
+      getAllResources("services/$serviceName/components/$component")?.host_components?.HostRoles?.host_name
+    } else {
+      []
     }
-    hosts
   }
 
   /**
@@ -839,7 +838,7 @@ class AmbariClient {
    */
   def int restartServiceComponents(String service, List<String> components) {
     def filter = components.collect {
-      ["service_name": service, "component_name": it, "hosts": getInternalHostNames(it).join(",")]
+      ["service_name": service, "component_name": it, "hosts": getHostNamesByComponent(it).join(",")]
     }
     Map bodyMap = [
       "RequestInfo"              : [command: "RESTART", context: "Restart $service components $components"],
