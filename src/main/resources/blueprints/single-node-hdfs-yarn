@@ -8,7 +8,7 @@
       },
       {
         "name" : "SECONDARY_NAMENODE"
-      },       
+      },
       {
         "name" : "DATANODE"
       },
@@ -20,6 +20,9 @@
       },
       {
         "name" : "NODEMANAGER"
+      },
+      {
+        "name": "APP_TIMELINE_SERVER"
       },
       {
         "name" : "YARN_CLIENT"

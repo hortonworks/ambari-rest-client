@@ -26,6 +26,9 @@
           "name": "NAGIOS_SERVER"
         },
         {
+          "name": "APP_TIMELINE_SERVER"
+        },
+        {
           "name": "ZOOKEEPER_SERVER"
         }
       ],
