@@ -107,6 +107,16 @@ class AmbariClient {
   }
 
   /**
+   * Returns the state of the host.
+   *
+   * @param host host's internal hostname
+   * @return state of the host
+   */
+  String getHostState(String host) {
+    getAllResources("hosts/$host").Hosts.host_status
+  }
+
+  /**
    * Decommission and remove a host from the cluster.
    * NOTE: this is a synchronous call, it wont return until all
    * requests are finished
