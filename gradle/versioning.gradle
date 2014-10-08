@@ -79,7 +79,7 @@ class ProjectVersion {
             fullVersion += ".$build"
         }
         if (branch != null && !branch.contains("master")) {
-            fullVersion += ".$branch"
+            fullVersion += ""
         }
         fullVersion
     }
