@@ -231,9 +231,20 @@ class AmbariClient {
 
   /**
    * Deletes the host from the cluster.
+   * Note: Deleting a host from a cluster does not mean it is also
+   * deleted/unregistered from Ambari. It will remain there with UNKNOWN state.
    */
   def deleteHost(String hostName) {
     ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName")
+  }
+
+  /**
+   * Deletes the host from Ambari.
+   * Note: Deleting a host from a cluster does not mean it is also
+   * deleted/unregistered from Ambari. It will remain there with UNKNOWN state.
+   */
+  def unregisterHost(String hostName) {
+    ambari.delete(path: "hosts/$hostName")
   }
 
   /**
