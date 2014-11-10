@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package com.sequenceiq.ambari.client
+
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
@@ -25,6 +26,10 @@ import groovyx.net.http.RESTClient
 import org.apache.commons.io.IOUtils
 import org.apache.http.NoHttpResponseException
 import org.apache.http.client.ClientProtocolException
+import java.net.ConnectException
+import java.net.NoRouteToHostException
+import java.net.UnknownHostException
+
 /**
  * Basic client to send requests to the Ambari server.
  */
@@ -477,37 +482,14 @@ class AmbariClient {
           throw new InvalidBlueprintException("At least one '$SLAVE' host group is required.")
         }
       }
-      boolean nagiosIsPresented = isNagiosPresented(bpMap)
-      if (nagiosIsPresented) {
-        if (bpMap.configurations?.size > 0) {
-            if (bpMap.configurations?.global?.size != 1) {
-              throw new InvalidBlueprintException("Invalid blueprint: Currently we supporting just the ambari 1.6.");
-            } else {
-              def find = bpMap.host_groups.components.global.find { it.nagios_contact == null }
-              if (find) {
-                throw new InvalidBlueprintException("Invalid blueprint: Currently we supporting just the ambari 1.6.");
-              }
-            }
+      if (isComponentPresent(bpMap, "NAGIOS_SERVER")) {
+        if (bpMap?.configurations?.findAll { it?.global?.nagios_contact }?.size() != 1) {
+          throw new InvalidBlueprintException("Invalid blueprint: Currently we supporting just the ambari 1.6.");
         }
       }
     } else {
       throw new InvalidBlueprintException("No blueprint specified")
     }
-  }
-
-  private boolean isNagiosPresented(def bpMap) {
-    if (bpMap?.host_groups?.size > 0) {
-      for (int i = 0; i < bpMap.host_groups.size; i++) {
-        def actual_host_group = bpMap.host_groups[i]
-        if (actual_host_group.components?.size > 0) {
-          def find = actual_host_group.components.findAll { it.name.toUpperCase().startsWith("NAGIOS_SERVER") }
-          if (find) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
   }
 
   /**
@@ -1195,6 +1177,10 @@ class AmbariClient {
   private def int getRequestId(def responseDecorator) {
     def resp = IOUtils.toString(new InputStreamReader(responseDecorator.entity.content.wrappedStream))
     slurper.parseText(resp)?.Requests?.id
+  }
+
+  private def boolean isComponentPresent(def bpMap, def component) {
+    bpMap?.host_groups?.collectAll { it?.components?.name }.flatten().contains(component)
   }
 
 }
