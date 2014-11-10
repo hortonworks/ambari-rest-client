@@ -477,7 +477,7 @@ class AmbariClient {
           throw new InvalidBlueprintException("At least one '$SLAVE' host group is required.")
         }
       }
-      boolean nagiosIsPresented = nagiosIsPresentedInBlueprint(bpMap)
+      boolean nagiosIsPresented = isNagiosPresented(bpMap)
       if (nagiosIsPresented) {
         if (bpMap.configurations?.size > 0) {
             if (bpMap.configurations?.global?.size != 1) {
@@ -495,7 +495,7 @@ class AmbariClient {
     }
   }
 
-  private boolean nagiosIsPresentedInBlueprint(def bpMap) {
+  private boolean isNagiosPresented(def bpMap) {
     if (bpMap?.host_groups?.size > 0) {
       for (int i = 0; i < bpMap.host_groups.size; i++) {
         def actual_host_group = bpMap.host_groups[i]
