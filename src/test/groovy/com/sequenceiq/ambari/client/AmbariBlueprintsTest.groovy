@@ -160,7 +160,7 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
     ambari.validateBlueprint(json)
 
     then:
-    noExceptionThrown()
+    thrown(InvalidBlueprintException)
   }
 
   def "test validate blueprint no slaves_"() {
