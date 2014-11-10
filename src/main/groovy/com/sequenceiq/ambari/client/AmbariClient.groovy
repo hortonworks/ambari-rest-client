@@ -482,6 +482,11 @@ class AmbariClient {
           throw new InvalidBlueprintException("At least one '$SLAVE' host group is required.")
         }
       }
+      if (isComponentPresent(bpMap, "NAGIOS_SERVER")) {
+        if (bpMap?.configurations?.findAll { it?.global?.nagios_contact }?.size() != 1) {
+          throw new InvalidBlueprintException("Invalid blueprint: Currently we supporting just the ambari 1.6.");
+        }
+      }
     } else {
       throw new InvalidBlueprintException("No blueprint specified")
     }
@@ -1172,6 +1177,10 @@ class AmbariClient {
   private def int getRequestId(def responseDecorator) {
     def resp = IOUtils.toString(new InputStreamReader(responseDecorator.entity.content.wrappedStream))
     slurper.parseText(resp)?.Requests?.id
+  }
+
+  private def boolean isComponentPresent(def bpMap, def component) {
+    bpMap?.host_groups?.collectAll { it?.components?.name }.flatten().contains(component)
   }
 
 }
