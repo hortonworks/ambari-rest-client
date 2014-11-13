@@ -280,7 +280,10 @@ class AmbariClient {
     def resp = [:]
     components.each {
       addComponentToHost(hostName, it)
-      resp << [(it): setComponentState(hostName, it, "INSTALLED")]
+      def id = setComponentState(hostName, it, "INSTALLED")
+      if (id) {
+        resp << [(it): id]
+      }
     }
     resp
   }
@@ -1105,7 +1108,10 @@ class AmbariClient {
     throws HttpResponseException {
     def resp = [:]
     components.each {
-      resp << [(it): setComponentState(hostName, it, state)]
+      def id = setComponentState(hostName, it, state)
+      if (id) {
+        resp << [(it): id]
+      }
     }
     return resp
   }
@@ -1122,8 +1128,10 @@ class AmbariClient {
     putRequestMap.put('requestContentType', ContentType.URLENC)
     putRequestMap.put('path', "clusters/${getClusterName()}/hosts/$hostName/host_components/${component.toUpperCase()}")
     putRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
-    def reponse = ambari.put(putRequestMap)
-    slurper.parseText(reponse.getAt("responseData")?.getAt("str"))?.Requests?.id
+    def response = ambari.put(putRequestMap).getAt("responseData")?.getAt("str")
+    if (response) {
+      slurper.parseText(response)?.Requests?.id
+    }
   }
 
   /**
