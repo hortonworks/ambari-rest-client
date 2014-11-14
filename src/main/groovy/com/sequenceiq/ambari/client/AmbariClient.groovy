@@ -196,6 +196,13 @@ class AmbariClient {
   }
 
   /**
+   * Decommission the HBase Region Server on a given host.
+   */
+  def int decommissionHBaseRegionServer(String host) {
+    decommission(host, "HBASE_REGIONSERVER", "HBASE", "HBASE_MASTER")
+  }
+
+  /**
    * Decommission a host component on a given host.
    * @param host hostName where the component is installed to
    * @param slaveName slave to be decommissioned
