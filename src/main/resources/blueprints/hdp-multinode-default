@@ -8,7 +8,7 @@
     ],
     "host_groups" : [
         {
-            "name" : "master_1",
+            "name" : "master",
             "components" : [
                 {
                     "name" : "NAMENODE"
