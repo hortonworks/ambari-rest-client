@@ -117,6 +117,18 @@ class AmbariClient {
   }
 
   /**
+   * Change the password of an Ambari user.
+   */
+  def changePassword(String user, String oldPassword, String newPassword, boolean admin) {
+    def roles = ["user"]
+    if (admin) {
+      roles << "admin"
+    }
+    def context = ["Users": ["roles": roles.join(','), "password": newPassword, "old_password": oldPassword]]
+    ambari.put(path: "users/$user", body: new JsonBuilder(context).toPrettyString(), requestContentType: ContentType.URLENC)
+  }
+
+  /**
    * Decommission and remove a host from the cluster.
    * NOTE: this is a synchronous call, it wont return until all
    * requests are finished
