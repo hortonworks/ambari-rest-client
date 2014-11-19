@@ -117,6 +117,25 @@ class AmbariClient {
   }
 
   /**
+   * Create a new Ambari user.
+   */
+  def createUser(String user, String password, boolean admin) {
+    def roles = ["user"]
+    if (admin) {
+      roles << "admin"
+    }
+    def context = ["Users": ["roles": roles.join(','), "password": password]]
+    ambari.post(path: "users/$user", body: new JsonBuilder(context).toPrettyString(), { it })
+  }
+
+  /**
+   * Delete an Ambari user.
+   */
+  def deleteUser(String user) {
+    ambari.delete(path: "users/$user")
+  }
+
+  /**
    * Change the password of an Ambari user.
    */
   def changePassword(String user, String oldPassword, String newPassword, boolean admin) {
