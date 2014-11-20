@@ -764,6 +764,39 @@ class AmbariClient {
   }
 
   /**
+   * Returns the type of the components of a given host group in a given blueprint.
+   * There are 3 types: SLAVE, CLIENT, MASTER
+   *
+   * @param blueprintId if of the blueprint
+   * @param hostGroup host group's name in the blueprint
+   * @return map where the key is the component's name and the value is the category
+   */
+  def Map<String, String> getComponentsCategory(String blueprintId, String hostGroup) {
+    def bpMap = getBlueprint(blueprintId)
+    def components = bpMap?.host_groups?.find { it.name.equals(hostGroup) }?.components?.collect { it.name }
+    getComponentsCategory(components)
+  }
+
+  /**
+   * Returns the type of the components.
+   * There are 3 types: SLAVE, CLIENT, MASTER
+   *
+   * @param components list of the components
+   * @return map where the key is the component's name and the value is the category
+   */
+  def Map<String, String> getComponentsCategory(List<String> components) {
+    def result = [:]
+    components.each {
+      def json = slurp("clusters/${getClusterName()}/components/$it", "ServiceComponentInfo")
+      def category = json?.ServiceComponentInfo?.category
+      if (category) {
+        result << ["$it": category]
+      }
+    }
+    result
+  }
+
+  /**
    * Performs a health check on the Ambari server.
    *
    * @return status
