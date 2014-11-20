@@ -148,6 +148,31 @@ class AmbariClient {
   }
 
   /**
+   * Runs a MapReduce service check which is a simple WordCount.
+   * @return id of the request
+   */
+  def int runMRServiceCheck() {
+    runServiceCheck("MAPREDUCE2_SERVICE_CHECK", "MAPREDUCE2")
+  }
+
+  /**
+   * Run a service check.
+   *
+   * @param command command to run
+   * @param serviceName name of the service
+   * @return id of the request
+   */
+  def int runServiceCheck(String command, String serviceName) {
+    Map bodyMap = [
+      "RequestInfo"              : [command: command, context: command],
+      "Requests/resource_filters": [[service_name: serviceName]]
+    ]
+    ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), {
+      getRequestId(it)
+    })
+  }
+
+  /**
    * Decommission and remove a host from the cluster.
    * NOTE: this is a synchronous call, it wont return until all
    * requests are finished
