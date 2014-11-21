@@ -790,7 +790,7 @@ class AmbariClient {
       def json = slurp("clusters/${getClusterName()}/components/$it", "ServiceComponentInfo")
       def category = json?.ServiceComponentInfo?.category
       if (category) {
-        result << ["$it": category]
+        result << [(it): category]
       }
     }
     result
