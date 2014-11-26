@@ -550,7 +550,7 @@ class AmbariClient {
       }
       if (isComponentPresent(bpMap, "NAGIOS_SERVER")) {
         if (bpMap?.configurations?.findAll { it?.global?.nagios_contact }?.size() != 1) {
-          throw new InvalidBlueprintException("Invalid blueprint: Currently we supporting just the ambari 1.6.");
+          throw new InvalidBlueprintException("Invalid blueprint: Currently we are supporting only Ambari 1.6 blueprints");
         }
       }
     } else {
