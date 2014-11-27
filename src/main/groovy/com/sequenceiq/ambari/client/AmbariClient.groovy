@@ -310,7 +310,10 @@ class AmbariClient {
   def Map<String, Map<Long, Long>> getDFSSpace() {
     def result = [:]
     def response = slurp("clusters/${getClusterName()}/services/HDFS/components/NAMENODE", "metrics/dfs")
-    def liveNodes = slurper.parseText(response?.metrics?.dfs?.namenode?.LiveNodes)
+    def nn = response?.metrics?.dfs?.namenode
+    def liveNodes = slurper.parseText(nn?.LiveNodes)
+    def deadNodes = slurper.parseText(nn?.DeadNodes)
+    liveNodes = liveNodes - deadNodes
     if (liveNodes) {
       liveNodes.each {
         result << [(it.key): [(it.value.remaining as Long): it.value.usedSpace as Long]]
