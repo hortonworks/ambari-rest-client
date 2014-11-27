@@ -23,7 +23,7 @@ import groovy.util.logging.Slf4j
 class AmbariDecommissionTest extends AbstractAmbariClientTest {
 
   private enum Scenario {
-    NOT_EMPTY_RESULT, EMPTY_RESULT
+    NOT_EMPTY_RESULT, EMPTY_RESULT, LIVE_NODES
   }
 
   def "test get decommissioning nodes"() {
@@ -51,6 +51,26 @@ class AmbariDecommissionTest extends AbstractAmbariClientTest {
     result == [:]
   }
 
+  def "test get dfs block size of the data nodes"() {
+    given:
+    ambari.metaClass.getClusterName = { return "MySingleNodeCluster" }
+    mockResponses(Scenario.LIVE_NODES.name())
+
+    when:
+    def result = ambari.getDFSSpace();
+
+    then:
+    result == ["decomtest-1-1417096578294.c.siq-haas.internal": [9360900096: 57344],
+               "decomtest-2-1417096576950.c.siq-haas.internal": [9360794745: 162695],
+               "decomtest-9-1417096577273.c.siq-haas.internal": [9360748544: 208896],
+               "decomtest-3-1417096576478.c.siq-haas.internal": [9360900096: 57344],
+               "decomtest-7-1417096577548.c.siq-haas.internal": [9360930130: 27310],
+               "decomtest-8-1417096577818.c.siq-haas.internal": [9360827248: 130192],
+               "decomtest-4-1417096576724.c.siq-haas.internal": [9360777216: 180224],
+               "decomtest-6-1417096578055.c.siq-haas.internal": [9360896575: 60865],
+               "decomtest-5-1417096578527.c.siq-haas.internal": [9360777216: 180224]]
+  }
+
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
     def thePath = resourceRequestMap.get("path");
     def query = resourceRequestMap.get("query");
@@ -61,6 +81,8 @@ class AmbariDecommissionTest extends AbstractAmbariClientTest {
         case Scenario.NOT_EMPTY_RESULT: json = "decommission.json"
           break
         case Scenario.EMPTY_RESULT: json = "decommission2.json"
+          break
+        case Scenario.LIVE_NODES: json = "livenodes.json"
           break
       }
     } else {
