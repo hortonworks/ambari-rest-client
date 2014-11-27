@@ -284,6 +284,24 @@ class AmbariClient {
   }
 
   /**
+   * Returns the name of the node and the size of the replicated block that are remaining.
+   *
+   * @return Map where the key is the internal host name of the node and the value
+   *         is size of the replicated block
+   */
+  def Map<String, Long> getDecommissioningDataNodes() {
+    def result = [:]
+    def response = slurp("clusters/${getClusterName()}/services/HDFS/components/NAMENODE", "metrics/dfs/namenode/DecomNodes")
+    def nodes = slurper.parseText(response?.metrics?.dfs?.namenode?.DecomNodes)
+    if (nodes) {
+      nodes.each {
+        result << [(it.key): it.value.underReplicatedBlocks as Long]
+      }
+    }
+    result
+  }
+
+  /**
    * Deletes the components from the host.
    */
   def deleteHostComponents(String hostName, List<String> components) {

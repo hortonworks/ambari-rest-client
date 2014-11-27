@@ -20,29 +20,35 @@ package com.sequenceiq.ambari.client
 import groovy.util.logging.Slf4j
 
 @Slf4j
-class AmbariClustersTest extends AbstractAmbariClientTest {
+class AmbariDecommissionTest extends AbstractAmbariClientTest {
 
   private enum Scenario {
-    CLUSTERS, CLUSTER
+    NOT_EMPTY_RESULT, EMPTY_RESULT
   }
 
-  def "test get cluster as JSON"() {
+  def "test get decommissioning nodes"() {
     given:
-    mockResponses(Scenario.CLUSTER.name())
+    ambari.metaClass.getClusterName = { return "MySingleNodeCluster" }
+    mockResponses(Scenario.NOT_EMPTY_RESULT.name())
 
-    expect:
-    String json = ambari.getClusterAsJson();
-    log.debug("JSON: {}", json)
+    when:
+    Map<String, Long> result = ambari.getDecommissioningDataNodes();
 
+    then:
+    result == ["node1-15-1417034863208.c.siq-haas.internal": 1578,
+               "node3-9-1417034863274.c.siq-haas.internal" : 1436]
   }
 
-  def "test get clusters as JSON"() {
+  def "test get decommissioning nodes with no nodes"() {
     given:
-    mockResponses(Scenario.CLUSTERS.name())
+    ambari.metaClass.getClusterName = { return "MySingleNodeCluster" }
+    mockResponses(Scenario.EMPTY_RESULT.name())
 
-    expect:
-    String json = ambari.getClustersAsJson();
-    log.debug("JSON: {}", json)
+    when:
+    Map<String, Long> result = ambari.getDecommissioningDataNodes();
+
+    then:
+    result == [:]
   }
 
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
@@ -50,11 +56,11 @@ class AmbariClustersTest extends AbstractAmbariClientTest {
     def query = resourceRequestMap.get("query");
     def Scenario scenario = Scenario.valueOf(scenarioStr)
     def json = null
-    if (thePath == TestResources.CLUSTERS.uri()) {
-      json = "clusters.json"
-    } else if (thePath == TestResources.CLUSTER.uri()) {
+    if (thePath == TestResources.GET_DECOM_NODES.uri()) {
       switch (scenario) {
-        case Scenario.CLUSTER: json = "clusterAll.json"
+        case Scenario.NOT_EMPTY_RESULT: json = "decommission.json"
+          break
+        case Scenario.EMPTY_RESULT: json = "decommission2.json"
           break
       }
     } else {
