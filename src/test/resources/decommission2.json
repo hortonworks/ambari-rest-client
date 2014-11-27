@@ -1,0 +1,15 @@
+{
+  "href" : "http://146.148.16.116:8080/api/v1/clusters/MySingleNodeCluster/services/HDFS/components/NAMENODE?fields=metrics/dfs/namenode/DecomNodes",
+  "ServiceComponentInfo" : {
+    "cluster_name" : "MySingleNodeCluster",
+    "component_name" : "NAMENODE",
+    "service_name" : "HDFS"
+  },
+  "metrics" : {
+    "dfs" : {
+      "namenode" : {
+        "DecomNodes" : "{}"
+      }
+    }
+  }
+}

@@ -30,7 +30,8 @@ enum TestResources {
   TASKS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/requests/1"),
   SERVICES("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/services"),
   SERVICE_COMPONENTS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/services/HDFS/components"),
-  HOST_COMPONENTS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/hosts/host/host_components")
+  HOST_COMPONENTS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/hosts/host/host_components"),
+  GET_DECOM_NODES("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/services/HDFS/components/NAMENODE")
 
   String uri;
 
