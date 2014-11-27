@@ -302,6 +302,24 @@ class AmbariClient {
   }
 
   /**
+   * Returns the nodes by DFS an their data allocations.
+   *
+   * @return a Map where the key is the internal host name and the value
+   *         is a Map where the key is the remaining space and the value is the used space in bytes
+   */
+  def Map<String, Map<Long, Long>> getDFSSpace() {
+    def result = [:]
+    def response = slurp("clusters/${getClusterName()}/services/HDFS/components/NAMENODE", "metrics/dfs")
+    def liveNodes = slurper.parseText(response?.metrics?.dfs?.namenode?.LiveNodes)
+    if (liveNodes) {
+      liveNodes.each {
+        result << [(it.key): [(it.value.remaining as Long): it.value.usedSpace as Long]]
+      }
+    }
+    result
+  }
+
+  /**
    * Deletes the components from the host.
    */
   def deleteHostComponents(String hostName, List<String> components) {
