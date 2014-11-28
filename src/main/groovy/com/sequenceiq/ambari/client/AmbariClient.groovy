@@ -313,7 +313,9 @@ class AmbariClient {
     def liveNodes = slurper.parseText(response?.metrics?.dfs?.namenode?.LiveNodes)
     if (liveNodes) {
       liveNodes.each {
-        result << [(it.key): [(it.value.remaining as Long): it.value.usedSpace as Long]]
+        if (it.value.adminState == "In Service") {
+          result << [(it.key): [(it.value.remaining as Long): it.value.usedSpace as Long]]
+        }
       }
     }
     result

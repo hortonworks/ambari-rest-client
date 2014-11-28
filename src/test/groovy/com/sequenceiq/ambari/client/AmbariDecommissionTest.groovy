@@ -61,13 +61,9 @@ class AmbariDecommissionTest extends AbstractAmbariClientTest {
 
     then:
     result == ["decomtest-1-1417096578294.c.siq-haas.internal": [9360900096: 57344],
-               "decomtest-2-1417096576950.c.siq-haas.internal": [9360794745: 162695],
                "decomtest-9-1417096577273.c.siq-haas.internal": [9360748544: 208896],
                "decomtest-3-1417096576478.c.siq-haas.internal": [9360900096: 57344],
-               "decomtest-7-1417096577548.c.siq-haas.internal": [9360930130: 27310],
-               "decomtest-8-1417096577818.c.siq-haas.internal": [9360827248: 130192],
                "decomtest-4-1417096576724.c.siq-haas.internal": [9360777216: 180224],
-               "decomtest-6-1417096578055.c.siq-haas.internal": [9360896575: 60865],
                "decomtest-5-1417096578527.c.siq-haas.internal": [9360777216: 180224]]
   }
 
