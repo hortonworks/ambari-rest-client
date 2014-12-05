@@ -154,7 +154,7 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
 
   def "test validate blueprint for ambari 1.7"() {
     given:
-    def json = getClass().getClassLoader().getResourceAsStream("blueprint17.json").text
+    def json = getClass().getClassLoader().getResourceAsStream("blueprint16.json").text
 
     when:
     ambari.validateBlueprint(json)

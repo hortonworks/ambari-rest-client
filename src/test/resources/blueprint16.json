@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "nagios-env": {
+            "global": {
                 "nagios_contact": "admin@localhost"
             }
         }
