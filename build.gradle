@@ -21,7 +21,7 @@ allprojects {
 }
 
 jar {
-    baseName = 'ambari-client17'
+    baseName = 'ambari-client18'
 }
 
 configurations {
@@ -96,8 +96,7 @@ class BuildInfoTask extends DefaultTask {
         new File(applicationDestination, "application.properties").withWriter { out ->
             [
                     "info.app.name=" + basename,
-                    "info.app.version=" + buildVersion,
-                    "management.contextPath=" + "\${CB_MANAGEMENT_CONTEXT_PATH}"
+                    "info.app.version=" + buildVersion
             ].each { out.println it }
         }
     }
