@@ -988,12 +988,9 @@ class AmbariClient {
    * Returns the internal host names of the hosts which the host components are installed to.
    */
   def List<String> getHostNamesByComponent(String component) {
-    def serviceName = getAllResources("host_components/$component")?.component?.ServiceComponentInfo?.service_name?.getAt(0)
-    if (serviceName) {
-      getAllResources("services/$serviceName/components/$component")?.host_components?.HostRoles?.host_name
-    } else {
-      []
-    }
+    def hostRoles = getAllResources("host_components", "HostRoles/component_name")
+    def hosts = hostRoles?.items?.findAll { it.HostRoles.component_name.equals(component) }?.HostRoles?.host_name
+    hosts ?: []
   }
 
   /**
