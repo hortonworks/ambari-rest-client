@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 package com.sequenceiq.ambari.client
-
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
@@ -29,7 +28,6 @@ import org.apache.http.client.ClientProtocolException
 import java.net.ConnectException
 import java.net.NoRouteToHostException
 import java.net.UnknownHostException
-
 /**
  * Basic client to send requests to the Ambari server.
  */
@@ -563,6 +561,17 @@ class AmbariClient {
     if (json) {
       def text = slurper.parseText(json)
       def bpMap = extendBlueprintConfiguration(text, configurations)
+      def builder = new JsonBuilder(bpMap)
+      def resultJson = builder.toPrettyString()
+      postBlueprint(resultJson)
+      resultJson
+    }
+  }
+
+  def String addBlueprintWithHostgroupConfiguration(String json, Map<String, Map<String, Map<String, String>>> configurations) throws HttpResponseException {
+    if (json) {
+      def text = slurper.parseText(json)
+      def bpMap = extendBlueprintHostGroupConfiguration(text, configurations)
       def builder = new JsonBuilder(bpMap)
       def resultJson = builder.toPrettyString()
       postBlueprint(resultJson)
@@ -1300,6 +1309,31 @@ class AmbariClient {
       } else {
         def existingConf = configurations.get(index)
         existingConf."$site" << it.value
+      }
+    }
+    blueprintMap
+  }
+
+  private def extendBlueprintHostGroupConfiguration(Map blueprintMap, Map newConfigs) {
+    for (int j = 0; j < newConfigs.size(); j++) {
+      def configurations = blueprintMap.host_groups.find { it.name == newConfigs.keySet().getAt(j) }.configurations
+      if (!configurations) {
+        if (newConfigs) {
+          def conf = []
+          newConfigs.get(newConfigs.keySet().getAt(j)).each { conf << [(it.key): it.value] }
+          blueprintMap.host_groups.find { it.name == newConfigs.keySet().getAt(j) } << ["configurations": conf]
+        }
+      } else {
+        newConfigs.get(newConfigs.keySet().getAt(j)).each {
+          def site = it.key
+          def index = indexOfConfig(configurations, site)
+          if (index == -1) {
+            configurations << ["$site": it.value]
+          } else {
+            def existingConf = configurations.get(index)
+            existingConf."$site" << it.value
+          }
+        }
       }
     }
     blueprintMap
