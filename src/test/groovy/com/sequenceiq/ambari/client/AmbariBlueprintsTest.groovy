@@ -123,7 +123,7 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
     mockResponses(Scenario.HOSTS.name())
 
     when:
-    def result = ambari.getHostNames()
+    def result = ambari.getHostStatuses()
 
     then:
     "UNHEALTHY" == result["server.ambari.com"]
