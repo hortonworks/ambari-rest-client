@@ -25,9 +25,6 @@ import groovyx.net.http.RESTClient
 import org.apache.commons.io.IOUtils
 import org.apache.http.NoHttpResponseException
 import org.apache.http.client.ClientProtocolException
-import java.net.ConnectException
-import java.net.NoRouteToHostException
-import java.net.UnknownHostException
 /**
  * Basic client to send requests to the Ambari server.
  */
@@ -496,7 +493,7 @@ class AmbariClient {
    */
   def Map<String, List<String>> recommendAssignments(String blueprint) throws InvalidHostGroupHostAssociation {
     def result = [:]
-    def hostNames = getHostNames().keySet() as List
+    def hostNames = getHostStatuses().keySet() as List
     def groups = getBlueprint(blueprint)?.host_groups?.collect { ["name": it.name, "cardinality": it.cardinality] }
     if (hostNames && groups) {
       def groupSize = groups.size()
@@ -753,8 +750,12 @@ class AmbariClient {
    *
    * @return hostname state association
    */
-  def Map<String, String> getHostNames() {
+  def Map<String, String> getHostStatuses() {
     getHosts().items.collectEntries { [(it.Hosts.host_name): it.Hosts.host_status] }
+  }
+
+  def Map<String, String> getHostNames() {
+    getHosts().items.collectEntries { [(it.Hosts.public_host_name): it.Hosts.host_name] }
   }
 
   /**
@@ -763,7 +764,7 @@ class AmbariClient {
    * to ambari.
    */
   def Map<String, String> getHostNamesByState(String state) {
-    getHostNames().findAll { it.value == state }
+    getHostStatuses().findAll { it.value == state }
   }
 
   /**
