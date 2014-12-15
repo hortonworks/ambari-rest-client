@@ -29,7 +29,7 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
   def "test recommend for single node"() {
     given:
     mockResponses(Scenario.SINGLE_NODE_BLUEPRINT.name())
-    ambari.metaClass.getHostNames = { return ["amb0": "HEALTHY"] }
+    ambari.metaClass.getHostStatuses = { return ["amb0": "HEALTHY"] }
 
     when:
     def result = ambari.recommendAssignments("single-node-hdfs-yarn")
@@ -41,7 +41,7 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
   def "test recommend for invalid host number"() {
     given:
     mockResponses(Scenario.MULTI_NODE_BLUEPRINT.name())
-    ambari.metaClass.getHostNames = { return ["amb0": "HEALTHY"] }
+    ambari.metaClass.getHostStatuses = { return ["amb0": "HEALTHY"] }
 
     when:
     def result
@@ -58,7 +58,7 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
   def "test recommend for no slave group"() {
     given:
     mockResponses(Scenario.MULTI_NODE_BLUEPRINT2.name())
-    ambari.metaClass.getHostNames = {
+    ambari.metaClass.getHostStatuses = {
       return [
         "amb0": "HEALTHY",
         "amb1": "HEALTHY",
@@ -96,7 +96,7 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
   def "test recommend for multi node"() {
     given:
     mockResponses(Scenario.MULTI_NODE_BLUEPRINT.name())
-    ambari.metaClass.getHostNames = {
+    ambari.metaClass.getHostStatuses = {
       return [
         "amb0": "HEALTHY",
         "amb1": "HEALTHY",
