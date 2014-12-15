@@ -244,6 +244,69 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
     actual == expected
   }
 
+  def "test add blueprint with master heterogen configuration"() {
+    given:
+    def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen.json").text
+    ambari.metaClass.postBlueprint = { String blueprint -> return }
+
+    when:
+    def config = [
+            "master": [
+              "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
+              "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
+            ]
+    ]
+    def blueprint = ambari.addBlueprintWithHostgroupConfiguration(json, config)
+
+    then:
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen-config.json").text)
+    def actual = slurper.parseText(blueprint)
+    actual == expected
+  }
+
+  def "test add blueprint with master and slave_1 heterogen configuration"() {
+    given:
+    def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen.json").text
+    ambari.metaClass.postBlueprint = { String blueprint -> return }
+
+    when:
+    def config = [
+            "master": [
+                    "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
+                    "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
+            ],
+            "slave_1": [
+                    "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
+                    "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
+            ]
+    ]
+    def blueprint = ambari.addBlueprintWithHostgroupConfiguration(json, config)
+
+    then:
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen-master-slave-config.json").text)
+    def actual = slurper.parseText(blueprint)
+    actual == expected
+  }
+
+  def "test add blueprint with master and slave_1 heterogen configuration with existing config"() {
+    given:
+    def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen-with-config.json").text
+    ambari.metaClass.postBlueprint = { String blueprint -> return }
+
+    when:
+    def config = [
+            "master": [
+                    "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"]
+            ]
+    ]
+    def blueprint = ambari.addBlueprintWithHostgroupConfiguration(json, config)
+
+    then:
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen-with-config-result.json").text)
+    def actual = slurper.parseText(blueprint)
+    actual == expected
+  }
+
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
     def thePath = resourceRequestMap.get("path");
     def query = resourceRequestMap.get("query");
