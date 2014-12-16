@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package com.sequenceiq.ambari.client
+
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
@@ -28,6 +29,7 @@ import org.apache.http.client.ClientProtocolException
 import java.net.ConnectException
 import java.net.NoRouteToHostException
 import java.net.UnknownHostException
+
 /**
  * Basic client to send requests to the Ambari server.
  */
@@ -815,6 +817,21 @@ class AmbariClient {
   }
 
   /**
+   * Returns all the components states grouped by hosts.
+   *
+   * @return host name - [component name - state]
+   */
+  def Map<String, Map<String, String>> getHostComponentsStates() {
+    getAllResources("hosts", "host_components/HostRoles/state").items.collectEntries {
+      def hostName = it.Hosts.host_name
+      def components = it.host_components.collectEntries {
+        [(it.HostRoles.component_name): it.HostRoles.state]
+      }
+      [(hostName): components]
+    }
+  }
+
+  /**
    * Returns the type of the components of a given host group in a given blueprint.
    * There are 3 types: SLAVE, CLIENT, MASTER
    *
@@ -825,6 +842,19 @@ class AmbariClient {
   def Map<String, String> getComponentsCategory(String blueprintId, String hostGroup) {
     def bpMap = getBlueprint(blueprintId)
     def components = bpMap?.host_groups?.find { it.name.equals(hostGroup) }?.components?.collect { it.name }
+    getComponentsCategory(components)
+  }
+
+  /**
+   * Returns the type of the components of a given blueprint.
+   * There are 3 types: SLAVE, CLIENT, MASTER
+   *
+   * @param blueprintId if of the blueprint
+   * @return map where the key is the component's name and the value is the category
+   */
+  def Map<String, String> getComponentsCategory(String blueprintId) {
+    def bpMap = getBlueprint(blueprintId)
+    def components = bpMap?.host_groups?.components?.name?.flatten()
     getComponentsCategory(components)
   }
 
