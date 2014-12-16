@@ -21,7 +21,7 @@ allprojects {
 }
 
 jar {
-    baseName = 'ambari-client17'
+    baseName = 'ambari-client18'
 }
 
 configurations {
@@ -89,14 +89,14 @@ class BuildInfoTask extends DefaultTask {
         applicationDestination.mkdirs()
         new File(destination, "build.info").withWriter { out ->
             [
-                    "ARTIFACT_BASENAME=" + basename,
-                    "ARTIFACT_VERSION=" + buildVersion,
+              "ARTIFACT_BASENAME=" + basename,
+              "ARTIFACT_VERSION=" + buildVersion,
             ].each { out.println it }
         }
         new File(applicationDestination, "application.properties").withWriter { out ->
             [
-                    "info.app.name=" + basename,
-                    "info.app.version=" + buildVersion
+              "info.app.name=" + basename,
+              "info.app.version=" + buildVersion
             ].each { out.println it }
         }
     }
