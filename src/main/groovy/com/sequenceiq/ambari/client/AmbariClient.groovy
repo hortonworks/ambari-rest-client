@@ -120,12 +120,8 @@ class AmbariClient {
    * Create a new Ambari user.
    */
   def createUser(String user, String password, boolean admin) {
-    def roles = ["user"]
-    if (admin) {
-      roles << "admin"
-    }
-    def context = ["Users": ["roles": roles.join(','), "password": password]]
-    ambari.post(path: "users/$user", body: new JsonBuilder(context).toPrettyString(), { it })
+    def context = ["Users/active": true, "Users/admin": admin, "Users/password": password, "Users/user_name": user]
+    ambari.post(path: "users", body: new JsonBuilder(context).toPrettyString(), { it })
   }
 
   /**
@@ -143,7 +139,7 @@ class AmbariClient {
     if (admin) {
       roles << "admin"
     }
-    def context = ["Users": ["roles": roles.join(','), "password": newPassword, "old_password": oldPassword]]
+    def context = ["Users/password": newPassword, "Users/old_password": oldPassword]
     ambari.put(path: "users/$user", body: new JsonBuilder(context).toPrettyString(), requestContentType: ContentType.URLENC)
   }
 
