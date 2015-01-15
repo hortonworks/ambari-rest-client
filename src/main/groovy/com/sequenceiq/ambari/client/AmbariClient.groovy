@@ -979,7 +979,7 @@ class AmbariClient {
     // collect properties for every service
     def finalMap = serviceToTags.collectEntries { entry ->
       // collect config props for every service
-      def propsMap = collectConfigPropertiesForService(entry.getKey(), entry.getValue())
+      def propsMap = collectConfigPropertiesForServiceByList(entry.getKey(), entry.getValue())
       // put them in the final map
       [(entry.key): propsMap]
     }
@@ -1168,7 +1168,7 @@ class AmbariClient {
     }
   }
 
-  private def Map<String, String> collectConfigPropertiesForService(String service, List<String> tag) {
+  private def Map<String, String> collectConfigPropertiesForServiceByList(String service, List<String> tag) {
     Map<String, String> serviceConfigProperties = new HashMap<>();
 
     for (String actualTag : tag) {
@@ -1182,6 +1182,21 @@ class AmbariClient {
       } else {
         log.debug("No resource object has been returned for the resource request map: {}", resourceRequestMap)
       }
+    }
+    return serviceConfigProperties
+  }
+
+  private def Map<String, String> collectConfigPropertiesForService(String service, def tag) {
+    Map<String, String> serviceConfigProperties
+
+    def Map resourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations",
+            ['type': "$service", 'tag': "$tag"])
+    def rawResource = getSlurpedResource(resourceRequestMap);
+
+    if (rawResource) {
+      serviceConfigProperties = rawResource.items?.collectEntries { it -> it.properties }
+    } else {
+      log.debug("No resource object has been returned for the resource request map: {}", resourceRequestMap)
     }
     return serviceConfigProperties
   }
