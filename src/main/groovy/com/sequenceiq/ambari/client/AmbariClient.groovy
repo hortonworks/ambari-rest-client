@@ -612,7 +612,6 @@ class AmbariClient {
     addBlueprint(getResourceContent("blueprints/multi-node-hdfs-yarn"))
     addBlueprint(getResourceContent("blueprints/single-node-hdfs-yarn"))
     addBlueprint(getResourceContent("blueprints/lambda-architecture"))
-    addBlueprint(getResourceContent("blueprints/warmup"))
     addBlueprint(getResourceContent("blueprints/hdp-singlenode-default"))
     addBlueprint(getResourceContent("blueprints/hdp-multinode-default"))
   }

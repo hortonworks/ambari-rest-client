@@ -161,6 +161,6 @@
   "Blueprints": {
     "blueprint_name": "lambda-architecture",
     "stack_name": "HDP",
-    "stack_version": "2.1"
+    "stack_version": "2.2"
   }
 }
