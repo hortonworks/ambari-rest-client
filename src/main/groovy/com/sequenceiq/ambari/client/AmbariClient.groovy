@@ -950,7 +950,9 @@ class AmbariClient {
 
     rawConfigs?.items.collect { object ->
       // selecting the latest versions
-      processServiceVersions(serviceToTags, object.type, object.tag)
+      if (object.tag.isLong()) {
+        processServiceVersions(serviceToTags, object.type, object.tag)
+      }
     }
 
     // collect properties for every service
