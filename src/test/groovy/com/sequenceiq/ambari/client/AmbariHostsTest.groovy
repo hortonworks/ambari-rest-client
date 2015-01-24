@@ -59,37 +59,6 @@ class AmbariHostsTest extends AbstractAmbariClientTest {
     ] == result
   }
 
-  def "install host components to a host from an existing valid blueprint"() {
-    given:
-    mockResponses(Scenario.CLUSTERS.name())
-    ambari.metaClass.addComponentToHost = { String host, String component -> return null }
-    ambari.metaClass.setComponentState = { String host, String component, String state -> return 10 }
-
-    when:
-    def result = ambari.installComponentsToHost("amb0", "hdp-multinode-default", "slave_1")
-
-    then:
-    [
-      "HBASE_REGIONSERVER": 10,
-      "NODEMANAGER"       : 10,
-      "DATANODE"          : 10,
-      "GANGLIA_MONITOR"   : 10
-    ] == result
-  }
-
-  def "install host components to a host from an existing valid blueprint but invalid group"() {
-    given:
-    mockResponses(Scenario.CLUSTERS.name())
-    ambari.metaClass.addComponentToHost = { String host, String component -> return null }
-    ambari.metaClass.setComponentState = { String host, String component, String state -> return null }
-
-    when:
-    def result = ambari.installComponentsToHost("amb0", "hdp-multinode-default", "slave_2")
-
-    then:
-    [:] == result
-  }
-
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
     def thePath = resourceRequestMap.get("path");
     def Scenario scenario = Scenario.valueOf(scenarioStr)
