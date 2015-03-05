@@ -57,7 +57,10 @@
           "name": "GANGLIA_MONITOR"
         },
         {
-          "name": "HDFS_CLIENT"
+          "name": "RESOURCEMANAGER"
+        },
+        {
+          "name": "STORM_UI_SERVER"
         },
         {
           "name": "NODEMANAGER"
@@ -78,6 +81,6 @@
   "Blueprints": {
     "blueprint_name": "multi-node-hdfs-yarn",
     "stack_name": "HDP",
-    "stack_version": "2.1"
+    "stack_version": "2.2"
   }
 }
