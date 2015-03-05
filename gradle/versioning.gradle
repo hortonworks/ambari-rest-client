@@ -7,8 +7,8 @@ buildscript {
     dependencies { classpath 'org.ajoberstar:gradle-git:0.8.0' }
 }
 
-Integer majorVersion = 1
-Integer minorVersion = 7
+Integer majorVersion = 2
+Integer minorVersion = 0
 
 def env = project.hasProperty('env') ? project.getProperty('env') : 'local'
 def config = new ConfigSlurper(env).parse(file("$rootDir/gradle/config/buildConfig.groovy").toURL())
