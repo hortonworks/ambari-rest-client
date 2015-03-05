@@ -23,9 +23,6 @@
           "name": "HISTORYSERVER"
         },
         {
-          "name": "NAGIOS_SERVER"
-        },
-        {
           "name": "APP_TIMELINE_SERVER"
         },
         {
