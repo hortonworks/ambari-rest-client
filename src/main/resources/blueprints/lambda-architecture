@@ -26,9 +26,6 @@
           "name": "SUPERVISOR"
         },
         {
-          "name": "NAGIOS_SERVER"
-        },
-        {
           "name": "TEZ_CLIENT"
         },
         {

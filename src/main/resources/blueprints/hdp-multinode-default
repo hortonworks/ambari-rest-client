@@ -143,9 +143,6 @@
           "name": "AMBARI_SERVER"
         },
         {
-          "name": "NAGIOS_SERVER"
-        },
-        {
           "name": "ZOOKEEPER_CLIENT"
         },
         {
