@@ -59,9 +59,6 @@
           "name": "RESOURCEMANAGER"
         },
         {
-          "name": "STORM_REST_API"
-        },
-        {
           "name": "STORM_UI_SERVER"
         },
         {
@@ -83,6 +80,6 @@
   "Blueprints": {
     "blueprint_name": "warmup",
     "stack_name": "HDP",
-    "stack_version": "2.1"
+    "stack_version": "2.2"
   }
 }
