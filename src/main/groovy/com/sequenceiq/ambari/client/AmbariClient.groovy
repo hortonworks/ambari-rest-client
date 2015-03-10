@@ -296,6 +296,40 @@ class AmbariClient {
   }
 
   /**
+   * Returns all the defined alerts grouped by alert definition name.
+   * A filter can be applied for scopes: HOST, ANY, SERVICE
+   *
+   * @return alert properties
+   */
+  def Map<String, List<Map<String, Object>>> getAlerts(scope = []) {
+    getAllResources("alerts", "Alert").items.findAll {
+      scope == [] || scope.contains(it.Alert.scope)
+    }.collect { it.Alert }.groupBy { it.definition_name }
+  }
+
+  /**
+   * Get a specified alert by id.
+   *
+   * @param id id of the alert
+   * @return alert or empty collection
+   */
+  Map<String, Object> getAlert(int id) {
+    def response = getAllResources("alerts/$id")
+    response ? response.Alert : [:]
+  }
+
+  /**
+   * Get a specified alert by name. Can return multiple
+   * values if the alert is HOST based.
+   *
+   * @param definitionName alert definition name
+   * @return list of alerts or empty collection
+   */
+  List<Map<String, Object>> getAlert(String definitionName) {
+    getAlerts()[definitionName] ?: []
+  }
+
+  /**
    * Returns the nodes by DFS an their data allocations.
    *
    * @return a Map where the key is the internal host name and the value
