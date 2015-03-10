@@ -303,7 +303,7 @@ class AmbariClient {
    *
    * @return alert properties
    */
-  def Map<String, List<Map<String, Object>>> getAlerts(scope = []) {
+  def Map<String, List<Map<String, Object>>> getAlerts(List<String> scope = []) {
     getAllResources("alerts", "Alert").items.findAll {
       scope == [] || scope.contains(it.Alert.scope)
     }.collect { it.Alert }.groupBy { it.definition_name }
@@ -329,6 +329,21 @@ class AmbariClient {
    */
   List<Map<String, Object>> getAlert(String definitionName) {
     getAlerts()[definitionName] ?: []
+  }
+
+  /**
+   * Returns the history of a certain alert.
+   *
+   * @param alertDefinition alert definition name
+   * @param count desired number of result from the latest one
+   * @return list of alert properties or empty collection
+   */
+  def List<Map<String, Object>> getAlertHistory(String alertDefinition, int count) {
+    def predicate = ["fields"                      : "AlertHistory/*",
+                     "AlertHistory/definition_name": alertDefinition,
+                     "to"                          : "end",
+                     "page_size"                   : "$count"]
+    getAllPredictedResources("alert_history", predicate).items.collect { it.AlertHistory }
   }
 
   /**
@@ -1210,6 +1225,10 @@ class AmbariClient {
     slurp("clusters/${getClusterName()}/$resourceName", fields ? "$fields/*" : "")
   }
 
+  private def getAllPredictedResources(resourceName, predicate = [:]) {
+    slurpPredicate("clusters/${getClusterName()}/$resourceName", predicate)
+  }
+
   /**
    * Posts the blueprint JSON to Ambari with name 'bp' in the URL
    * because it does not matter here. The blueprint's name is
@@ -1242,6 +1261,11 @@ class AmbariClient {
     def result = getSlurpedResource(resourceReqMap)
 
     return result
+  }
+
+  private def slurpPredicate(path, predicate) {
+    def Map resourceReqMap = getResourceRequestMap(path, predicate)
+    getSlurpedResource(resourceReqMap)
   }
 
   /**
