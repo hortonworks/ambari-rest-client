@@ -339,11 +339,18 @@ class AmbariClient {
    * @return list of alert properties or empty collection
    */
   def List<Map<String, Object>> getAlertHistory(String alertDefinition, int count) {
-    def predicate = ["fields"                      : "AlertHistory/*",
-                     "AlertHistory/definition_name": alertDefinition,
-                     "to"                          : "end",
-                     "page_size"                   : "$count"]
-    getAllPredictedResources("alert_history", predicate).items.collect { it.AlertHistory }
+    def prePredicate = ["AlertHistory/definition_name": alertDefinition]
+    def totalSize = getAllPredictedResources("alert_history", prePredicate).items?.size
+    if (totalSize) {
+      def desiredNum = totalSize - count
+      def predicate = ["fields"                      : "AlertHistory/*",
+                       "AlertHistory/definition_name": alertDefinition,
+                       "from"                        : "${desiredNum > 0 ? desiredNum : 0}"
+      ]
+      getAllPredictedResources("alert_history", predicate).items.collect { it.AlertHistory }
+    } else {
+      []
+    }
   }
 
   /**
