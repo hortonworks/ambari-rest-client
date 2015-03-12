@@ -332,6 +332,17 @@ class AmbariClient {
   }
 
   /**
+   * Get a specified alert history by id.
+   *
+   * @param id id of the alert history
+   * @return history or empty collection
+   */
+  Map<String, Object> getAlertHistory(int id) {
+    def response = getAllResources("alert_history/$id")
+    response ? response.AlertHistory : [:]
+  }
+
+  /**
    * Returns the history of a certain alert.
    *
    * @param alertDefinition alert definition name
@@ -339,18 +350,18 @@ class AmbariClient {
    * @return list of alert properties or empty collection
    */
   def List<Map<String, Object>> getAlertHistory(String alertDefinition, int count) {
+    def result = []
     def prePredicate = ["AlertHistory/definition_name": alertDefinition]
-    def totalSize = getAllPredictedResources("alert_history", prePredicate).items?.size
-    if (totalSize) {
-      def desiredNum = totalSize - count
-      def predicate = ["fields"                      : "AlertHistory/*",
-                       "AlertHistory/definition_name": alertDefinition,
-                       "from"                        : "${desiredNum > 0 ? desiredNum : 0}"
-      ]
-      getAllPredictedResources("alert_history", predicate).items.collect { it.AlertHistory }
-    } else {
-      []
+    def items = getAllPredictedResources("alert_history", prePredicate).items
+    if (items) {
+      def itemSize = items.size
+      def from = itemSize - count > -1 ? itemSize - count : 0
+      from = from == items.size ? itemSize -1 : from
+      items[from..itemSize - 1].collect { it.AlertHistory.id }.each {
+        result << getAlertHistory(it)
+      }
     }
+    result
   }
 
   /**
