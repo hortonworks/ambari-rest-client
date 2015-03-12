@@ -296,6 +296,26 @@ class AmbariClient {
   }
 
   /**
+   * Returns the alert definitions.
+   *
+   * @return collection of definitions
+   */
+  def List<Map<String, String>> getAlertDefinitions() {
+    getAllResources("alert_definitions", "AlertDefinition").items.collect {
+      def details = [:]
+      def definition = it.AlertDefinition
+      details << ["enabled": definition.enabled]
+      details << ["scope":  definition.scope]
+      details << ["interval": definition.interval as String]
+      details << ["description": definition.description]
+      details << ["name": definition.name]
+      details << ["label": definition.label]
+      details << ["service_name": definition.service_name]
+      details
+    }
+  }
+
+  /**
    * Returns all the defined alerts grouped by alert definition name.
    * A filter can be applied for scopes: HOST, ANY, SERVICE
    *
@@ -354,7 +374,7 @@ class AmbariClient {
     if (items) {
       def itemSize = items.size
       def from = itemSize - count > -1 ? itemSize - count : 0
-      from = from == itemSize ? itemSize -1 : from
+      from = from == itemSize ? itemSize - 1 : from
       items[from..itemSize - 1].collect { it.AlertHistory.id }.each {
         result << getAlertHistory(it)
       }
