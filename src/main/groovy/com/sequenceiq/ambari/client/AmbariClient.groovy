@@ -298,6 +298,15 @@ class AmbariClient {
   }
 
   /**
+   * Creates a new alert definition.
+   *
+   * @param definition alert definition as json
+   */
+  def void createAlert(String definition) {
+    ambari.post(path: "clusters/${getClusterName()}/alert_definitions", body: definition, { it })
+  }
+
+  /**
    * Returns the alert definitions.
    *
    * @return collection of definitions
