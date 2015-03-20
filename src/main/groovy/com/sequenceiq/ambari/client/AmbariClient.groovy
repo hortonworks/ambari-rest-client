@@ -314,7 +314,7 @@ class AmbariClient {
       def details = [:]
       def definition = it.AlertDefinition
       details << ["enabled": definition.enabled]
-      details << ["scope":  definition.scope]
+      details << ["scope": definition.scope]
       details << ["interval": definition.interval as String]
       details << ["description": definition.description]
       details << ["name": definition.name]
@@ -1086,6 +1086,31 @@ class AmbariClient {
     }
     return finalMap
     return finalMap
+  }
+
+  /**
+   * Add a service to the cluster.
+   *
+   * @param serviceName name of the service
+   */
+  def void addService(String serviceName) {
+    ambari.post(path: "clusters/${getClusterName()}/services",
+      body: new JsonBuilder(["ServiceInfo": ["service_name": serviceName]]).toPrettyString(), { it })
+  }
+
+  /**
+   * Add a service component to the cluster.
+   *
+   * @param serviceName name of the service
+   * @param component component name
+   */
+  def void addServiceComponent(String serviceName, String component) {
+    def body = ["components": [["ServiceComponentInfo": ["component_name": component]]]]
+    def Map<String, ?> requestMap = [:]
+    requestMap.put('path', "clusters/${getClusterName()}/services")
+    requestMap.put('query', ['ServiceInfo/service_name': serviceName])
+    requestMap.put('body', new JsonBuilder(body).toPrettyString());
+    ambari.post(requestMap, { it })
   }
 
   /**
