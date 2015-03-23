@@ -1155,6 +1155,25 @@ class AmbariClient {
   }
 
   /**
+   * Generate the keytabs.
+   *
+   * @param missingOnly if set to true, keytabs will be generated only for missing hosts and services
+   * @return id of the request
+   */
+  def int generateKeytabs(boolean missingOnly) {
+    def Map<String, ?> putRequestMap = [:]
+    putRequestMap.put('requestContentType', ContentType.URLENC)
+    putRequestMap.put('path', "clusters/${getClusterName()}")
+    putRequestMap.put('body', new JsonBuilder(["Clusters": ["security_type": "KERBEROS"]]).toPrettyString())
+    if (missingOnly) {
+      putRequestMap.put('query', ['regenerate_keytabs': 'missing'])
+    }
+
+    def response = ambari.put(putRequestMap)
+    slurper.parseText(response.getAt("responseData")?.getAt("str"))?.Requests?.id
+  }
+
+  /**
    * Add a service to the cluster.
    *
    * @param serviceName name of the service
