@@ -19,6 +19,7 @@ package com.sequenceiq.ambari.client
 
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+import groovy.text.SimpleTemplateEngine
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
@@ -42,6 +43,7 @@ class AmbariClient {
   boolean debugEnabled = false;
   def RESTClient ambari
   def slurper = new JsonSlurper()
+  def templateProcessor = new SimpleTemplateEngine()
   def clusterName
 
   /**
@@ -439,39 +441,39 @@ class AmbariClient {
   }
 
   /**
-   * Install all the components from a given blueprint's host group. The services must be installed
-   * in order to install its components. It is recommended to use the same blueprint's host group from which
+   * Adds all the components from a given blueprint's host group. The services must be installed
+   * in order to add its components. It is recommended to use the same blueprint's host group from which
    * the cluster was created.
    *
    * @param hostNames components will be installed on these hosts
    * @param blueprint id of the blueprint
    * @param hostGroup host group of the blueprint
-   * @return request id since its an async call
    */
-  def int installComponentsToHosts(List<String> hostNames, String blueprint, String hostGroup) throws HttpResponseException {
+  def void addComponentsToHosts(List<String> hostNames, String blueprint, String hostGroup) throws HttpResponseException {
     def bpMap = getBlueprint(blueprint)
     def components = bpMap?.host_groups?.find { it.name.equals(hostGroup) }?.components?.collect { it.name }
-    components ? installComponentsToHosts(hostNames, components) : -1
+    if (components) {
+      addComponentsToHosts(hostNames, components)
+    }
   }
 
   /**
-   * Installs the given components to the given hosts.
-   * Only existing service components can be installed.
+   * Adds the given components to the given hosts. It does not install them. To install the components use
+   * the {@link #setComponentsState(java.lang.String, java.util.List, java.lang.String)} or the
+   * {@link #setAllComponentsState(java.lang.String, java.util.List, java.lang.String, java.lang.String)}.
+   * Only existing service components can be added.
    *
    * @param hostNames hosts to install the component to
    * @param components components to be installed
    * @throws HttpResponseException in case the component's service is not installed
-   * @return request id since its an async call
    */
-  def int installComponentsToHosts(List<String> hostNames, List<String> components) throws HttpResponseException {
-    def clusterName = getClusterName()
+  def void addComponentsToHosts(List<String> hostNames, List<String> components) throws HttpResponseException {
     def commaSepHostNames = hostNames.join(',')
     def addRequest = [
       "RequestInfo": ["query": "Hosts/host_name.in($commaSepHostNames)"],
       "Body"       : ["host_components": components.collectAll { ["HostRoles": ["component_name": it]] }]
     ]
     ambari.post(path: "clusters/${getClusterName()}/hosts", body: new JsonBuilder(addRequest).toPrettyString(), { it })
-    setAllComponentsState(clusterName, hostNames, "INSTALLED", "Install components")
   }
 
   /**
@@ -1089,6 +1091,70 @@ class AmbariClient {
   }
 
   /**
+   * Create a default kerberos config (same as with the wizzard)
+   *
+   * @param kdcHost key distribution center's host
+   * @param realm kerberos realm
+   * @param domain kerberos domain
+   */
+  def void createKerberosConfig(String kdcHost, String realm, String domain) {
+    def model = [
+      "KDC_HOST"     : kdcHost,
+      "REALM"        : realm,
+      "DOMAIN"       : domain,
+      "TAG"          : "version${System.currentTimeMillis()}",
+      "ATTR_TEMPLATE": getResourceContent("templates/kerberos-attr-template"),
+      "CONTENT"      : getResourceContent("templates/kerberos-content-template"),]
+    def Map<String, ?> putRequestMap = [:]
+    putRequestMap.put('requestContentType', ContentType.URLENC)
+    putRequestMap.put('path', "clusters/${getClusterName()}")
+    putRequestMap.put('body', createJson("kerberos-config.json", model));
+    ambari.put(putRequestMap)
+  }
+
+  /**
+   * Creates a default kerberos descriptor for the different Hadoop services.
+   *
+   * @param realm kerberos realm
+   */
+  def void createKerberosDescriptor(String realm) {
+    def json = getResourceContent("templates/kerberos-descriptor").replaceAll("actual-realm", realm)
+    ambari.post(path: "clusters/${getClusterName()}/artifacts/kerberos_descriptor", body: json, { it })
+  }
+
+  /**
+   * In order to add/remove or change any service or host related config in a kerberos secure cluster you need
+   * to set the session attributes which contains an admin principal.
+   *
+   * @param principal admin principal
+   * @param password password for the admin principal
+   */
+  def void setKerberosSession(String principal, String password) {
+    def session = ["session_attributes": ["kerberos_admin": ["principal": principal, "password": password]]]
+    def Map<String, ?> kdcPut = [:]
+    kdcPut.put('requestContentType', ContentType.URLENC)
+    kdcPut.put('path', "clusters/${getClusterName()}")
+    kdcPut.put('body', new JsonBuilder(session).toPrettyString());
+    ambari.put(kdcPut)
+  }
+
+  /**
+   * Enables kerberos security on the cluster. It will generate the necessary keytabs using the previously
+   * provided krb5-conf.
+   *
+   * @return id of the request
+   */
+  def int enableKerberos() {
+    def Map<String, ?> putRequestMap = [:]
+    putRequestMap.put('requestContentType', ContentType.URLENC)
+    putRequestMap.put('path', "clusters/${getClusterName()}")
+    putRequestMap.put('body', new JsonBuilder(["Clusters": ["security_type": "KERBEROS"]]).toPrettyString())
+
+    def response = ambari.put(putRequestMap)
+    slurper.parseText(response.getAt("responseData")?.getAt("str"))?.Requests?.id
+  }
+
+  /**
    * Add a service to the cluster.
    *
    * @param serviceName name of the service
@@ -1111,6 +1177,27 @@ class AmbariClient {
     requestMap.put('query', ['ServiceInfo/service_name': serviceName])
     requestMap.put('body', new JsonBuilder(body).toPrettyString());
     ambari.post(requestMap, { it })
+  }
+
+  /**
+   * Sets the given service's state to the desired value.
+   *
+   * @param serviceName name of the service
+   * @param state desired state
+   * @return id of the request
+   */
+  def int setServiceState(String serviceName, String state) {
+    def body = ["RequestInfo": ["context"        : "Set service: $serviceName state to: $state",
+                                "operation_level": ["level": "CLUSTER", "cluster_name": getClusterName()]],
+                "Body"       : ["ServiceInfo": ["state": state]]]
+    def Map<String, ?> requestMap = [:]
+    requestMap.put('requestContentType', ContentType.URLENC)
+    requestMap.put('path', "clusters/${getClusterName()}/services")
+    requestMap.put('query', ['ServiceInfo/service_name': serviceName, 'ServiceInfo/state': state])
+    requestMap.put('body', new JsonBuilder(body).toPrettyString());
+
+    def response = ambari.put(requestMap)
+    slurper.parseText(response.getAt("responseData")?.getAt("str"))?.Requests?.id
   }
 
   /**
@@ -1515,7 +1602,16 @@ class AmbariClient {
     }
   }
 
-  private int setAllComponentsState(String clusterName, List<String> hostNames, String state, String context)
+  /**
+   * Sets the state of all components to the desired state.
+   *
+   * @param clusterName name of the cluster
+   * @param hostNames name of the host
+   * @param state desired state
+   * @param context context shown on the UI
+   * @return id of the request
+   */
+  def int setAllComponentsState(String clusterName, List<String> hostNames, String state, String context)
     throws HttpResponseException {
     def reqInfo = [
       "context"        : context,
@@ -1614,6 +1710,11 @@ class AmbariClient {
 
   private def boolean isComponentPresent(def bpMap, def component) {
     bpMap?.host_groups?.collectAll { it?.components?.name }.flatten().contains(component)
+  }
+
+  private def String createJson(String templateName, Map bindings) throws Exception {
+    def InputStream inPut = this.getClass().getClassLoader().getResourceAsStream("templates/$templateName");
+    templateProcessor.createTemplate(new InputStreamReader(inPut)).make(bindings);
   }
 
 }

@@ -1,0 +1,32 @@
+{
+  "Clusters": {
+    "desired_config": [
+      {
+        "type": "kerberos-env",
+        "tag": "$TAG",
+        "properties": {
+          "kdc_type": "mit-kdc",
+          "kdc_host": "$KDC_HOST",
+          "realm": "$REALM",
+          "ldap_url": "",
+          "container_dn": "",
+          "create_attributes_template": "$ATTR_TEMPLATE",
+          "encryption_types": "aes des3-cbc-sha1 rc4 des-cbc-md5",
+          "admin_server_host": "$KDC_HOST"
+        },
+        "service_config_version_note": "This is the initial configuration created by Enable Kerberos wizard."
+      },
+      {
+        "type": "krb5-conf",
+        "tag": "$TAG",
+        "properties": {
+          "content": "$CONTENT",
+          "domains": "$DOMAIN",
+          "manage_krb5_conf": "true",
+          "conf_dir": "/etc"
+        },
+        "service_config_version_note": "This is the initial configuration created by Enable Kerberos wizard."
+      }
+    ]
+  }
+}
