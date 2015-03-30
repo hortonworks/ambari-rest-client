@@ -255,6 +255,23 @@ class AmbariClient {
   }
 
   /**
+   * Set the HBase Region server to maintenance mode and back.
+   *
+   * @param hostName name of the host which is running the Region server
+   * @param mode true to maintenance mode false to active mode
+   */
+  def void setHBaseRegionServerToMaintenance(String hostName, boolean mode) {
+    def reqInfo = ["RequestInfo": ["context": "Turn On Maintenance Mode for RegionServer"],
+                   "Body"       : ["HostRoles": ["maintenance_state": mode ? "ON" : "OFF"]]]
+    def Map<String, ?> putRequestMap = [:]
+    putRequestMap.put('requestContentType', ContentType.URLENC)
+    putRequestMap.put('path', "clusters/${getClusterName()}/hosts/$hostName/host_components/HBASE_REGIONSERVER")
+    putRequestMap.put('body', new JsonBuilder(reqInfo).toPrettyString());
+
+    ambari.put(putRequestMap)
+  }
+
+  /**
    * Decommission a host component on a given host.
    * @param host hostName where the component is installed to
    * @param slaveName slave to be decommissioned
@@ -295,6 +312,30 @@ class AmbariClient {
       }
     }
     result
+  }
+
+  /**
+   * Returns the hostnames of those Region servers which currently stores data and the number of files they store
+   *
+   * @param hostFilter filter for which hosts are interested
+   * @return map key - hostname value - stored files
+   */
+  def Map<String, Long> getHBaseRegionServersWithData(List<String> hostFilter) {
+    def res = [:]
+    def prePredicate = ["fields": "host_components/metrics/hbase"]
+    def host_components = getAllPredictedResources("services/HBASE/components/HBASE_REGIONSERVER", prePredicate)?.host_components
+    if (host_components) {
+      host_components.each {
+        def hostName = it.HostRoles.host_name
+        if (hostFilter.isEmpty() || hostFilter.contains(hostName)) {
+          def storeFiles = it.metrics.hbase.regionserver.storefiles
+          if (storeFiles > 0) {
+            res << ["$hostName": storeFiles]
+          }
+        }
+      }
+    }
+    res
   }
 
   /**
