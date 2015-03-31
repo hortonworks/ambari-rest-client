@@ -255,6 +255,18 @@ class AmbariClient {
   }
 
   /**
+   * Set the HBase Region servers to maintenance mode and back.
+   *
+   * @param hostNames names of the hosts which is running the Region server
+   * @param mode true to maintenance mode false to active mode
+   */
+  def void setHBaseRegionServersToMaintenance(List<String> hostNames, boolean mode) {
+    hostNames.each {
+      setHBaseRegionServerToMaintenance(it, mode)
+    }
+  }
+
+  /**
    * Set the HBase Region server to maintenance mode and back.
    *
    * @param hostName name of the host which is running the Region server
