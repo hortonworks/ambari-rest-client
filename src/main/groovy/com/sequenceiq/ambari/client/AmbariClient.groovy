@@ -530,6 +530,32 @@ class AmbariClient {
   }
 
   /**
+   * In case of adding new nodes to the cluster these nodes should be added to the
+   * appropriate config groups as well otherwise they'll use the default one. This method
+   * adds the given hosts to the desired config groups for every config type like: yarn-site, hdfs-site etc..
+   *
+   * @param hosts hosts to be added to the groups
+   * @param tag tag of the config group
+   */
+  def void addHostsToConfigGroups(List<String> hosts, String tag) {
+    def groups = getConfigGroups(tag)
+    if (groups) {
+      groups.each {
+        it.remove("href")
+        def currentHosts = it.ConfigGroup.hosts
+        hosts.each {
+          currentHosts << ["host_name": it]
+        }
+        def Map<String, ?> putRequestMap = [:]
+        putRequestMap.put('requestContentType', ContentType.URLENC)
+        putRequestMap.put('path', "clusters/${getClusterName()}/config_groups/$it.ConfigGroup.id")
+        putRequestMap.put('body', new JsonBuilder(it).toPrettyString());
+        ambari.put(putRequestMap)
+      }
+    }
+  }
+
+  /**
    * Starts the given components on a host.
    * To start all components on hosts use the {@link #startAllServices} method.
    *
@@ -1533,7 +1559,6 @@ class AmbariClient {
     return slurpedResource
   }
 
-
   private def getAllResources(resourceName, fields = "") {
     slurp("clusters/${getClusterName()}/$resourceName", fields ? "$fields/*" : "")
   }
@@ -1787,6 +1812,13 @@ class AmbariClient {
   private def String createJson(String templateName, Map bindings) throws Exception {
     def InputStream inPut = this.getClass().getClassLoader().getResourceAsStream("templates/$templateName");
     templateProcessor.createTemplate(new InputStreamReader(inPut)).make(bindings);
+  }
+
+  private def getConfigGroups(String tag) {
+    def groups = getAllResources("config_groups", "ConfigGroup")
+    groups.items.findAll {
+      it.ConfigGroup.group_name.endsWith(tag)
+    }
   }
 
 }
