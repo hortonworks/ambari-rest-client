@@ -512,8 +512,7 @@ class AmbariClient {
 
   /**
    * Adds the given components to the given hosts. It does not install them. To install the components use
-   * the {@link #setComponentsState(java.lang.String, java.util.List, java.lang.String)} or the
-   * {@link #setAllComponentsState(java.lang.String, java.util.List, java.lang.String, java.lang.String)}.
+   * the {@link #installAllComponentsOnHosts(java.util.List)}.
    * Only existing service components can be added.
    *
    * @param hostNames hosts to install the component to
@@ -577,13 +576,40 @@ class AmbariClient {
   }
 
   /**
-   * Stops all the components on a host.
+   * Stops all the components on the specified hosts.
    *
+   * @param hostNames list of FQDN
    * @return request id since its an async call
-   * @throws HttpResponseException in case the component is not found
+   * @throws HttpResponseException in case of any rest exception
    */
   def int stopAllComponentsOnHosts(List<String> hostNames) throws HttpResponseException {
-    setAllComponentsState(getClusterName(), hostNames, "INSTALLED", "Stop all components")
+    setAllComponentsStateToInstalled(hostNames, "Stop all components on hosts")
+  }
+
+  /**
+   * Installs the added components on the specified hosts.
+   *
+   * @param hostNames list of FQDN
+   * @return request id since its an async call
+   * @throws HttpResponseException in case of any rest exception
+   */
+  def int installAllComponentsOnHosts(List<String> hostNames) throws HttpResponseException {
+    setAllComponentsStateToInstalled(hostNames, "Install all components on hosts")
+  }
+
+  /**
+   * Starts all the components of the specified hostgroup of a blueprint.
+   *
+   * @param blueprint id of the blueprint
+   * @param hostGroup hostgroup of the blueprint
+   * @return request id since its an async call
+   * @throws HttpResponseException in case of any rest exception
+   */
+  def int startAllComponents(String blueprint, String hostGroup) throws HttpResponseException {
+    def categories = getComponentsCategory(blueprint, hostGroup)
+    def components = categories.findAll { it.value.equals("SLAVE") || it.value.equals("MASTER") }.keySet()
+    def query = "HostRoles/component_name.in(${components.join(',')})"
+    setAllComponentsState(getClusterName(), "STARTED", "Start all components", query)
   }
 
   /**
@@ -1703,17 +1729,15 @@ class AmbariClient {
    * Sets the state of all components to the desired state.
    *
    * @param clusterName name of the cluster
-   * @param hostNames name of the host
    * @param state desired state
    * @param context context shown on the UI
    * @return id of the request
    */
-  def int setAllComponentsState(String clusterName, List<String> hostNames, String state, String context)
-    throws HttpResponseException {
+  private def int setAllComponentsState(clusterName, state, context, query) throws HttpResponseException {
     def reqInfo = [
       "context"        : context,
       "operation_level": ["level": "HOST_COMPONENT", "cluster_name": clusterName],
-      "query"          : "HostRoles/host_name.in(${hostNames.join(',')})"
+      "query"          : query
     ]
     def reqBody = ["HostRoles": ["state": state]]
     def Map<String, ?> putRequestMap = [:]
@@ -1819,6 +1843,10 @@ class AmbariClient {
     groups.items.findAll {
       it.ConfigGroup.group_name.endsWith(tag)
     }
+  }
+
+  private def int setAllComponentsStateToInstalled(List<String> hostNames, String context) {
+    setAllComponentsState(getClusterName(), "INSTALLED", context, "HostRoles/host_name.in(${hostNames.join(',')})")
   }
 
 }
