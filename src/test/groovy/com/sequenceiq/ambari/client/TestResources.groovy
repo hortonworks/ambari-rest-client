@@ -31,7 +31,8 @@ enum TestResources {
   SERVICES("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/services"),
   SERVICE_COMPONENTS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/services/HDFS/components"),
   HOST_COMPONENTS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/hosts/host/host_components"),
-  GET_DECOM_NODES("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/services/HDFS/components/NAMENODE")
+  GET_DECOM_NODES("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/services/HDFS/components/NAMENODE"),
+  STACKS("http://localhost:8080/api/v1/stacks/HDP/versions/2.2/operating_systems/redhat6/repositories/HDP-2.2")
 
   String uri;
 

@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # curl requests for retrieving service configurations from ambari
-AMBARI_HOST=172.18.0.2
+#AMBARI_HOST=172.17.0.2
 #AMBARI_HOST=54.76.147.101
+AMBARI_HOST=104.197.18.66
 AMBARI_PORT=8080
 AMBARI_USER=admin
 AMBARI_PWD=admin
@@ -66,4 +67,17 @@ startAll(){
 
 stopAll(){
   curl --trace-ascii debugdump.txt -u $AMBARI_USER:$AMBARI_PWD "$RESOURCE_BASE/clusters/MySingleNodeCluster/services?params/run_smoke_test=true"  -X PUT -H 'X-Requested-By: X-Requested-By' --data '{"RequestInfo": {"context": "Stop All Services"}, "Body": {"ServiceInfo": {"state": "INSTALLED"}}}' --verbose
+}
+
+
+getHDPRepository(){
+  curl -u $AMBARI_USER:$AMBARI_PWD "$RESOURCE_BASE/stacks/HDP/versions/2.2/operating_systems/redhat6/repositories/HDP-2.2"
+}
+
+getUtilsRepository(){
+  curl -u $AMBARI_USER:$AMBARI_PWD "$RESOURCE_BASE/stacks/HDP/versions/2.2/operating_systems/redhat6/repositories/HDP-UTILS-1.1.0.20"
+}
+
+putHDPRepository(){
+  curl -u $AMBARI_USER:$AMBARI_PWD "$RESOURCE_BASE/stacks/HDP/versions/2.2/operating_systems/redhat6/repositories/HDP-2.2" -X PUT -H 'X-Requested-By: X-Requested-By' --data '{"Repositories":{"base_url":"http://public-repo-1.hortonworks.com/HDP/centos6/2.x/updates/2.2.4.2","verify_base_url":true}}' --verbose
 }
