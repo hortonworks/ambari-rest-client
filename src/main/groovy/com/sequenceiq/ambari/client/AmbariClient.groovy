@@ -827,32 +827,6 @@ class AmbariClient {
   }
 
   /**
-   * Only validates the multinode blueprints, at least 1 slave host group must exist.
-   * Throws an exception if the blueprint is not valid.
-   *
-   * @param json blueprint json
-   * @throws InvalidBlueprintException if the blueprint is not valid
-   */
-  def void validateBlueprint(String json) throws InvalidBlueprintException {
-    if (json) {
-      def bpMap = slurper.parseText(json)
-      if (bpMap?.host_groups?.size > 1) {
-        def find = bpMap.host_groups.find { it.name.toLowerCase().startsWith(SLAVE) }
-        if (!find) {
-          throw new InvalidBlueprintException("At least one '$SLAVE' host group is required.")
-        }
-      }
-      if (isComponentPresent(bpMap, "NAGIOS_SERVER")) {
-        if (bpMap?.configurations?.findAll { it?."nagios-env"?.nagios_contact }?.size() != 1) {
-          throw new InvalidBlueprintException("We are no longer supporting 1.6 blueprints");
-        }
-      }
-    } else {
-      throw new InvalidBlueprintException("No blueprint specified")
-    }
-  }
-
-  /**
    * Adds the default blueprints.
    *
    * @throws HttpResponseException in case of error
