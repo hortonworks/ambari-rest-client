@@ -141,58 +141,6 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
     [:] == result
   }
 
-  def "test validate blueprint"() {
-    given:
-    def json = getClass().getClassLoader().getResourceAsStream("blueprint.json").text
-
-    when:
-    ambari.validateBlueprint(json)
-
-    then:
-    noExceptionThrown()
-  }
-
-  def "test validate blueprint for ambari 1.7"() {
-    given:
-    def json = getClass().getClassLoader().getResourceAsStream("blueprint16.json").text
-
-    when:
-    ambari.validateBlueprint(json)
-
-    then:
-    thrown(InvalidBlueprintException)
-  }
-
-  def "test validate blueprint no slaves_"() {
-    given:
-    def json = getClass().getClassLoader().getResourceAsStream("hdp-multinode-default2.json").text
-
-    when:
-    ambari.validateBlueprint(json)
-
-    then:
-    thrown(InvalidBlueprintException)
-  }
-
-  def "test validate blueprint with uppercase SLAVE_"() {
-    given:
-    def json = getClass().getClassLoader().getResourceAsStream("hdp-multinode-default.json").text
-
-    when:
-    ambari.validateBlueprint(json)
-
-    then:
-    notThrown(InvalidBlueprintException)
-  }
-
-  def "test validate blueprint for null json"() {
-    when:
-    ambari.validateBlueprint(null)
-
-    then:
-    thrown(InvalidBlueprintException)
-  }
-
   def "test add blueprint with configuration"() {
     given:
     def json = getClass().getClassLoader().getResourceAsStream("blueprint.json").text
