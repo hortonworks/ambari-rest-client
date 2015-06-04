@@ -27,6 +27,17 @@ import groovyx.net.http.RESTClient
 import org.apache.commons.io.IOUtils
 import org.apache.http.NoHttpResponseException
 import org.apache.http.client.ClientProtocolException
+import org.apache.http.config.Registry
+import org.apache.http.config.RegistryBuilder
+import org.apache.http.conn.socket.ConnectionSocketFactory
+import org.apache.http.conn.socket.PlainConnectionSocketFactory
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory
+import org.apache.http.conn.ssl.SSLContexts
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
+
+import javax.net.ssl.SSLContext
+import java.security.Security
 import java.net.ConnectException
 import java.net.NoRouteToHostException
 import java.net.UnknownHostException
@@ -53,9 +64,26 @@ class AmbariClient {
    * @param port port of the Ambari server; default value is 8080
    * @param user username of the Ambari server; default is admin
    * @param password password fom the Ambari server; default is admin
+   * @param clientCertPath client certificate path, used in 2-way-ssl
+   * @param clientKeyPath client key path, used in 2-way-ssl
+   * @param serverCertPath server certificate path, used in 2-way-ssl
    */
-  AmbariClient(host = 'localhost', port = '8080', user = 'admin', password = 'admin') {
-    ambari = new RESTClient("http://${host}:${port}/api/v1/" as String)
+  AmbariClient(host = 'localhost', port = '8080', user = 'admin', password = 'admin',
+               clientCertPath = null, clientKeyPath = null, serverCertPath = null) {
+    def http = clientCertPath == null ? "http" : "https";
+    ambari = new RESTClient("$http://${host}:${port}/api/v1/" as String)
+
+    if (clientCertPath) {
+      SSLContext sslContext = setupSSLContext(clientCertPath, clientKeyPath, serverCertPath);
+      PoolingHttpClientConnectionManager connectionManager =
+        new PoolingHttpClientConnectionManager(setupSchemeRegistry(sslContext));
+      connectionManager.setMaxTotal(1000);
+      connectionManager.setDefaultMaxPerRoute(500);
+      def httpClient = HttpClientBuilder.create().setConnectionManager(connectionManager)
+        .setDefaultRequestConfig().build();
+      ambari.setClient(httpClient)
+    }
+
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
     ambari.headers['X-Requested-By'] = 'ambari'
   }
@@ -782,7 +810,7 @@ class AmbariClient {
    */
   def String addStackRepository(String stack, String stackVersion, String osType, String repoId, String baseUrl, boolean verify) throws HttpResponseException {
     def Map bodyMap = [
-            "Repositories": ["base_url": baseUrl, "verify_base_url": verify ]
+      "Repositories": ["base_url": baseUrl, "verify_base_url": verify]
     ]
     def Map<String, ?> putRequestMap = [:]
     putRequestMap.put('requestContentType', ContentType.URLENC)
@@ -790,9 +818,6 @@ class AmbariClient {
     putRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
     ambari.put(putRequestMap)
   }
-
-
-
 
   /**
    * Adds a blueprint to the Ambari server. Exception is thrown if fails.
@@ -1863,6 +1888,24 @@ class AmbariClient {
 
   private def int setAllComponentsStateToInstalled(List<String> hostNames, String context) {
     setAllComponentsState(getClusterName(), "INSTALLED", context, "HostRoles/host_name.in(${hostNames.join(',')})")
+  }
+
+  private SSLContext setupSSLContext(clientCertPath, clientKeyPath, serverCertPath) {
+    Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+    SSLContext context = SSLContexts.custom()
+      .loadTrustMaterial(KeystoreUtils.createTrustStore(serverCertPath))
+      .loadKeyMaterial(KeystoreUtils.createKeyStore(clientCertPath, clientKeyPath), "consul".toCharArray())
+      .build();
+    return context;
+  }
+
+  private Registry<ConnectionSocketFactory> setupSchemeRegistry(SSLContext sslContext) {
+    RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.create();
+    registryBuilder.register("http", PlainConnectionSocketFactory.getSocketFactory());
+    if (sslContext != null) {
+      registryBuilder.register("https", new SSLConnectionSocketFactory(sslContext));
+    }
+    return registryBuilder.build();
   }
 
 }
