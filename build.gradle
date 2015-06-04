@@ -56,6 +56,9 @@ dependencies {
     compile 'org.codehaus.groovy:groovy-all:2.1.8'
     compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
     compile 'commons-io:commons-io:2.4'
+    compile "org.apache.httpcomponents:httpcore:4.3.1"
+    compile "org.apache.httpcomponents:httpclient:4.3.1"
+    compile "org.bouncycastle:bcpkix-jdk15on:1.51"
 
     testCompile 'org.easymock:easymock:3.2'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
