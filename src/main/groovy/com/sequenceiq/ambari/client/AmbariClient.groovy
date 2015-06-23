@@ -1887,7 +1887,7 @@ class AmbariClient {
   }
 
   private def int getRequestId(def responseDecorator) {
-    def resp = IOUtils.toString(new InputStreamReader(responseDecorator.entity.content.wrappedStream))
+    def resp = IOUtils.toString(new InputStreamReader(responseDecorator.entity.content))
     slurper.parseText(resp)?.Requests?.id
   }
 
