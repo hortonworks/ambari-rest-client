@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 package com.sequenceiq.ambari.client
-
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovy.text.SimpleTemplateEngine
@@ -943,6 +942,28 @@ class AmbariClient {
     getClusters().items.collect {
       "[$it.Clusters.cluster_id] $it.Clusters.cluster_name:$it.Clusters.version"
     }.join("\n")
+  }
+
+  /**
+   * Returns a map with <status, list of request ids> based on statuses parameter.
+   * @param statuses the relevant statuses
+   * @return the status map
+   */
+  def Map<String, List<Integer>> getRequests(String... statuses) {
+    def reqs = getAllResources("requests", "Requests/request_status,Requests/id")?.items?.Requests
+    def resp = [:]
+    reqs.each {
+      def reqStatus = it?.request_status
+      if (!statuses || reqStatus in statuses) {
+        def reqlist = resp[reqStatus]
+        if (reqlist == null) {
+          reqlist = []
+          resp[reqStatus] = reqlist
+        }
+        reqlist << it?.id
+      }
+    }
+    return resp
   }
 
   /**
