@@ -825,29 +825,71 @@ class AmbariClient {
    * @throws HttpResponseException in case of error
    */
   def String addBlueprint(String json) throws HttpResponseException {
-    addBlueprint(json, [:])
+    postBlueprint(json)
   }
 
-  def String addBlueprint(String json, Map<String, Map<String, String>> configurations) throws HttpResponseException {
-    if (json) {
-      def text = slurper.parseText(json)
-      def bpMap = extendBlueprintConfiguration(text, configurations)
-      def builder = new JsonBuilder(bpMap)
-      def resultJson = builder.toPrettyString()
-      postBlueprint(resultJson)
-      resultJson
+  /**
+   * Extends the given blueprint with global configurations.
+   *
+   * @param blueprintJson original blueprint JSON as String
+   * @param newConfigs global configuration map - <site_config_name <config_name, config_value>>
+   * @return extended blueprints JSON as String
+   */
+  def String extendBlueprintGlobalConfiguration(String blueprintJson, Map<String, Map<String, String>> newConfigs) {
+    def blueprintMap = slurper.parseText(blueprintJson)
+    def configurations = blueprintMap.configurations
+    if (!configurations) {
+      if (newConfigs) {
+        def conf = []
+        newConfigs.each { conf << [(it.key): ["properties": it.value]] }
+        blueprintMap << ["configurations": conf]
+      }
+    } else {
+      newConfigs.each {
+        def site = it.key
+        def index = indexOfConfig(configurations, site)
+        if (index == -1) {
+          configurations << ["$site": ["properties": it.value]]
+        } else {
+          def existingConf = configurations.get(index)
+          existingConf."$site".properties << it.value
+        }
+      }
     }
+    new JsonBuilder(blueprintMap).toPrettyString()
   }
 
-  def String addBlueprintWithHostgroupConfiguration(String json, Map<String, Map<String, Map<String, String>>> configurations) throws HttpResponseException {
-    if (json) {
-      def text = slurper.parseText(json)
-      def bpMap = extendBlueprintHostGroupConfiguration(text, configurations)
-      def builder = new JsonBuilder(bpMap)
-      def resultJson = builder.toPrettyString()
-      postBlueprint(resultJson)
-      resultJson
+  /**
+   * Extends the given blueprint with host group level configurations.
+   *
+   * @param blueprintJson original blueprint JSON as String
+   * @param newConfigs host group level configurations - <host_group_name <site_config_name <config_name, config_value>>>
+   * @return extended blueprints JSON as String
+   */
+  def String extendBlueprintHostGroupConfiguration(String blueprintJson, Map<String, Map<String, Map<String, String>>> newConfigs) {
+    def blueprintMap = slurper.parseText(blueprintJson)
+    for (int j = 0; j < newConfigs.size(); j++) {
+      def configurations = blueprintMap.host_groups.find { it.name == newConfigs.keySet().getAt(j) }.configurations
+      if (!configurations) {
+        if (newConfigs) {
+          def conf = []
+          newConfigs.get(newConfigs.keySet().getAt(j)).each { conf << [(it.key): it.value] }
+          blueprintMap.host_groups.find { it.name == newConfigs.keySet().getAt(j) } << ["configurations": conf]
+        }
+      } else {
+        newConfigs.get(newConfigs.keySet().getAt(j)).each {
+          def site = it.key
+          def index = indexOfConfig(configurations, site)
+          if (index == -1) {
+            configurations << ["$site": it.value]
+          } else {
+            def existingConf = configurations.get(index)
+            existingConf."$site" << it.value
+          }
+        }
+      }
     }
+    new JsonBuilder(blueprintMap).toPrettyString()
   }
 
   /**
@@ -1825,54 +1867,6 @@ class AmbariClient {
 
   private String getResourceContent(name) {
     getClass().getClassLoader().getResourceAsStream(name)?.text
-  }
-
-  private def extendBlueprintConfiguration(Map blueprintMap, Map newConfigs) {
-    def configurations = blueprintMap.configurations
-    if (!configurations) {
-      if (newConfigs) {
-        def conf = []
-        newConfigs.each { conf << [(it.key): it.value] }
-        blueprintMap << ["configurations": conf]
-      }
-      return blueprintMap
-    }
-    newConfigs.each {
-      def site = it.key
-      def index = indexOfConfig(configurations, site)
-      if (index == -1) {
-        configurations << ["$site": it.value]
-      } else {
-        def existingConf = configurations.get(index)
-        existingConf."$site" << it.value
-      }
-    }
-    blueprintMap
-  }
-
-  private def extendBlueprintHostGroupConfiguration(Map blueprintMap, Map newConfigs) {
-    for (int j = 0; j < newConfigs.size(); j++) {
-      def configurations = blueprintMap.host_groups.find { it.name == newConfigs.keySet().getAt(j) }.configurations
-      if (!configurations) {
-        if (newConfigs) {
-          def conf = []
-          newConfigs.get(newConfigs.keySet().getAt(j)).each { conf << [(it.key): it.value] }
-          blueprintMap.host_groups.find { it.name == newConfigs.keySet().getAt(j) } << ["configurations": conf]
-        }
-      } else {
-        newConfigs.get(newConfigs.keySet().getAt(j)).each {
-          def site = it.key
-          def index = indexOfConfig(configurations, site)
-          if (index == -1) {
-            configurations << ["$site": it.value]
-          } else {
-            def existingConf = configurations.get(index)
-            existingConf."$site" << it.value
-          }
-        }
-      }
-    }
-    blueprintMap
   }
 
   private int indexOfConfig(List<Map> configurations, String site) {
