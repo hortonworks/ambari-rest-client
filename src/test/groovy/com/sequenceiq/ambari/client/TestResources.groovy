@@ -20,7 +20,7 @@ package com.sequenceiq.ambari.client
 enum TestResources {
   CLUSTERS("http://localhost:8080/api/v1/clusters"),
   CLUSTER("http://localhost:8080/api/v1/clusters/MySingleNodeCluster"),
-  CONFIGURATIONS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/configurations"),
+  CONFIGURATIONS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/configurations/service_config_versions"),
   BLUEPRINTS("http://localhost:8080/api/v1/blueprints"),
   BLUEPRINT("http://localhost:8080/api/v1/blueprints/single-node-hdfs-yarn"),
   BLUEPRINT_MULTI("http://localhost:8080/api/v1/blueprints/hdp-multinode-default"),

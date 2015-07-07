@@ -23,22 +23,10 @@ import groovy.util.logging.Slf4j
 class AmbariServiceConfigurationTest extends AbstractAmbariClientTest {
 
   private enum Scenario {
-    CONFIGURATIONS, MULTIPLE_VERSIONS
+    MULTIPLE_VERSIONS
   }
 
   def "test request service configurations map"() {
-    given:
-    mockResponses(Scenario.CONFIGURATIONS.name())
-
-    when:
-    Map<String, Map<String, String>> serviceConfigMap = ambari.getServiceConfigMap();
-
-    then:
-    serviceConfigMap != [:]
-    serviceConfigMap.get("yarn-site") != [:]
-  }
-
-  def "test request service configurations with multiple versions"() {
     given:
     mockResponses(Scenario.MULTIPLE_VERSIONS.name())
 
@@ -46,8 +34,32 @@ class AmbariServiceConfigurationTest extends AbstractAmbariClientTest {
     Map<String, Map<String, String>> serviceConfigMap = ambari.getServiceConfigMap();
 
     then:
-    serviceConfigMap != [:]
+    77 == serviceConfigMap.size()
     serviceConfigMap.get("yarn-site") != [:]
+  }
+
+  def "test request service configurations map for HDFS property"() {
+    given:
+    mockResponses(Scenario.MULTIPLE_VERSIONS.name())
+
+    when:
+    Map<String, Map<String, String>> serviceConfigMap = ambari.getServiceConfigMap("hdfs-site");
+
+    then:
+    1 == serviceConfigMap.size()
+    serviceConfigMap.get("hdfs-site").get("dfs.datanode.data.dir") == "/hadoopfs/fs1/hdfs/datanode"
+  }
+
+  def "test request service configurations map for host groups property"() {
+    given:
+    mockResponses(Scenario.MULTIPLE_VERSIONS.name())
+
+    when:
+    Map<String, Map<String, String>> serviceConfigMap = ambari.getServiceConfigMapByHostGroup("host_group_master_2")
+
+    then:
+    77 == serviceConfigMap.size()
+    serviceConfigMap.get("hdfs-site").get("dfs.datanode.data.dir") == "/hadoopfs/fs1/hdfs/datanode,/hadoopfs/fs2/hdfs/datanode"
   }
 
   // ---- helper method definitions
@@ -61,19 +73,7 @@ class AmbariServiceConfigurationTest extends AbstractAmbariClientTest {
     if (thePath == TestResources.CLUSTERS.uri()) {
       json = "clusters.json"
     } else if (thePath == TestResources.CONFIGURATIONS.uri()) {
-      if (!theQuery) {
-        switch (scenario) {
-          case Scenario.MULTIPLE_VERSIONS:
-            json = "service-versions-multiple.json"
-            break
-          case Scenario.CONFIGURATIONS:
-            json = "service-versions.json"
-            break
-        }
-      } else {
-        json = "service-config.json"
-      }
-
+        json = "service-config-versions.json"
     } else {
       log.error("Unsupported resource path: {}", thePath)
     }
