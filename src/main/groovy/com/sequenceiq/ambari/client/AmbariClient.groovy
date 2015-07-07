@@ -486,7 +486,7 @@ class AmbariClient {
     if (liveNodes) {
       liveNodes.each {
         if (it.value.adminState == "In Service") {
-          result << [(it.key): [(it.value.remaining as Long): it.value.usedSpace as Long]]
+          result << [(it.key.split(':')[0]): [(it.value.remaining as Long): it.value.usedSpace as Long]]
         }
       }
     }
@@ -1712,7 +1712,7 @@ class AmbariClient {
     ambari.post(path: "blueprints/bp", body: blueprint, { it })
   }
 
-  private def createClusterJson(String name, Map hostGroups) {
+  def createClusterJson(String name, Map hostGroups) {
     def builder = new JsonBuilder()
     def groups = hostGroups.collect {
       def hostList = it.value.collect { ['fqdn': it] }
