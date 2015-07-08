@@ -486,7 +486,7 @@ class AmbariClient {
     if (liveNodes) {
       liveNodes.each {
         if (it.value.adminState == "In Service") {
-          result << [(it.key): [(it.value.remaining as Long): it.value.usedSpace as Long]]
+          result << [(it.key.split(':')[0]): [(it.value.remaining as Long): it.value.usedSpace as Long]]
         }
       }
     }
@@ -1246,57 +1246,40 @@ class AmbariClient {
   }
 
   /**
-   * Returns a map with service configurations. The keys are the service names, values are maps with <propertyName, propertyValue> entries
+   * Returns a map with service configurations of the 'default' config group.
+   * The keys are the config-types, values are maps with <propertyName, propertyValue> entries
    *
-   * @return a Map with entries of format <servicename, Map<property, value>>
+   * @return a Map with entries of format <config-type, Map<property, value>>
    */
   def Map<String, Map<String, String>> getServiceConfigMap(String type = "") {
-    def Map<String, Integer> serviceToTags = new HashMap<>()
-
-    //get services and last versions configurations
-    def path = "clusters/${getClusterName()}/configurations"
-    Map<String, ?> configsResourceRequestMap = getResourceRequestMap(path, type ? ["type": type] : [:])
-    def rawConfigs = getSlurpedResource(configsResourceRequestMap)
-
-    rawConfigs?.items.collect { object ->
-      // selecting the latest versions
-      if (object.tag.isLong()) {
-        processServiceVersions(serviceToTags, object.type, object.tag)
-      }
-    }
-
-    // collect properties for every service
-    def finalMap = serviceToTags.collectEntries { entry ->
-      // collect config props for every service
-      def propsMap = collectConfigPropertiesForService(entry.getKey(), entry.getValue())
-      // put them in the final map
-      [(entry.key): propsMap]
-    }
-    return finalMap
+    def configs = getServiceConfigMapByHostGroup(null)
+    type ? [(type): configs.get(type)] : configs
   }
 
+  /**
+   * Returns the currently active host group level configurations combined with the 'default' config group.
+   *
+   * @param hostGroup name of the host group, in Ambari the config group's name is the same
+   * @return return the configurations in the form of <config-type, <property_key, property_value>>
+   */
   def Map<String, Map<String, String>> getServiceConfigMapByHostGroup(String hostGroup) {
-    def Map<String, List<String>> serviceToTags = new HashMap<>()
-
-    //get services and last versions configurations
-    def path = "clusters/${getClusterName()}/configurations"
-    Map<String, ?> configsResourceRequestMap = getResourceRequestMap(path, [:])
-    def rawConfigs = getSlurpedResource(configsResourceRequestMap)
-
-    rawConfigs?.items.collect { object ->
-      // selecting the latest versions
-      processServiceVersionsByHostGroup(serviceToTags, object.type.toString(), object.version, object.tag, hostGroup)
+    Map<String, Map<String, String>> result = new HashMap<>()
+    def rawConfigs = getAllPredictedResources("configurations/service_config_versions",
+      ['is_current': "true", 'fields': "*"]).items
+    rawConfigs.each {
+      if (it.group_name == "default" || (hostGroup && it.group_name.contains(hostGroup))) {
+        it.configurations.each {
+          def type = it.type
+          Map props = result.get(type)
+          if (props) {
+            props.putAll(it.properties)
+          } else {
+            result << [(it.type): it.properties]
+          }
+        }
+      }
     }
-
-    // collect properties for every service
-    def finalMap = serviceToTags.collectEntries { entry ->
-      // collect config props for every service
-      def propsMap = collectConfigPropertiesForServiceByList(entry.getKey(), entry.getValue())
-      // put them in the final map
-      [(entry.key): propsMap]
-    }
-    return finalMap
-    return finalMap
+    result
   }
 
   /**
@@ -1556,91 +1539,6 @@ class AmbariClient {
 
     def reponse = ambari.put(putRequestMap)
     slurper.parseText(reponse.getAt("responseData")?.getAt("str"))?.Requests?.id
-  }
-
-  private def processServiceVersions(Map<String, Integer> serviceToVersions, String service, def version) {
-    boolean change = false
-    log.debug("Handling service version <{}:{}>", service, version)
-    if (serviceToVersions.containsKey(service)) {
-      log.debug("Entry already added, checking versions ...")
-      def newVersion = Long.valueOf(version.minus("version")).longValue()
-      def oldVersion = Long.valueOf(serviceToVersions.get(service).minus("version")).longValue()
-      change = oldVersion < newVersion
-    } else {
-      change = true;
-    }
-    if (change) {
-      log.debug("Adding / updating service version <{}:{}>", service, version)
-      serviceToVersions.put(service, version);
-    }
-  }
-
-  private def processServiceVersionsByHostGroup(Map<String, List<String>> serviceToVersions, String service,
-                                                def version, def tag, String hostGroup) {
-    boolean change = false
-    log.debug("Handling service version <{}:{}>", service, version)
-    if (tag.isLong() || tag.toString().equals(hostGroup)) {
-      if (serviceToVersions.containsKey(service)) {
-        if (serviceToVersions.get(service).get(0).isLong()) {
-          if (tag.toString().equals(hostGroup)) {
-            change = true;
-          } else {
-            log.debug("Entry already added, checking versions ...")
-            def newVersion = version.longValue()
-            def oldVersion = Long.valueOf(serviceToVersions.get(service).get(0)).longValue()
-            change = oldVersion < newVersion
-          }
-        } else {
-          change = true;
-        }
-      } else {
-        change = true;
-      }
-    }
-    if (change) {
-      log.debug("Adding / updating service version <{}:{}>", service, version)
-      if (!serviceToVersions.containsKey(service)) {
-        serviceToVersions.put(service, new ArrayList<String>());
-      }
-      if (tag.isLong()) {
-        serviceToVersions.get(service).add(0, tag.toString());
-      } else {
-        serviceToVersions.get(service).add(tag.toString());
-      }
-    }
-  }
-
-  private def Map<String, String> collectConfigPropertiesForServiceByList(String service, List<String> tag) {
-    Map<String, String> serviceConfigProperties = new HashMap<>();
-
-    for (String actualTag : tag) {
-      def Map resourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations",
-        ['type': "$service", 'tag': "$actualTag"])
-      def rawResource = getSlurpedResource(resourceRequestMap);
-
-      if (rawResource) {
-        Map<String, String> tmpConfigs = rawResource.items?.collectEntries { it -> it.properties }
-        serviceConfigProperties.putAll(tmpConfigs);
-      } else {
-        log.debug("No resource object has been returned for the resource request map: {}", resourceRequestMap)
-      }
-    }
-    return serviceConfigProperties
-  }
-
-  private def Map<String, String> collectConfigPropertiesForService(String service, def tag) {
-    Map<String, String> serviceConfigProperties
-
-    def Map resourceRequestMap = getResourceRequestMap("clusters/${getClusterName()}/configurations",
-      ['type': "$service", 'tag': "$tag"])
-    def rawResource = getSlurpedResource(resourceRequestMap);
-
-    if (rawResource) {
-      serviceConfigProperties = rawResource.items?.collectEntries { it -> it.properties }
-    } else {
-      log.debug("No resource object has been returned for the resource request map: {}", resourceRequestMap)
-    }
-    return serviceConfigProperties
   }
 
   private Map<String, ?> getResourceRequestMap(String path, Map<String, String> queryParams) {
