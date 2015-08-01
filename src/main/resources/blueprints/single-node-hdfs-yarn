@@ -38,6 +38,12 @@
       },
       {
         "name" : "ZOOKEEPER_CLIENT"
+      },
+      {
+        "name" : "METRICS_COLLECTOR"
+      },
+      {
+        "name" : "METRICS_MONITOR
       }
       ],
       "cardinality" : "1"
