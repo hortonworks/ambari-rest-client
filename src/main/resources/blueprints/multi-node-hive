@@ -1,14 +1,15 @@
 {
   "host_groups": [
     {
-      "name": "master",
+      "name": "master_1",
       "components": [
         {
           "name": "NAMENODE"
         },
         {
-          "name": "SECONDARY_NAMENODE"
+          "name" : "HIVE_SERVER"
         },
+
         {
           "name": "RESOURCEMANAGER"
         },
@@ -22,17 +23,65 @@
           "name": "ZOOKEEPER_SERVER"
         }, 
         {
+          "name" : "METRICS_MONITOR"
+        },
+        {
+          "name" : "WEBHCAT_SERVER"
+        },
+        {
+          "name" : "TEZ_CLIENT"
+        },
+        {
+          "name" : "HIVE_CLIENT"
+        },
+        {
+          "name" : "PIG"
+        }
+        ],
+      "cardinality": "1"
+    },
+        {
+      "name": "master_2",
+      "components": [
+        {
+          "name": "SECONDARY_NAMENODE"
+        },
+        {
+          "name" : "HIVE_SERVER"
+        }, 
+        {
           "name" : "METRICS_COLLECTOR"
         },
         {
           "name" : "METRICS_MONITOR"
+        },
+        {
+          "name" : "HCAT"
+        },
+        {
+          "name" : "TEZ_CLIENT"
+        },
+        {
+          "name" : "HIVE_METASTORE"
+        },
+        {
+          "name" : "MYSQL_SERVER"
+        },
+        {
+          "name" : "HIVE_CLIENT"
+        },
+        {
+          "name" : "PIG"
         }
-    ],
+      ],
       "cardinality": "1"
     },
     {
       "name": "slave_1",
       "components": [
+        {
+          "name" : "PIG"
+        },
         {
           "name": "DATANODE"
         },
@@ -53,13 +102,20 @@
         },
         {
           "name" : "METRICS_MONITOR"
+        },
+        {
+          "name" : "TEZ_CLIENT"
+        },
+        {
+          "name" : "HIVE_CLIENT"
         }
+
       ],
       "cardinality": "1+"
     }
   ],
   "Blueprints": {
-    "blueprint_name": "multi-node-hdfs-yarn",
+    "blueprint_name": "multi-node-hive",
     "stack_name": "HDP",
     "stack_version": "2.3"
   }
