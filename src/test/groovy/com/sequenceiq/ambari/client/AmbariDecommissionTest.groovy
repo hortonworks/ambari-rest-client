@@ -28,7 +28,7 @@ class AmbariDecommissionTest extends AbstractAmbariClientTest {
 
   def "test get decommissioning nodes"() {
     given:
-    ambari.metaClass.getClusterName = { return "MySingleNodeCluster" }
+    ambari.getClusterName() >> "MySingleNodeCluster"
     mockResponses(Scenario.NOT_EMPTY_RESULT.name())
 
     when:
@@ -41,7 +41,7 @@ class AmbariDecommissionTest extends AbstractAmbariClientTest {
 
   def "test get decommissioning nodes with no nodes"() {
     given:
-    ambari.metaClass.getClusterName = { return "MySingleNodeCluster" }
+    ambari.getClusterName() >> "MySingleNodeCluster"
     mockResponses(Scenario.EMPTY_RESULT.name())
 
     when:
@@ -53,7 +53,7 @@ class AmbariDecommissionTest extends AbstractAmbariClientTest {
 
   def "test get dfs block size of the data nodes"() {
     given:
-    ambari.metaClass.getClusterName = { return "MySingleNodeCluster" }
+    ambari.getClusterName() >> "MySingleNodeCluster"
     mockResponses(Scenario.LIVE_NODES.name())
 
     when:

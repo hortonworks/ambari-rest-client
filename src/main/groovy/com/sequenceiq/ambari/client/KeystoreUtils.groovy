@@ -26,11 +26,11 @@ public class KeystoreUtils {
     KeyPair keyPair = loadPrivateKey(clientKeyPath);
     Certificate privateCertificate = loadCertificate(clientCertPath);
 
-    KeyStore keyStore = KeyStore.getInstance("JKS");
+    KeyStore keyStore = KeyStore.getInstance('JKS');
     keyStore.load(null);
 
     Certificate[] cert = [privateCertificate]
-    keyStore.setKeyEntry("client", keyPair.getPrivate(), "consul".toCharArray(), cert);
+    keyStore.setKeyEntry('client', keyPair.getPrivate(), 'consul'.toCharArray(), cert);
     return keyStore;
   }
 
@@ -42,11 +42,11 @@ public class KeystoreUtils {
     try {
       pemParser = new PEMParser(reader);
       X509CertificateHolder certificateHolder = (X509CertificateHolder) pemParser.readObject();
-      Certificate caCertificate = new JcaX509CertificateConverter().setProvider("BC").getCertificate(certificateHolder);
+      Certificate caCertificate = new JcaX509CertificateConverter().setProvider('BC').getCertificate(certificateHolder);
 
-      KeyStore trustStore = KeyStore.getInstance("JKS");
+      KeyStore trustStore = KeyStore.getInstance('JKS');
       trustStore.load(null);
-      trustStore.setCertificateEntry("ca", caCertificate);
+      trustStore.setCertificateEntry('ca', caCertificate);
       return trustStore;
 
     } finally {
@@ -69,7 +69,7 @@ public class KeystoreUtils {
     try {
       pemParser = new PEMParser(reader);
       X509CertificateHolder certificateHolder = (X509CertificateHolder) pemParser.readObject();
-      return new JcaX509CertificateConverter().setProvider("BC").getCertificate(certificateHolder);
+      return new JcaX509CertificateConverter().setProvider('BC').getCertificate(certificateHolder);
     } finally {
       if (pemParser != null) {
         pemParser.close();
@@ -97,7 +97,7 @@ public class KeystoreUtils {
       byte[] pemPrivateKeyEncoded = pemKeyPair.getPrivateKeyInfo().getEncoded();
       byte[] pemPublicKeyEncoded = pemKeyPair.getPublicKeyInfo().getEncoded();
 
-      KeyFactory factory = KeyFactory.getInstance("RSA");
+      KeyFactory factory = KeyFactory.getInstance('RSA');
 
       X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(pemPublicKeyEncoded);
       PublicKey publicKey = factory.generatePublic(publicKeySpec);

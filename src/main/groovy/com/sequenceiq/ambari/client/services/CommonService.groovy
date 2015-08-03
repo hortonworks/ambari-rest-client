@@ -15,29 +15,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.sequenceiq.ambari.client
-
+package com.sequenceiq.ambari.client.services
+import com.sequenceiq.ambari.client.AmbariClientUtils
+import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
-import spock.lang.Specification
+import groovyx.net.http.RESTClient
 
 @Slf4j
-abstract class AbstractAmbariClientTest extends Specification {
+trait CommonService {
 
-  protected AmbariClient ambari
+  static final int PAD = 30
 
-  def setup() {
-    ambari = Spy(AmbariClient)
-    ambari.utils = Spy(AmbariClientUtils, constructorArgs: [ambari])
-  }
+  boolean debugEnabled = false
+  AmbariClientUtils utils = new AmbariClientUtils(this)
+  JsonSlurper slurper = new JsonSlurper()
+  String clusterNameCache
 
-  // implement this in descendants!
-  def protected selectResponseJson
+  abstract String getClusterName()
+  abstract RESTClient getAmbari()
 
-  def protected mockResponses(String scenarioStr) {
-    ambari.utils.getRawResource(_) >> { Map resourceRequestMap ->
-      String jsonFileName = selectResponseJson(resourceRequestMap, scenarioStr)
-      String jsonAsText = getClass().getClassLoader().getResourceAsStream(jsonFileName)?.text
-      return jsonAsText;
-    }
+  /**
+   * Sets the debug variable. Used by printing the API calls for the Ambari Shell.
+   *
+   * @param enabled enable or disable
+   */
+  def setDebugEnabled(boolean enabled) {
+    debugEnabled = enabled;
   }
 }

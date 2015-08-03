@@ -29,7 +29,7 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
   def "test recommend for single node"() {
     given:
     mockResponses(Scenario.SINGLE_NODE_BLUEPRINT.name())
-    ambari.metaClass.getHostStatuses = { return ["amb0": "HEALTHY"] }
+    ambari.getHostStatuses() >> ["amb0": "HEALTHY"]
 
     when:
     def result = ambari.recommendAssignments("single-node-hdfs-yarn")
@@ -41,7 +41,7 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
   def "test recommend for invalid host number"() {
     given:
     mockResponses(Scenario.MULTI_NODE_BLUEPRINT.name())
-    ambari.metaClass.getHostStatuses = { return ["amb0": "HEALTHY"] }
+    ambari.getHostStatuses() >> ["amb0": "HEALTHY"]
 
     when:
     def result
@@ -58,25 +58,23 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
   def "test recommend for no slave group"() {
     given:
     mockResponses(Scenario.MULTI_NODE_BLUEPRINT2.name())
-    ambari.metaClass.getHostStatuses = {
-      return [
-        "amb0": "HEALTHY",
-        "amb1": "HEALTHY",
-        "amb2": "HEALTHY",
-        "amb3": "HEALTHY",
-        "amb4": "HEALTHY",
-        "amb5": "HEALTHY",
-        "amb6": "HEALTHY",
-        "amb7": "HEALTHY",
-        "amb8": "HEALTHY",
-        "amb9": "HEALTHY",
-        "am10": "HEALTHY",
-        "am10": "HEALTHY",
-        "am20": "HEALTHY",
-        "am30": "HEALTHY",
-        "am40": "HEALTHY",
-      ]
-    }
+    ambari.getHostStatuses() >> [
+      "amb0": "HEALTHY",
+      "amb1": "HEALTHY",
+      "amb2": "HEALTHY",
+      "amb3": "HEALTHY",
+      "amb4": "HEALTHY",
+      "amb5": "HEALTHY",
+      "amb6": "HEALTHY",
+      "amb7": "HEALTHY",
+      "amb8": "HEALTHY",
+      "amb9": "HEALTHY",
+      "am10": "HEALTHY",
+      "am10": "HEALTHY",
+      "am20": "HEALTHY",
+      "am30": "HEALTHY",
+      "am40": "HEALTHY",
+    ]
 
     when:
     def result
@@ -96,25 +94,23 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
   def "test recommend for multi node"() {
     given:
     mockResponses(Scenario.MULTI_NODE_BLUEPRINT.name())
-    ambari.metaClass.getHostStatuses = {
-      return [
-        "amb0": "HEALTHY",
-        "amb1": "HEALTHY",
-        "amb2": "HEALTHY",
-        "amb3": "HEALTHY",
-        "amb4": "HEALTHY",
-        "amb5": "HEALTHY",
-        "amb6": "HEALTHY",
-        "amb7": "HEALTHY",
-        "amb8": "HEALTHY",
-        "amb9": "HEALTHY",
-        "am10": "HEALTHY",
-        "am10": "HEALTHY",
-        "am20": "HEALTHY",
-        "am30": "HEALTHY",
-        "am40": "HEALTHY",
-      ]
-    }
+    ambari.getHostStatuses() >> [
+      "amb0": "HEALTHY",
+      "amb1": "HEALTHY",
+      "amb2": "HEALTHY",
+      "amb3": "HEALTHY",
+      "amb4": "HEALTHY",
+      "amb5": "HEALTHY",
+      "amb6": "HEALTHY",
+      "amb7": "HEALTHY",
+      "amb8": "HEALTHY",
+      "amb9": "HEALTHY",
+      "am10": "HEALTHY",
+      "am10": "HEALTHY",
+      "am20": "HEALTHY",
+      "am30": "HEALTHY",
+      "am40": "HEALTHY",
+    ]
 
     when:
     def result = ambari.recommendAssignments("hdp-multinode-default")
