@@ -120,7 +120,7 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
   def "test stop all services"() {
     given:
     def context
-    ambari.metaClass.getClusterName = { return "cluster" }
+    ambari.getClusterName() >> "cluster"
     ambari.getAmbari().metaClass.put = { Map request ->
       context = request
     }
@@ -140,7 +140,7 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
   def "test start service ZOOKEEPER"() {
     given:
     def context
-    ambari.metaClass.getClusterName = { return "cluster" }
+    ambari.getClusterName() >> "cluster"
     ambari.getAmbari().metaClass.put = { Map request ->
       context = request
     }
@@ -160,7 +160,7 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
   def "test stop service ZOOKEEPER"() {
     given:
     def context
-    ambari.metaClass.getClusterName = { return "cluster" }
+    ambari.getClusterName() >> "cluster"
     ambari.getAmbari().metaClass.put = { Map request ->
       context = request
     }
