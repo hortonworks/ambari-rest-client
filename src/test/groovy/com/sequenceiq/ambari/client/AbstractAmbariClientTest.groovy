@@ -31,7 +31,7 @@ abstract class AbstractAmbariClientTest extends Specification {
   }
 
   // implement this in descendants!
-  def protected selectResponseJson
+  abstract protected selectResponseJson(Map resourceRequestMap, String scenarioStr);
 
   def protected mockResponses(String scenarioStr) {
     ambari.utils.getRawResource(_) >> { Map resourceRequestMap ->

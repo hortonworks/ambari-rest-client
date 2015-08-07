@@ -177,7 +177,7 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
     body.ServiceInfo.state == "INSTALLED"
   }
 
-  def private String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
+  def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
     def thePath = resourceRequestMap.get("path");
     def Scenario scenario = Scenario.valueOf(scenarioStr)
 
