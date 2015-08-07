@@ -519,8 +519,7 @@ trait ServiceAndHostService extends ClusterService {
     requestMap.put('query', ['ServiceInfo/service_name': serviceName, 'ServiceInfo/state': state])
     requestMap.put('body', new JsonBuilder(body).toPrettyString());
 
-    def response = ambari.put(requestMap)
-    slurper.parseText(response.getAt('responseData')?.getAt('str') as String)?.Requests?.id
+    utils.putAndGetId(requestMap)
   }
 
   /**
@@ -602,8 +601,7 @@ trait ServiceAndHostService extends ClusterService {
     putRequestMap.put('query', ['params/run_smoke_test': 'false'])
     putRequestMap.put('body', builder.toPrettyString());
 
-    def response = ambari.put(putRequestMap)
-    slurper.parseText(response.getAt('responseData')?.getAt('str') as String)?.Requests?.id
+    utils.putAndGetId(putRequestMap)
   }
 
   /**

@@ -16,17 +16,15 @@
  * limitations under the License.
  */
 package com.sequenceiq.ambari.client
-
 import com.sequenceiq.ambari.client.services.AlertService
 import com.sequenceiq.ambari.client.services.BlueprintService
 import com.sequenceiq.ambari.client.services.ConfigService
 import com.sequenceiq.ambari.client.services.HBaseService
-import com.sequenceiq.ambari.client.services.ServiceAndHostService
 import com.sequenceiq.ambari.client.services.KerberosService
+import com.sequenceiq.ambari.client.services.ServiceAndHostService
+import com.sequenceiq.ambari.client.services.StackService
 import com.sequenceiq.ambari.client.services.TaskService
 import com.sequenceiq.ambari.client.services.UserService
-import com.sequenceiq.ambari.client.services.StackService
-import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
@@ -245,24 +243,5 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, HBa
    */
   def String healthCheck() {
     ambari.get(path: 'check', headers: ['Accept': ContentType.TEXT]).data.text
-  }
-
-  /**
-   * Generate the keytabs.
-   *
-   * @param missingOnly if set to true, keytabs will be generated only for missing hosts and services
-   * @return id of the request
-   */
-  def int generateKeytabs(boolean missingOnly) {
-    def Map<String, ?> putRequestMap = [:]
-    putRequestMap.put('requestContentType', ContentType.URLENC)
-    putRequestMap.put('path', "clusters/${getClusterName()}")
-    putRequestMap.put('body', new JsonBuilder(['Clusters': ['security_type': 'KERBEROS']]).toPrettyString())
-    if (missingOnly) {
-      putRequestMap.put('query', ['regenerate_keytabs': 'missing'])
-    }
-
-    def response = ambari.put(putRequestMap)
-    slurper.parseText(response.getAt('responseData')?.getAt('str') as String)?.Requests?.id
   }
 }

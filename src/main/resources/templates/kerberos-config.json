@@ -10,8 +10,19 @@
           "realm": "$REALM",
           "ldap_url": "",
           "container_dn": "",
-          "create_attributes_template": "$ATTR_TEMPLATE",
+          "manage_identities": true,
+          "install_packages": true,
+          "executable_search_paths": "/usr/bin, /usr/kerberos/bin, /usr/sbin, /usr/lib/mit/bin, /usr/lib/mit/sbin",
           "encryption_types": "aes des3-cbc-sha1 rc4 des-cbc-md5",
+          "password_length": 20,
+          "password_min_lowercase_letters": 1,
+          "password_min_uppercase_letters": 1,
+          "password_min_digits": 1,
+          "password_min_punctuation": 1,
+          "password_min_whitespace": 0,
+          "service_check_principal_name": "\${cluster_name}-\${short_date}",
+          "create_attributes_template": "$ATTR_TEMPLATE",
+          "case_insensitive_username_rules": false,
           "admin_server_host": "$KDC_HOST"
         },
         "service_config_version_note": "This is the initial configuration created by Enable Kerberos wizard."
@@ -22,7 +33,7 @@
         "properties": {
           "content": "$CONTENT",
           "domains": "$DOMAIN",
-          "manage_krb5_conf": "true",
+          "manage_krb5_conf": true,
           "conf_dir": "/etc"
         },
         "service_config_version_note": "This is the initial configuration created by Enable Kerberos wizard."

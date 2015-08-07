@@ -199,4 +199,9 @@ class AmbariClientUtils {
     }
     return registryBuilder.build();
   }
+
+  def int putAndGetId(def Map<String, ?> putRequestMap) {
+    def response = ambariClient.ambari.put(putRequestMap)
+    ambariClient.slurper.parseText(response.getAt('responseData')?.getAt('str') as String)?.Requests?.id
+  }
 }
