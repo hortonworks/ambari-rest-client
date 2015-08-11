@@ -184,7 +184,11 @@ trait BlueprintService extends ClusterService {
           configurations << ["$site": ['properties': it.value]]
         } else {
           def existingConf = configurations.get(index)
-          existingConf."$site".properties << it.value
+          if (existingConf."$site".properties == null) {
+            existingConf."$site" << it.value
+          } else {
+            existingConf."$site".properties << it.value
+          }
         }
       }
     }
@@ -216,7 +220,11 @@ trait BlueprintService extends ClusterService {
             configurations << ["$site": it.value]
           } else {
             def existingConf = configurations.get(index)
-            existingConf."$site" << it.value
+            if (existingConf."$site".properties == null) {
+              existingConf."$site" << it.value
+            } else {
+              existingConf."$site".properties << it.value
+            }
           }
         }
       }
