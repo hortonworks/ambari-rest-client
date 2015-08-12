@@ -147,8 +147,8 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
 
     when:
     def config = [
-      "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
-      "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
+            "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
+            "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
     ]
     def blueprint = ambari.extendBlueprintGlobalConfiguration(json, config)
 
@@ -164,9 +164,9 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
 
     when:
     def config = [
-      "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "apple"],
-      "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"],
-      "core-site": ["fs.defaultFS": "localhost:9000"]
+            "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "apple"],
+            "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"],
+            "core-site": ["fs.defaultFS": "localhost:9000"]
     ]
     def blueprint = ambari.extendBlueprintGlobalConfiguration(json, config)
 
@@ -182,9 +182,9 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
 
     when:
     def config = [
-      "falcon-startup.properties": ["*.falcon.graph.serialize.path"   : "/hadoopfs/fs1/falcon",
-                                    "*.falcon.graph.storage.directory": "/hadoopfs/fs1/falcon"],
-      "zoo.cfg"                  : ["dataDir": "/hadoopfs/fs1/zookeeper"]
+            "falcon-startup.properties": ["*.falcon.graph.serialize.path"   : "/hadoopfs/fs1/falcon",
+                                          "*.falcon.graph.storage.directory": "/hadoopfs/fs1/falcon"],
+            "zoo.cfg"                  : ["dataDir": "/hadoopfs/fs1/zookeeper"]
     ]
     def blueprint = ambari.extendBlueprintGlobalConfiguration(json, config)
 
@@ -213,10 +213,10 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
 
     when:
     def config = [
-      "master": [
-        "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
-        "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
-      ]
+            "master": [
+                    "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
+                    "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
+            ]
     ]
     def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, config)
 
@@ -232,14 +232,14 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
 
     when:
     def config = [
-      "master" : [
-        "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
-        "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
-      ],
-      "slave_1": [
-        "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
-        "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
-      ]
+            "master" : [
+                    "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
+                    "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
+            ],
+            "slave_1": [
+                    "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
+                    "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
+            ]
     ]
     def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, config)
 
@@ -255,14 +255,51 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
 
     when:
     def config = [
-      "master": [
-        "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"]
-      ]
+            "master": [
+                    "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"]
+            ]
     ]
     def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, config)
 
     then:
     def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen-with-config-result.json").text)
+    def actual = slurper.parseText(blueprint)
+    actual == expected
+  }
+
+  def "test extend blueprint global configuration with existing config and property block"() {
+    given:
+    def json = getClass().getClassLoader().getResourceAsStream("hdp-blueprint-inner-properties.json").text
+
+    when:
+    def config = [
+            "hdfs-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"]
+
+    ]
+    def blueprint = ambari.extendBlueprintGlobalConfiguration(json, config)
+
+    then:
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("hdp-blueprint-inner-properties-result.json").text)
+    def actual = slurper.parseText(blueprint)
+    actual == expected
+  }
+
+  def "test extend blueprint master configuration with existing config and property block"() {
+    given:
+    def json = getClass().getClassLoader().getResourceAsStream("hdp-blueprint-inner-properties2.json").text
+
+    when:
+    def config = [
+            "master": [
+                    "hdfs-site"   : ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"],
+                    "kafka-broker": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"]
+            ]
+
+    ]
+    def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, config)
+
+    then:
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("hdp-blueprint-inner-properties2-result.json").text)
     def actual = slurper.parseText(blueprint)
     actual == expected
   }
@@ -273,14 +310,14 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
 
     when:
     def hostGroupConfig = [
-      "master": [
-        "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"]
-      ]
+            "master": [
+                    "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"]
+            ]
     ]
     def globalConfig = [
-      "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "apple"],
-      "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"],
-      "core-site": ["fs.defaultFS": "localhost:9000"]
+            "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "apple"],
+            "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"],
+            "core-site": ["fs.defaultFS": "localhost:9000"]
     ]
 
     def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, hostGroupConfig)
