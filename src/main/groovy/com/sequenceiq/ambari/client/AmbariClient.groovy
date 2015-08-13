@@ -16,15 +16,16 @@
  * limitations under the License.
  */
 package com.sequenceiq.ambari.client
+
 import com.sequenceiq.ambari.client.services.AlertService
 import com.sequenceiq.ambari.client.services.BlueprintService
 import com.sequenceiq.ambari.client.services.ConfigService
 import com.sequenceiq.ambari.client.services.HBaseService
-import com.sequenceiq.ambari.client.services.KerberosService
 import com.sequenceiq.ambari.client.services.ServiceAndHostService
-import com.sequenceiq.ambari.client.services.StackService
+import com.sequenceiq.ambari.client.services.KerberosService
 import com.sequenceiq.ambari.client.services.TaskService
 import com.sequenceiq.ambari.client.services.UserService
+import com.sequenceiq.ambari.client.services.StackService
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
