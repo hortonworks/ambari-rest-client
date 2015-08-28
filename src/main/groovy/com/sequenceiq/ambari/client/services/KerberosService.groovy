@@ -98,9 +98,7 @@ trait KerberosService extends ClusterService {
     putRequestMap.put('requestContentType', ContentType.URLENC)
     putRequestMap.put('path', "clusters/${getClusterName()}")
     putRequestMap.put('body', new JsonBuilder(['Clusters': ['security_type': 'KERBEROS']]).toPrettyString())
-    if (missingOnly) {
-      putRequestMap.put('query', ['regenerate_keytabs': 'missing'])
-    }
+    putRequestMap.put('query', ['regenerate_keytabs': missingOnly ? 'missing' : 'all'])
 
     utils.putAndGetId(putRequestMap)
   }

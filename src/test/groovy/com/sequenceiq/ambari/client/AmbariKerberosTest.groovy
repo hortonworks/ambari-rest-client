@@ -114,7 +114,7 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     then:
     def body = slurper.parseText(context.body)
     'KERBEROS' == body?.Clusters?.security_type
-    null == context?.query?.regenerate_keytabs
+    'all' == context?.query?.regenerate_keytabs
   }
 
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
