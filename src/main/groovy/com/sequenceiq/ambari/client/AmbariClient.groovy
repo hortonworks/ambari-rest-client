@@ -25,6 +25,7 @@ import com.sequenceiq.ambari.client.services.ServiceAndHostService
 import com.sequenceiq.ambari.client.services.StackService
 import com.sequenceiq.ambari.client.services.TaskService
 import com.sequenceiq.ambari.client.services.UserService
+import com.sequenceiq.ambari.client.services.ViewService
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
@@ -38,7 +39,7 @@ import javax.net.ssl.SSLContext
  * Basic client to send requests to the Ambari server.
  */
 @Slf4j
-class AmbariClient implements AlertService, BlueprintService, ConfigService, HBaseService, ServiceAndHostService, KerberosService, StackService, TaskService, UserService {
+class AmbariClient implements AlertService, BlueprintService, ConfigService, HBaseService, ServiceAndHostService, KerberosService, StackService, TaskService, UserService, ViewService {
 
   private static final String SLAVE = 'slave_'
 
