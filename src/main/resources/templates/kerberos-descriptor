@@ -122,12 +122,81 @@
             }
           }
         ],
+        "configurations": [
+          {
+            "spark-defaults": {
+              "spark.history.kerberos.enabled": "true"
+            }
+          }
+        ],
         "components": [
           {
             "name": "SPARK_JOBHISTORYSERVER"
           },
           {
             "name": "SPARK_CLIENT"
+          }
+        ]
+      },
+      {
+        "name": "RANGER_KMS",
+        "identities": [
+          {
+            "name": "/spnego",
+            "keytab": {
+              "file": null,
+              "owner": {
+                "name": null,
+                "access": null
+              },
+              "configuration": "kms-site/hadoop.kms.authentication.kerberos.keytab",
+              "group": {
+                "name": null,
+                "access": null
+              }
+            }
+          },
+          {
+            "name": "/smokeuser"
+          }
+        ],
+        "configurations": [
+          {
+            "kms-site": {
+              "hadoop.kms.authentication.type": "kerberos",
+              "hadoop.kms.authentication.kerberos.principal": "*"
+            }
+          }
+        ],
+        "components": [
+          {
+            "name": "RANGER_KMS_SERVER",
+            "identities": [
+              {
+                "principal": {
+                  "value": null,
+                  "local_username": null,
+                  "configuration": "kms-site/hadoop.kms.authentication.signer.secret.provider.zookeeper.kerberos.principal",
+                  "type": "service"
+                },
+                "name": "/spnego",
+                "keytab": {
+                  "file": null,
+                  "owner": {
+                    "name": null,
+                    "access": null
+                  },
+                  "configuration": "kms-site/hadoop.kms.authentication.signer.secret.provider.zookeeper.kerberos.keytab",
+                  "group": {
+                    "name": null,
+                    "access": null
+                  }
+                }
+              },
+              {
+                "name": "/smokeuser"
+              }
+            ]
           }
         ]
       },
@@ -189,68 +258,6 @@
                     "access": null
                   }
                 }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "RANGER_KMS",
-        "identities": [
-          {
-            "name": "/spnego",
-            "keytab": {
-              "file": null,
-              "owner": {
-                "name": null,
-                "access": null
-              },
-              "configuration": "kms-site/hadoop.kms.authentication.kerberos.keytab",
-              "group": {
-                "name": null,
-                "access": null
-              }
-            }
-          },
-          {
-            "name": "/smokeuser"
-          }
-        ],
-        "configurations": [
-          {
-            "kms-site": {
-              "hadoop.kms.authentication.type": "kerberos",
-              "hadoop.kms.authentication.kerberos.principal": "*"
-            }
-          }
-        ],
-        "components": [
-          {
-            "name": "RANGER_KMS_SERVER",
-            "identities": [
-              {
-                "principal": {
-                  "value": null,
-                  "local_username": null,
-                  "configuration": "kms-site/hadoop.kms.authentication.signer.secret.provider.zookeeper.kerberos.principal",
-                  "type": "service"
-                },
-                "name": "/spnego",
-                "keytab": {
-                  "file": null,
-                  "owner": {
-                    "name": null,
-                    "access": null
-                  },
-                  "configuration": "kms-site/hadoop.kms.authentication.signer.secret.provider.zookeeper.kerberos.keytab",
-                  "group": {
-                    "name": null,
-                    "access": null
-                  }
-                }
-              },
-              {
-                "name": "/smokeuser"
               }
             ]
           }
@@ -747,133 +754,6 @@
         ]
       },
       {
-        "name": "HBASE",
-        "identities": [
-          {
-            "name": "/spnego"
-          },
-          {
-            "name": "/HDFS/hdfs"
-          },
-          {
-            "principal": {
-              "value": "${hbase-env/hbase_user}-${cluster_name}@${realm}",
-              "local_username": "${hbase-env/hbase_user}",
-              "configuration": "hbase-env/hbase_principal_name",
-              "type": "user"
-            },
-            "name": "hbase",
-            "keytab": {
-              "file": "${keytab_dir}/hbase.headless.keytab",
-              "owner": {
-                "name": "${hbase-env/hbase_user}",
-                "access": "r"
-              },
-              "configuration": "hbase-env/hbase_user_keytab",
-              "group": {
-                "name": "${cluster-env/user_group}",
-                "access": "r"
-              }
-            }
-          },
-          {
-            "name": "/smokeuser"
-          }
-        ],
-        "configurations": [
-          {
-            "hbase-site": {
-              "hbase.coprocessor.master.classes": "{{hbase_coprocessor_master_classes}}",
-              "hbase.security.authorization": "true",
-              "hbase.bulkload.staging.dir": "/apps/hbase/staging",
-              "hbase.coprocessor.region.classes": "{{hbase_coprocessor_region_classes}}",
-              "zookeeper.znode.parent": "/hbase-secure",
-              "hbase.security.authentication": "kerberos"
-            }
-          }
-        ],
-        "components": [
-          {
-            "name": "HBASE_REGIONSERVER",
-            "identities": [
-              {
-                "principal": {
-                  "value": "hbase/_HOST@${realm}",
-                  "local_username": "${hbase-env/hbase_user}",
-                  "configuration": "hbase-site/hbase.regionserver.kerberos.principal",
-                  "type": "service"
-                },
-                "name": "hbase_regionserver_hbase",
-                "keytab": {
-                  "file": "${keytab_dir}/hbase.service.keytab",
-                  "owner": {
-                    "name": "${hbase-env/hbase_user}",
-                    "access": "r"
-                  },
-                  "configuration": "hbase-site/hbase.regionserver.keytab.file",
-                  "group": {
-                    "name": "${cluster-env/user_group}",
-                    "access": ""
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "name": "HBASE_MASTER",
-            "identities": [
-              {
-                "principal": {
-                  "value": "hbase/_HOST@${realm}",
-                  "local_username": "${hbase-env/hbase_user}",
-                  "configuration": "hbase-site/hbase.master.kerberos.principal",
-                  "type": "service"
-                },
-                "name": "hbase_master_hbase",
-                "keytab": {
-                  "file": "${keytab_dir}/hbase.service.keytab",
-                  "owner": {
-                    "name": "${hbase-env/hbase_user}",
-                    "access": "r"
-                  },
-                  "configuration": "hbase-site/hbase.master.keytab.file",
-                  "group": {
-                    "name": "${cluster-env/user_group}",
-                    "access": ""
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "name": "PHOENIX_QUERY_SERVER",
-            "identities": [
-              {
-                "principal": {
-                  "value": "hbase/_HOST@${realm}",
-                  "local_username": "${hbase-env/hbase_user}",
-                  "configuration": "hbase-site/phoenix.queryserver.kerberos.principal",
-                  "type": "service"
-                },
-                "name": "hbase_queryserver_hbase",
-                "keytab": {
-                  "file": "${keytab_dir}/hbase.service.keytab",
-                  "owner": {
-                    "name": "${hbase-env/hbase_user}",
-                    "access": "r"
-                  },
-                  "configuration": "hbase-site/phoenix.queryserver.keytab.file",
-                  "group": {
-                    "name": "${cluster-env/user_group}",
-                    "access": ""
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "ZOOKEEPER",
         "identities": [
           {
@@ -1041,6 +921,133 @@
         ]
       },
       {
+        "name": "HBASE",
+        "identities": [
+          {
+            "name": "/spnego"
+          },
+          {
+            "name": "/HDFS/hdfs"
+          },
+          {
+            "principal": {
+              "value": "${hbase-env/hbase_user}-${cluster_name}@${realm}",
+              "local_username": "${hbase-env/hbase_user}",
+              "configuration": "hbase-env/hbase_principal_name",
+              "type": "user"
+            },
+            "name": "hbase",
+            "keytab": {
+              "file": "${keytab_dir}/hbase.headless.keytab",
+              "owner": {
+                "name": "${hbase-env/hbase_user}",
+                "access": "r"
+              },
+              "configuration": "hbase-env/hbase_user_keytab",
+              "group": {
+                "name": "${cluster-env/user_group}",
+                "access": "r"
+              }
+            }
+          },
+          {
+            "name": "/smokeuser"
+          }
+        ],
+        "configurations": [
+          {
+            "hbase-site": {
+              "hbase.coprocessor.master.classes": "{{hbase_coprocessor_master_classes}}",
+              "hbase.security.authorization": "true",
+              "hbase.bulkload.staging.dir": "/apps/hbase/staging",
+              "hbase.coprocessor.region.classes": "{{hbase_coprocessor_region_classes}}",
+              "zookeeper.znode.parent": "/hbase-secure",
+              "hbase.security.authentication": "kerberos"
+            }
+          }
+        ],
+        "components": [
+          {
+            "name": "HBASE_REGIONSERVER",
+            "identities": [
+              {
+                "principal": {
+                  "value": "hbase/_HOST@${realm}",
+                  "local_username": "${hbase-env/hbase_user}",
+                  "configuration": "hbase-site/hbase.regionserver.kerberos.principal",
+                  "type": "service"
+                },
+                "name": "hbase_regionserver_hbase",
+                "keytab": {
+                  "file": "${keytab_dir}/hbase.service.keytab",
+                  "owner": {
+                    "name": "${hbase-env/hbase_user}",
+                    "access": "r"
+                  },
+                  "configuration": "hbase-site/hbase.regionserver.keytab.file",
+                  "group": {
+                    "name": "${cluster-env/user_group}",
+                    "access": ""
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "HBASE_MASTER",
+            "identities": [
+              {
+                "principal": {
+                  "value": "hbase/_HOST@${realm}",
+                  "local_username": "${hbase-env/hbase_user}",
+                  "configuration": "hbase-site/hbase.master.kerberos.principal",
+                  "type": "service"
+                },
+                "name": "hbase_master_hbase",
+                "keytab": {
+                  "file": "${keytab_dir}/hbase.service.keytab",
+                  "owner": {
+                    "name": "${hbase-env/hbase_user}",
+                    "access": "r"
+                  },
+                  "configuration": "hbase-site/hbase.master.keytab.file",
+                  "group": {
+                    "name": "${cluster-env/user_group}",
+                    "access": ""
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "PHOENIX_QUERY_SERVER",
+            "identities": [
+              {
+                "principal": {
+                  "value": "hbase/_HOST@${realm}",
+                  "local_username": "${hbase-env/hbase_user}",
+                  "configuration": "hbase-site/phoenix.queryserver.kerberos.principal",
+                  "type": "service"
+                },
+                "name": "hbase_queryserver_hbase",
+                "keytab": {
+                  "file": "${keytab_dir}/hbase.service.keytab",
+                  "owner": {
+                    "name": "${hbase-env/hbase_user}",
+                    "access": "r"
+                  },
+                  "configuration": "hbase-site/phoenix.queryserver.keytab.file",
+                  "group": {
+                    "name": "${cluster-env/user_group}",
+                    "access": ""
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "OOZIE",
         "identities": [
           {
@@ -1172,6 +1179,22 @@
                 }
               }
             ]
+          }
+        ]
+      },
+      {
+        "name": "MAHOUT",
+        "identities": [
+          {
+            "name": "/smokeuser"
+          },
+          {
+            "name": "/HDFS/hdfs"
+          }
+        ],
+        "components": [
+          {
+            "name": "MAHOUT"
           }
         ]
       },
