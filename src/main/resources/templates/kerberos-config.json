@@ -5,25 +5,26 @@
         "type": "kerberos-env",
         "tag": "$TAG",
         "properties": {
-          "kdc_type": "mit-kdc",
-          "kdc_host": "$KDC_HOST",
-          "realm": "$REALM",
-          "ldap_url": "",
-          "container_dn": "",
-          "manage_identities": true,
-          "install_packages": true,
-          "executable_search_paths": "/usr/bin, /usr/kerberos/bin, /usr/sbin, /usr/lib/mit/bin, /usr/lib/mit/sbin",
-          "encryption_types": "aes des3-cbc-sha1 rc4 des-cbc-md5",
-          "password_length": 20,
-          "password_min_lowercase_letters": 1,
-          "password_min_uppercase_letters": 1,
-          "password_min_digits": 1,
-          "password_min_punctuation": 1,
-          "password_min_whitespace": 0,
-          "service_check_principal_name": "\${cluster_name}-\${short_date}",
-          "create_attributes_template": "$ATTR_TEMPLATE",
+          "ad_create_attributes_template": "$ATTR_TEMPLATE",
+          "admin_server_host": "$KDC_HOST",
           "case_insensitive_username_rules": false,
-          "admin_server_host": "$KDC_HOST"
+          "container_dn": "",
+          "encryption_types": "aes des3-cbc-sha1 rc4 des-cbc-md5",
+          "executable_search_paths": "/usr/bin, /usr/kerberos/bin, /usr/sbin, /usr/lib/mit/bin, /usr/lib/mit/sbin",
+          "install_packages": true,
+          "kdc_create_attributes": "",
+          "kdc_host": "$KDC_HOST",
+          "kdc_type": "mit-kdc",
+          "ldap_url": "",
+          "manage_identities": true,
+          "password_length": 20,
+          "password_min_digits": 1,
+          "password_min_lowercase_letters": 1,
+          "password_min_punctuation": 1,
+          "password_min_uppercase_letters": 1,
+          "password_min_whitespace": 0,
+          "realm": "$REALM",
+          "service_check_principal_name": "\${cluster_name}-\${short_date}"
         },
         "service_config_version_note": "This is the initial configuration created by Enable Kerberos wizard."
       },
@@ -31,10 +32,10 @@
         "type": "krb5-conf",
         "tag": "$TAG",
         "properties": {
+          "conf_dir": "/etc",
           "content": "$CONTENT",
           "domains": "$DOMAIN",
-          "manage_krb5_conf": true,
-          "conf_dir": "/etc"
+          "manage_krb5_conf": true
         },
         "service_config_version_note": "This is the initial configuration created by Enable Kerberos wizard."
       }

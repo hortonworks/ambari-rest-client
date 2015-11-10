@@ -122,12 +122,81 @@
             }
           }
         ],
+        "configurations": [
+          {
+            "spark-defaults": {
+              "spark.history.kerberos.enabled": "true"
+            }
+          }
+        ],
         "components": [
           {
             "name": "SPARK_JOBHISTORYSERVER"
           },
           {
             "name": "SPARK_CLIENT"
+          }
+        ]
+      },
+      {
+        "name": "RANGER_KMS",
+        "identities": [
+          {
+            "name": "/spnego",
+            "keytab": {
+              "file": null,
+              "owner": {
+                "name": null,
+                "access": null
+              },
+              "configuration": "kms-site/hadoop.kms.authentication.kerberos.keytab",
+              "group": {
+                "name": null,
+                "access": null
+              }
+            }
+          },
+          {
+            "name": "/smokeuser"
+          }
+        ],
+        "configurations": [
+          {
+            "kms-site": {
+              "hadoop.kms.authentication.type": "kerberos",
+              "hadoop.kms.authentication.kerberos.principal": "*"
+            }
+          }
+        ],
+        "components": [
+          {
+            "name": "RANGER_KMS_SERVER",
+            "identities": [
+              {
+                "principal": {
+                  "value": null,
+                  "local_username": null,
+                  "configuration": "kms-site/hadoop.kms.authentication.signer.secret.provider.zookeeper.kerberos.principal",
+                  "type": "service"
+                },
+                "name": "/spnego",
+                "keytab": {
+                  "file": null,
+                  "owner": {
+                    "name": null,
+                    "access": null
+                  },
+                  "configuration": "kms-site/hadoop.kms.authentication.signer.secret.provider.zookeeper.kerberos.keytab",
+                  "group": {
+                    "name": null,
+                    "access": null
+                  }
+                }
+              },
+              {
+                "name": "/smokeuser"
+              }
+            ]
           }
         ]
       },
@@ -189,68 +258,6 @@
                     "access": null
                   }
                 }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "RANGER_KMS",
-        "identities": [
-          {
-            "name": "/spnego",
-            "keytab": {
-              "file": null,
-              "owner": {
-                "name": null,
-                "access": null
-              },
-              "configuration": "kms-site/hadoop.kms.authentication.kerberos.keytab",
-              "group": {
-                "name": null,
-                "access": null
-              }
-            }
-          },
-          {
-            "name": "/smokeuser"
-          }
-        ],
-        "configurations": [
-          {
-            "kms-site": {
-              "hadoop.kms.authentication.type": "kerberos",
-              "hadoop.kms.authentication.kerberos.principal": "*"
-            }
-          }
-        ],
-        "components": [
-          {
-            "name": "RANGER_KMS_SERVER",
-            "identities": [
-              {
-                "principal": {
-                  "value": null,
-                  "local_username": null,
-                  "configuration": "kms-site/hadoop.kms.authentication.signer.secret.provider.zookeeper.kerberos.principal",
-                  "type": "service"
-                },
-                "name": "/spnego",
-                "keytab": {
-                  "file": null,
-                  "owner": {
-                    "name": null,
-                    "access": null
-                  },
-                  "configuration": "kms-site/hadoop.kms.authentication.signer.secret.provider.zookeeper.kerberos.keytab",
-                  "group": {
-                    "name": null,
-                    "access": null
-                  }
-                }
-              },
-              {
-                "name": "/smokeuser"
               }
             ]
           }
@@ -747,6 +754,173 @@
         ]
       },
       {
+        "name": "ZOOKEEPER",
+        "identities": [
+          {
+            "name": "/smokeuser"
+          }
+        ],
+        "components": [
+          {
+            "name": "ZOOKEEPER_SERVER",
+            "identities": [
+              {
+                "principal": {
+                  "value": "zookeeper/_HOST@${realm}",
+                  "local_username": null,
+                  "configuration": "zookeeper-env/zookeeper_principal_name",
+                  "type": "service"
+                },
+                "name": "zookeeper_zk",
+                "keytab": {
+                  "file": "${keytab_dir}/zk.service.keytab",
+                  "owner": {
+                    "name": "${zookeeper-env/zk_user}",
+                    "access": "r"
+                  },
+                  "configuration": "zookeeper-env/zookeeper_keytab_path",
+                  "group": {
+                    "name": "${cluster-env/user_group}",
+                    "access": ""
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "STORM",
+        "identities": [
+          {
+            "name": "/spnego"
+          },
+          {
+            "name": "/smokeuser"
+          },
+          {
+            "principal": {
+              "value": "${storm-env/storm_user}-${cluster_name}@${realm}",
+              "local_username": null,
+              "configuration": "storm-env/storm_principal_name",
+              "type": "user"
+            },
+            "name": "storm_components",
+            "keytab": {
+              "file": "${keytab_dir}/storm.headless.keytab",
+              "owner": {
+                "name": "${storm-env/storm_user}",
+                "access": "r"
+              },
+              "configuration": "storm-env/storm_keytab",
+              "group": {
+                "name": "${cluster-env/user_group}",
+                "access": ""
+              }
+            }
+          }
+        ],
+        "configurations": [
+          {
+            "storm-site": {
+              "nimbus.authorizer": "backtype.storm.security.auth.authorizer.SimpleACLAuthorizer",
+              "ui.filter.params": "{'type': 'kerberos', 'kerberos.principal': '{{storm_ui_jaas_principal}}', 'kerberos.keytab': '{{storm_ui_keytab_path}}', 'kerberos.name.rules': 'DEFAULT'}",
+              "nimbus.admins": "['{{storm_bare_jaas_principal}}']",
+              "storm.zookeeper.superACL": "sasl:{{storm_bare_jaas_principal}}",
+              "supervisor.enable": "true",
+              "storm.principal.tolocal": "backtype.storm.security.auth.KerberosPrincipalToLocal",
+              "java.security.auth.login.config": "{{conf_dir}}/storm_jaas.conf",
+              "nimbus.supervisor.users": "['{{storm_bare_jaas_principal}}']",
+              "drpc.authorizer": "backtype.storm.security.auth.authorizer.DRPCSimpleACLAuthorizer",
+              "ui.filter": "org.apache.hadoop.security.authentication.server.AuthenticationFilter"
+            }
+          }
+        ],
+        "components": [
+          {
+            "name": "STORM_UI_SERVER",
+            "identities": [
+              {
+                "principal": {
+                  "value": null,
+                  "local_username": null,
+                  "configuration": "storm-env/storm_ui_principal_name",
+                  "type": "service"
+                },
+                "name": "/spnego",
+                "keytab": {
+                  "file": null,
+                  "owner": {
+                    "name": null,
+                    "access": null
+                  },
+                  "configuration": "storm-env/storm_ui_keytab",
+                  "group": {
+                    "name": null,
+                    "access": null
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "SUPERVISOR"
+          },
+          {
+            "name": "DRPC_SERVER",
+            "identities": [
+              {
+                "principal": {
+                  "value": "nimbus/_HOST@${realm}",
+                  "local_username": null,
+                  "configuration": "storm-env/nimbus_principal_name",
+                  "type": "service"
+                },
+                "name": "nimbus_server",
+                "keytab": {
+                  "file": "${keytab_dir}/nimbus.service.keytab",
+                  "owner": {
+                    "name": "${storm-env/storm_user}",
+                    "access": "r"
+                  },
+                  "configuration": "storm-env/nimbus_keytab",
+                  "group": {
+                    "name": "${cluster-env/user_group}",
+                    "access": ""
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "NIMBUS",
+            "identities": [
+              {
+                "principal": {
+                  "value": "nimbus/_HOST@${realm}",
+                  "local_username": null,
+                  "configuration": "storm-env/nimbus_principal_name",
+                  "type": "service"
+                },
+                "name": "nimbus_server",
+                "keytab": {
+                  "file": "${keytab_dir}/nimbus.service.keytab",
+                  "owner": {
+                    "name": "${storm-env/storm_user}",
+                    "access": "r"
+                  },
+                  "configuration": "storm-env/nimbus_keytab",
+                  "group": {
+                    "name": "${cluster-env/user_group}",
+                    "access": ""
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
         "name": "HBASE",
         "identities": [
           {
@@ -874,173 +1048,6 @@
         ]
       },
       {
-        "name": "ZOOKEEPER",
-        "identities": [
-          {
-            "name": "/smokeuser"
-          }
-        ],
-        "components": [
-          {
-            "name": "ZOOKEEPER_SERVER",
-            "identities": [
-              {
-                "principal": {
-                  "value": "zookeeper/_HOST@${realm}",
-                  "local_username": null,
-                  "configuration": "zookeeper-env/zookeeper_principal_name",
-                  "type": "service"
-                },
-                "name": "zookeeper_zk",
-                "keytab": {
-                  "file": "${keytab_dir}/zk.service.keytab",
-                  "owner": {
-                    "name": "${zookeeper-env/zk_user}",
-                    "access": "r"
-                  },
-                  "configuration": "zookeeper-env/zookeeper_keytab_path",
-                  "group": {
-                    "name": "${cluster-env/user_group}",
-                    "access": ""
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "name": "STORM",
-        "identities": [
-          {
-            "name": "/spnego"
-          },
-          {
-            "name": "/smokeuser"
-          },
-          {
-            "principal": {
-              "value": "${storm-env/storm_user}@${realm}",
-              "local_username": null,
-              "configuration": "storm-env/storm_principal_name",
-              "type": "user"
-            },
-            "name": "storm_components",
-            "keytab": {
-              "file": "${keytab_dir}/storm.headless.keytab",
-              "owner": {
-                "name": "${storm-env/storm_user}",
-                "access": "r"
-              },
-              "configuration": "storm-env/storm_keytab",
-              "group": {
-                "name": "${cluster-env/user_group}",
-                "access": ""
-              }
-            }
-          }
-        ],
-        "configurations": [
-          {
-            "storm-site": {
-              "nimbus.authorizer": "backtype.storm.security.auth.authorizer.SimpleACLAuthorizer",
-              "ui.filter.params": "{'type': 'kerberos', 'kerberos.principal': '{{storm_ui_jaas_principal}}', 'kerberos.keytab': '{{storm_ui_keytab_path}}', 'kerberos.name.rules': 'DEFAULT'}",
-              "nimbus.admins": "['{{storm_user}}']",
-              "storm.zookeeper.superACL": "sasl:{{storm_bare_jaas_principal}}",
-              "supervisor.enable": "true",
-              "storm.principal.tolocal": "backtype.storm.security.auth.KerberosPrincipalToLocal",
-              "java.security.auth.login.config": "{{conf_dir}}/storm_jaas.conf",
-              "nimbus.supervisor.users": "['{{storm_user}}']",
-              "drpc.authorizer": "backtype.storm.security.auth.authorizer.DRPCSimpleACLAuthorizer",
-              "ui.filter": "org.apache.hadoop.security.authentication.server.AuthenticationFilter"
-            }
-          }
-        ],
-        "components": [
-          {
-            "name": "STORM_UI_SERVER",
-            "identities": [
-              {
-                "principal": {
-                  "value": null,
-                  "local_username": null,
-                  "configuration": "storm-env/storm_ui_principal_name",
-                  "type": "service"
-                },
-                "name": "/spnego",
-                "keytab": {
-                  "file": null,
-                  "owner": {
-                    "name": null,
-                    "access": null
-                  },
-                  "configuration": "storm-env/storm_ui_keytab",
-                  "group": {
-                    "name": null,
-                    "access": null
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "name": "SUPERVISOR"
-          },
-          {
-            "name": "DRPC_SERVER",
-            "identities": [
-              {
-                "principal": {
-                  "value": "nimbus/_HOST@${realm}",
-                  "local_username": null,
-                  "configuration": "storm-env/nimbus_principal_name",
-                  "type": "service"
-                },
-                "name": "nimbus_server",
-                "keytab": {
-                  "file": "${keytab_dir}/nimbus.service.keytab",
-                  "owner": {
-                    "name": "${storm-env/storm_user}",
-                    "access": "r"
-                  },
-                  "configuration": "storm-env/nimbus_keytab",
-                  "group": {
-                    "name": "${cluster-env/user_group}",
-                    "access": ""
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "name": "NIMBUS",
-            "identities": [
-              {
-                "principal": {
-                  "value": "nimbus/_HOST@${realm}",
-                  "local_username": null,
-                  "configuration": "storm-env/nimbus_principal_name",
-                  "type": "service"
-                },
-                "name": "nimbus_server",
-                "keytab": {
-                  "file": "${keytab_dir}/nimbus.service.keytab",
-                  "owner": {
-                    "name": "${storm-env/storm_user}",
-                    "access": "r"
-                  },
-                  "configuration": "storm-env/nimbus_keytab",
-                  "group": {
-                    "name": "${cluster-env/user_group}",
-                    "access": ""
-                  }
-                }
-              }
-            ]
-          }
-        ]
-      },
-      {
         "name": "OOZIE",
         "identities": [
           {
@@ -1062,7 +1069,6 @@
               "oozie.service.AuthorizationService.authorization.enabled": "true",
               "oozie.credentials.credentialclasses": "hcat=org.apache.oozie.action.hadoop.HCatCredentials,hive2=org.apache.oozie.action.hadoop.Hive2Credentials",
               "oozie.service.HadoopAccessorService.kerberos.enabled": "true",
-              "oozie.authentication.kerberos.name.rules": "",
               "oozie.authentication.type": "kerberos",
               "local.realm": "${realm}"
             }
@@ -1176,6 +1182,22 @@
         ]
       },
       {
+        "name": "MAHOUT",
+        "identities": [
+          {
+            "name": "/smokeuser"
+          },
+          {
+            "name": "/HDFS/hdfs"
+          }
+        ],
+        "components": [
+          {
+            "name": "MAHOUT"
+          }
+        ]
+      },
+      {
         "name": "KERBEROS",
         "identities": [
           {
@@ -1244,10 +1266,8 @@
           {
             "core-site": {
               "hadoop.security.authentication": "kerberos",
-              "hadoop.security.auth_to_local": "",
               "hadoop.security.authorization": "true",
-              "hadoop.proxyuser.HTTP.groups": "${hadoop-env/proxyuser_group}",
-              "hadoop.rpc.protection": "authentication"
+              "hadoop.proxyuser.HTTP.groups": "${hadoop-env/proxyuser_group}"
             }
           }
         ],
@@ -1546,7 +1566,7 @@
             "identities": [
               {
                 "principal": {
-                  "value": "amshbase/_HOST@${realm}",
+                  "value": "amshbasemaster/_HOST@${realm}",
                   "local_username": "${ams-env/ambari_metrics_user}",
                   "configuration": "ams-hbase-security-site/hbase.master.kerberos.principal",
                   "type": "service"
@@ -1567,7 +1587,7 @@
               },
               {
                 "principal": {
-                  "value": "amshbase/_HOST@${realm}",
+                  "value": "amshbasers/_HOST@${realm}",
                   "local_username": "${ams-env/ambari_metrics_user}",
                   "configuration": "ams-hbase-security-site/hbase.regionserver.kerberos.principal",
                   "type": "service"
@@ -1650,6 +1670,7 @@
       }
     ],
     "properties": {
+      "additional_realms": "",
       "keytab_dir": "/etc/security/keytabs",
       "realm": "actual-realm"
     }
