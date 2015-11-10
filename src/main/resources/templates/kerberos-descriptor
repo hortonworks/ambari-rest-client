@@ -800,7 +800,7 @@
           },
           {
             "principal": {
-              "value": "${storm-env/storm_user}@${realm}",
+              "value": "${storm-env/storm_user}-${cluster_name}@${realm}",
               "local_username": null,
               "configuration": "storm-env/storm_principal_name",
               "type": "user"
@@ -825,12 +825,12 @@
             "storm-site": {
               "nimbus.authorizer": "backtype.storm.security.auth.authorizer.SimpleACLAuthorizer",
               "ui.filter.params": "{'type': 'kerberos', 'kerberos.principal': '{{storm_ui_jaas_principal}}', 'kerberos.keytab': '{{storm_ui_keytab_path}}', 'kerberos.name.rules': 'DEFAULT'}",
-              "nimbus.admins": "['{{storm_user}}']",
+              "nimbus.admins": "['{{storm_bare_jaas_principal}}']",
               "storm.zookeeper.superACL": "sasl:{{storm_bare_jaas_principal}}",
               "supervisor.enable": "true",
               "storm.principal.tolocal": "backtype.storm.security.auth.KerberosPrincipalToLocal",
               "java.security.auth.login.config": "{{conf_dir}}/storm_jaas.conf",
-              "nimbus.supervisor.users": "['{{storm_user}}']",
+              "nimbus.supervisor.users": "['{{storm_bare_jaas_principal}}']",
               "drpc.authorizer": "backtype.storm.security.auth.authorizer.DRPCSimpleACLAuthorizer",
               "ui.filter": "org.apache.hadoop.security.authentication.server.AuthenticationFilter"
             }
@@ -1069,7 +1069,6 @@
               "oozie.service.AuthorizationService.authorization.enabled": "true",
               "oozie.credentials.credentialclasses": "hcat=org.apache.oozie.action.hadoop.HCatCredentials,hive2=org.apache.oozie.action.hadoop.Hive2Credentials",
               "oozie.service.HadoopAccessorService.kerberos.enabled": "true",
-              "oozie.authentication.kerberos.name.rules": "",
               "oozie.authentication.type": "kerberos",
               "local.realm": "${realm}"
             }
@@ -1267,10 +1266,8 @@
           {
             "core-site": {
               "hadoop.security.authentication": "kerberos",
-              "hadoop.security.auth_to_local": "",
               "hadoop.security.authorization": "true",
-              "hadoop.proxyuser.HTTP.groups": "${hadoop-env/proxyuser_group}",
-              "hadoop.rpc.protection": "authentication"
+              "hadoop.proxyuser.HTTP.groups": "${hadoop-env/proxyuser_group}"
             }
           }
         ],
@@ -1569,7 +1566,7 @@
             "identities": [
               {
                 "principal": {
-                  "value": "amshbase/_HOST@${realm}",
+                  "value": "amshbasemaster/_HOST@${realm}",
                   "local_username": "${ams-env/ambari_metrics_user}",
                   "configuration": "ams-hbase-security-site/hbase.master.kerberos.principal",
                   "type": "service"
@@ -1590,7 +1587,7 @@
               },
               {
                 "principal": {
-                  "value": "amshbase/_HOST@${realm}",
+                  "value": "amshbasers/_HOST@${realm}",
                   "local_username": "${ams-env/ambari_metrics_user}",
                   "configuration": "ams-hbase-security-site/hbase.regionserver.kerberos.principal",
                   "type": "service"
@@ -1673,6 +1670,7 @@
       }
     ],
     "properties": {
+      "additional_realms": "",
       "keytab_dir": "/etc/security/keytabs",
       "realm": "actual-realm"
     }
