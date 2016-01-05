@@ -22,10 +22,10 @@ import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 
 @Slf4j
-trait KerberosService extends ClusterService {
+trait KerberosService extends BlueprintService {
 
   /**
-   * Create a default kerberos config (same as with the wizzard)
+   * Create a default kerberos config (same as with the wizard)
    *
    * @param kdcHost key distribution center's host
    * @param realm kerberos realm
@@ -101,5 +101,33 @@ trait KerberosService extends ClusterService {
     putRequestMap.put('query', ['regenerate_keytabs': missingOnly ? 'missing' : 'all'])
 
     utils.putAndGetId(putRequestMap)
+  }
+
+  /**
+   * Adds the required kerberos configurations to a blueprint and the KERBEROS_CLIENT for each host group.
+   *
+   * @param blueprint blueprint in JSON format
+   * @param kdcHost KDC server address
+   * @param realm REALM for KDC
+   * @param domains comma separated domain names
+   * @return Returns the blueprint in JSON format with the extended kerberos configuration
+   */
+  def String extendBlueprintWithKerberos(String blueprint, String kdcHost, String realm, String domains) {
+    def config = [
+      "kerberos-env": ["realm"           : realm, "kdc_type": "mit-kdc", "kdc_host": kdcHost, "admin_server_host": kdcHost,
+                       "encryption_types": "aes des3-cbc-sha1 rc4 des-cbc-md5", "ldap_url": "", "container_dn": ""],
+      "krb5-conf"   : ["domains": domains, "manage_krb5_conf": "true"]
+    ]
+    def blueprintMap = slurper.parseText(blueprint)
+    blueprintMap.host_groups.each {
+      def kbClient = ["name": "KERBEROS_CLIENT"]
+      def comps = it.components
+      comps.remove(kbClient)
+      comps << kbClient
+    }
+    def bpDetails = blueprintMap.Blueprints
+    bpDetails.remove("security")
+    bpDetails << ["security": ["type": "KERBEROS"]]
+    extendBlueprintGlobalConfiguration(new JsonBuilder(blueprintMap).toPrettyString(), config)
   }
 }

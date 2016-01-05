@@ -117,6 +117,32 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     'all' == context?.query?.regenerate_keytabs
   }
 
+  def "test add kerberos config to clear blueprint"() {
+    given:
+    def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn.json").text
+
+    when:
+    def blueprint = ambari.extendBlueprintWithKerberos(json, "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul")
+
+    then:
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-kerb.json").text)
+    def actual = slurper.parseText(blueprint)
+    actual == expected
+  }
+
+  def "test add kerberos config to kerberos configured blueprint"() {
+    given:
+    def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-default-kerb.json").text
+
+    when:
+    def blueprint = ambari.extendBlueprintWithKerberos(json, "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul")
+
+    then:
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-kerb.json").text)
+    def actual = slurper.parseText(blueprint)
+    actual == expected
+  }
+
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {
   }
 

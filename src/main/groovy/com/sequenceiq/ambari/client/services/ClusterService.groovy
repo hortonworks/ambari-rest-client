@@ -73,13 +73,21 @@ trait ClusterService extends CommonService {
     return utils.getRawResource(resourceRequestMap)
   }
 
-  private String createClusterJson(String name, Map hostGroups) {
+  private String createClusterJson(String name, Map hostGroups, String principal, String key, String type) {
     def builder = new JsonBuilder()
     def groups = hostGroups.collect {
       def hostList = it.value.collect { ['fqdn': it] }
       [name: it.key, hosts: hostList]
     }
-    builder { "blueprint" name; "default_password" "admin"; "host_groups" groups }
+    if (principal) {
+      def credential = [["alias": "kdc.admin.credential", "principal": principal, "key": key, type: type]]
+      builder {
+        blueprint name; default_password "admin"; host_groups groups;
+        credentials credential
+      }
+    } else {
+      builder { blueprint name; default_password "admin"; host_groups groups; }
+    }
     builder.toPrettyString()
   }
 
@@ -96,7 +104,31 @@ trait ClusterService extends CommonService {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
-    ambari.post(path: "clusters/$clusterName", body: createClusterJson(blueprintName, hostGroups), { it })
+    ambari.post(path: "clusters/$clusterName", body: createClusterJson(blueprintName, hostGroups, null, null, null), {
+      it
+    })
+  }
+
+  /**
+   * Creates a cluster with the given blueprint and host group - host association.
+   *
+   * @param clusterName name of the cluster
+   * @param blueprintName blueprint id used to create this cluster
+   * @param hostGroups Map<String, List<String> key - host group, value - host list
+   * @param principal KDC principal (like: admin/admin)
+   * @param key key for KDC principal (like: admin)
+   * @param type type of the principal can be either 'TEMPORARY' or 'PERSISTED'
+   * @return true if the creation was successful false otherwise
+   * @throws HttpResponseException in case of error
+   */
+  def void createSecureCluster(String clusterName, String blueprintName, Map<String, List<String>> hostGroups,
+                               String principal, String key, String type) throws HttpResponseException {
+    if (debugEnabled) {
+      println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
+    }
+    ambari.post(path: "clusters/$clusterName", body: createClusterJson(blueprintName, hostGroups, principal, key, type), {
+      it
+    })
   }
 
   /**
