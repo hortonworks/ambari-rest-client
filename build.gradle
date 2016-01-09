@@ -20,7 +20,7 @@ allprojects {
 }
 
 jar {
-    baseName = 'ambari-client21'
+    baseName = 'ambari-client22'
 }
 
 configurations {
