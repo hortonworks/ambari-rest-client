@@ -73,7 +73,8 @@ trait ClusterService extends CommonService {
     return utils.getRawResource(resourceRequestMap)
   }
 
-  private String createClusterJson(String name, Map hostGroups, String principal, String key, String type) {
+  private String createClusterJson(String name, Map hostGroups, String strategy,
+    String principal, String key, String type) {
     def builder = new JsonBuilder()
     def groups = hostGroups.collect {
       def hostList = it.value.collect { ['fqdn': it] }
@@ -84,9 +85,10 @@ trait ClusterService extends CommonService {
       builder {
         blueprint name; default_password "admin"; host_groups groups;
         credentials credential
+        config_recommendation_strategy strategy
       }
     } else {
-      builder { blueprint name; default_password "admin"; host_groups groups; }
+      builder { blueprint name; default_password "admin"; host_groups groups; config_recommendation_strategy strategy }
     }
     builder.toPrettyString()
   }
@@ -97,16 +99,17 @@ trait ClusterService extends CommonService {
    * @param clusterName name of the cluster
    * @param blueprintName blueprint id used to create this cluster
    * @param hostGroups Map<String, List<String> key - host group, value - host list
+   * @param recommendationStrategy 'NEVER_APPLY', 'ONLY_STACK_DEFAULTS_APPLY', 'ALWAYS_APPLY'
    * @return true if the creation was successful false otherwise
    * @throws HttpResponseException in case of error
    */
-  def void createCluster(String clusterName, String blueprintName, Map<String, List<String>> hostGroups) throws HttpResponseException {
+  def void createCluster(String clusterName, String blueprintName, Map<String, List<String>> hostGroups,
+    String recommendationStrategy) throws HttpResponseException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
-    ambari.post(path: "clusters/$clusterName", body: createClusterJson(blueprintName, hostGroups, null, null, null), {
-      it
-    })
+    ambari.post(path: "clusters/$clusterName", body:
+      createClusterJson(blueprintName, hostGroups, recommendationStrategy, null, null, null), { it })
   }
 
   /**
@@ -115,6 +118,7 @@ trait ClusterService extends CommonService {
    * @param clusterName name of the cluster
    * @param blueprintName blueprint id used to create this cluster
    * @param hostGroups Map<String, List<String> key - host group, value - host list
+   * @param recommendationStrategy 'NEVER_APPLY', 'ONLY_STACK_DEFAULTS_APPLY', 'ALWAYS_APPLY'
    * @param principal KDC principal (like: admin/admin)
    * @param key key for KDC principal (like: admin)
    * @param type type of the principal can be either 'TEMPORARY' or 'PERSISTED'
@@ -122,13 +126,12 @@ trait ClusterService extends CommonService {
    * @throws HttpResponseException in case of error
    */
   def void createSecureCluster(String clusterName, String blueprintName, Map<String, List<String>> hostGroups,
-                               String principal, String key, String type) throws HttpResponseException {
+    String recommendationStrategy, String principal, String key, String type) throws HttpResponseException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
-    ambari.post(path: "clusters/$clusterName", body: createClusterJson(blueprintName, hostGroups, principal, key, type), {
-      it
-    })
+    ambari.post(path: "clusters/$clusterName", body:
+      createClusterJson(blueprintName, hostGroups, recommendationStrategy, principal, key, type), { it })
   }
 
   /**
@@ -153,16 +156,16 @@ trait ClusterService extends CommonService {
    */
   def int decommission(List<String> hosts, String slaveName, String serviceName, String componentName) {
     def requestInfo = [
-            command   : 'DECOMMISSION',
-            context   : "Decommission $slaveName",
-            parameters: ['slave_type': slaveName, 'excluded_hosts': hosts.join(',')]
+      command   : 'DECOMMISSION',
+      context   : "Decommission $slaveName",
+      parameters: ['slave_type': slaveName, 'excluded_hosts': hosts.join(',')]
     ]
     def filter = [
-            ['service_name': serviceName, 'component_name': componentName]
+      ['service_name': serviceName, 'component_name': componentName]
     ]
     Map bodyMap = [
-            'RequestInfo'              : requestInfo,
-            'Requests/resource_filters': filter
+      'RequestInfo'              : requestInfo,
+      'Requests/resource_filters': filter
     ]
     ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), {
       utils.getRequestId(it)
