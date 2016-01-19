@@ -231,4 +231,18 @@ trait ClusterService extends CommonService {
     }
     return resp
   }
+
+  /**
+   * Returns the ID of a request which matches the desired status and request context
+   *
+   * @param requestContext context to search for
+   * @param status request's current status
+   * @return id of the request or -1
+   */
+  def int getRequestIdWithContext(String requestContext, String status) {
+    def response = utils.getAllResources('requests', 'Requests/request_status,Requests/id,Requests/request_context')
+    def requests = response?.items?.Requests
+    def result = requests.find { it.request_context.startsWith(requestContext) && it.request_status.equals(status) }
+    result ? result.id : -1
+  }
 }

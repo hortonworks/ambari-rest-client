@@ -244,4 +244,17 @@ trait BlueprintService extends ClusterService {
     addBlueprint(utils.getResourceContent('blueprints/hdp-singlenode-default'))
     addBlueprint(utils.getResourceContent('blueprints/hdp-multinode-default'))
   }
+
+  /**
+   * Add hosts to the cluster and install all the services defined in the blueprint's host group.
+   *
+   * @param bpName name of the blueprint
+   * @param hostGroup which host group to add the hosts to
+   * @param hosts list of hosts in form of FQDN
+   */
+  def void addHostsWithBlueprint(String bpName, String hostGroup, List<String> hosts) throws HttpResponseException {
+    def hostMap = hosts.collect { ["blueprint": bpName, "host_group": hostGroup, "host_name": it] }
+    def json = new JsonBuilder(hostMap).toPrettyString()
+    ambari.post(path: "clusters/${getClusterName()}/hosts", body: json, { it })
+  }
 }
