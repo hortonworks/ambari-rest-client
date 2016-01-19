@@ -77,7 +77,13 @@ trait ClusterService extends CommonService {
     String principal, String key, String type) {
     def builder = new JsonBuilder()
     def groups = hostGroups.collect {
-      def hostList = it.value.collect { ['fqdn': it] }
+      def hostList = it.value.collect { instanceMeta ->
+                                          def tempMap = ['fqdn': instanceMeta.fqdn]
+                                          if (instanceMeta.rack != null) {
+                                            tempMap.rack_info = instanceMeta.rack
+                                          }
+                                          tempMap
+                                      }
       [name: it.key, hosts: hostList]
     }
     if (principal) {
@@ -103,7 +109,7 @@ trait ClusterService extends CommonService {
    * @return true if the creation was successful false otherwise
    * @throws HttpResponseException in case of error
    */
-  def void createCluster(String clusterName, String blueprintName, Map<String, List<String>> hostGroups,
+  def void createCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
     String recommendationStrategy) throws HttpResponseException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
@@ -125,7 +131,7 @@ trait ClusterService extends CommonService {
    * @return true if the creation was successful false otherwise
    * @throws HttpResponseException in case of error
    */
-  def void createSecureCluster(String clusterName, String blueprintName, Map<String, List<String>> hostGroups,
+  def void createSecureCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
     String recommendationStrategy, String principal, String key, String type) throws HttpResponseException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"

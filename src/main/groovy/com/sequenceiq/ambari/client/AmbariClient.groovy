@@ -245,4 +245,5 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, HBa
   def String healthCheck() {
     ambari.get(path: 'check', headers: ['Accept': ContentType.TEXT]).data.text
   }
+
 }
