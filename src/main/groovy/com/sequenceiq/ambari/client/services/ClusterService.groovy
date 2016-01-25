@@ -19,6 +19,7 @@ package com.sequenceiq.ambari.client.services
 
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
+import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
 
 @Slf4j
@@ -76,10 +77,11 @@ trait ClusterService extends CommonService {
   private String createClusterJson(String name, Map hostGroups, String strategy,
     String principal, String key, String type) {
     def builder = new JsonBuilder()
+    def isAmbariVersionOk = isAmbariGreaterThan221(ambariServerVersion())
     def groups = hostGroups.collect {
       def hostList = it.value.collect { instanceMeta ->
                                           def tempMap = ['fqdn': instanceMeta.fqdn]
-                                          if (instanceMeta.rack != null) {
+                                          if (isAmbariVersionOk && instanceMeta.rack != null) {
                                             tempMap.rack_info = instanceMeta.rack
                                           }
                                           tempMap
@@ -250,5 +252,22 @@ trait ClusterService extends CommonService {
     def requests = response?.items?.Requests
     def result = requests.find { it.request_context.startsWith(requestContext) && it.request_status.equals(status) }
     result ? result.id : -1
+  }
+
+  /**
+   * Returns the version of the Ambari server.
+   *
+   * @return version
+   */
+  def String ambariServerVersion() {
+    def json = utils.getSlurpedResource([path: 'services/AMBARI/components/AMBARI_SERVER', headers: ['Accept': ContentType.TEXT], query: [fields: 'RootServiceComponents/component_version']])
+    json.RootServiceComponents.component_version
+  }
+
+  private def boolean isAmbariGreaterThan221(version) {
+    [version.split('\\.'), [2, 2, 1]]
+            .transpose()
+            .collect { it[0].toInteger() >= it[1].toInteger() }
+            .every { it == true }
   }
 }
