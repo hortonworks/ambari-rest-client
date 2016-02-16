@@ -126,8 +126,12 @@ trait KerberosService extends BlueprintService {
       comps << kbClient
     }
     def bpDetails = blueprintMap.Blueprints
-    bpDetails.remove("security")
-    bpDetails << ["security": ["type": "KERBEROS"]]
+    def kerbType = ["type": "KERBEROS"]
+    if (bpDetails.security) {
+      bpDetails.security << kerbType
+    } else {
+      bpDetails << ["security": kerbType]
+    }
     extendBlueprintGlobalConfiguration(new JsonBuilder(blueprintMap).toPrettyString(), config)
   }
 }
