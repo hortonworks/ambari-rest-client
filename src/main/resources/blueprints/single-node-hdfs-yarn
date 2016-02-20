@@ -43,7 +43,7 @@
         "name" : "METRICS_COLLECTOR"
       },
       {
-        "name" : "METRICS_MONITOR
+        "name" : "METRICS_MONITOR"
       }
       ],
       "cardinality" : "1"
