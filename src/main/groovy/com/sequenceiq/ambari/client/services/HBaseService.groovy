@@ -66,7 +66,7 @@ trait HBaseService extends ClusterService {
    * @param hostFilter filter for which hosts are interested
    * @return map key - hostname value - state
    */
-  def Map<String, Long> getHBaseRegionServersState(List<String> hosts) {
+  def Map<String, String> getHBaseRegionServersState(List<String> hosts) {
     def res = [:]
     hosts.each {
       def rs = utils.getAllResources("hosts/$it/host_components/HBASE_REGIONSERVER")
