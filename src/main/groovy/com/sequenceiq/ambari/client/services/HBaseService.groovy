@@ -61,25 +61,16 @@ trait HBaseService extends ClusterService {
   }
 
   /**
-   * Returns the hostnames of those Region servers which currently stores data and the number of files they store
+   * Returns the hostnames of the desired Region servers and their state
    *
    * @param hostFilter filter for which hosts are interested
-   * @return map key - hostname value - stored files
+   * @return map key - hostname value - state
    */
-  def Map<String, Long> getHBaseRegionServersWithData(List<String> hostFilter) {
+  def Map<String, Long> getHBaseRegionServersState(List<String> hosts) {
     def res = [:]
-    def prePredicate = ['fields': 'host_components/metrics/hbase']
-    def host_components = utils.getAllPredictedResources('services/HBASE/components/HBASE_REGIONSERVER', prePredicate)?.host_components
-    if (host_components) {
-      host_components.each {
-        def hostName = it.HostRoles.host_name
-        if (hostFilter.isEmpty() || hostFilter.contains(hostName)) {
-          def storeFiles = it.metrics.hbase.regionserver.storefiles
-          if (storeFiles > 0) {
-            res << ["$hostName": storeFiles]
-          }
-        }
-      }
+    hosts.each {
+      def rs = utils.getAllResources("hosts/$it/host_components/HBASE_REGIONSERVER")
+      res << ["$it": rs.HostRoles.state]
     }
     res
   }
