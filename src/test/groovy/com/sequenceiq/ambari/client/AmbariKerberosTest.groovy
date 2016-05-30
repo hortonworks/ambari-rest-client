@@ -34,7 +34,7 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
 
     then:
     def body = slurper.parseText(context.body)
-    'host' == body?.Clusters?.desired_config?.get(0)?.properties?.kdc_host
+    'host' == body?.Clusters?.desired_config?.get(0)?.properties?.kdc_hosts
     'realm' == body?.Clusters?.desired_config?.get(0)?.properties?.realm
     'domain' == body?.Clusters?.desired_config?.get(1)?.properties?.domains
     true == body?.Clusters?.desired_config?.get(1)?.properties?.manage_krb5_conf

@@ -31,9 +31,9 @@ trait KerberosService extends BlueprintService {
    * @param realm kerberos realm
    * @param domain kerberos domain
    */
-  def void createKerberosConfig(String kdcHost, String realm, String domain) {
+  def void createKerberosConfig(String kdcHosts, String realm, String domain) {
     def model = [
-      'KDC_HOST'     : kdcHost,
+      'KDC_HOSTS'     : kdcHosts,
       'REALM'        : realm,
       'DOMAIN'       : domain,
       'TAG'          : "version${System.currentTimeMillis()}",
@@ -112,9 +112,9 @@ trait KerberosService extends BlueprintService {
    * @param domains comma separated domain names
    * @return Returns the blueprint in JSON format with the extended kerberos configuration
    */
-  def String extendBlueprintWithKerberos(String blueprint, String kdcHost, String realm, String domains) {
+  def String extendBlueprintWithKerberos(String blueprint, String kdcHosts, String realm, String domains) {
     def config = [
-      "kerberos-env": ["realm"           : realm, "kdc_type": "mit-kdc", "kdc_host": kdcHost, "admin_server_host": kdcHost,
+      "kerberos-env": ["realm"           : realm, "kdc_type": "mit-kdc", "kdc_hosts": kdcHosts, "admin_server_host": kdcHosts,
                        "encryption_types": "aes des3-cbc-sha1 rc4 des-cbc-md5", "ldap_url": "", "container_dn": ""],
       "krb5-conf"   : ["domains": domains, "manage_krb5_conf": "true"]
     ]
