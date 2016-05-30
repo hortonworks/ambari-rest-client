@@ -302,6 +302,24 @@ trait ServiceAndHostService extends ClusterService {
   }
 
   /**
+   * Triggers a SmartSense data capture with caseId for all services.
+   *
+   * @param case id of the capture
+   * @return the id of the Ambari request
+   */
+  def int smartSenseCapture(int caseId) {
+    def component = "HST_AGENT"
+    def filter = [service_name: "SMARTSENSE", component_name: component, 'hosts': getHostNamesByComponent(component).join(',')];
+    Map bodyMap = [
+            'RequestInfo': [command: 'Capture', context: "SmartSense Data Capture", 'parameters/service': "all", 'parameters/caseNumber': "$caseId"],
+            'Requests/resource_filters': [ filter ]
+    ]
+    ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), {
+      utils.getRequestId(it)
+    })
+  }
+
+  /**
    * Returns a pre-formatted list of the hosts.
    *
    * @return pre-formatted String
