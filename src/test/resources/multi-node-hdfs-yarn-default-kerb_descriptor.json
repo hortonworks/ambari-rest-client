@@ -62,7 +62,7 @@
         "properties": {
           "realm": "APACHE.EXAMPLE.COM",
           "kdc_type": "mit-kdc",
-          "kdc_host": "hostname.node.dc1.consul",
+          "kdc_hosts": "hostname.node.dc1.consul",
           "admin_server_host": "hostname.apache.example.com"
         }
       }
