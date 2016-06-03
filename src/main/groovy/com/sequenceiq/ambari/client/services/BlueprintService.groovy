@@ -252,9 +252,11 @@ trait BlueprintService extends ClusterService {
    * @param hostGroup which host group to add the hosts to
    * @param hosts list of hosts in form of FQDN
    */
-  def void addHostsWithBlueprint(String bpName, String hostGroup, List<String> hosts) throws HttpResponseException {
+  def int addHostsWithBlueprint(String bpName, String hostGroup, List<String> hosts) throws HttpResponseException {
     def hostMap = hosts.collect { ["blueprint": bpName, "host_group": hostGroup, "host_name": it] }
     def json = new JsonBuilder(hostMap).toPrettyString()
-    ambari.post(path: "clusters/${getClusterName()}/hosts", body: json, { it })
+    ambari.post(path: "clusters/${getClusterName()}/hosts", body: json, {
+      utils.getRequestId(it)
+    })
   }
 }
