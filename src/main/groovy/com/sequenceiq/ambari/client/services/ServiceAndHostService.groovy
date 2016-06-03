@@ -665,7 +665,7 @@ trait ServiceAndHostService extends ClusterService {
     def rawConfigs = utils.getAllPredictedResources('configurations/service_config_versions',
             ['is_current': 'true', 'fields': '*']).items
     rawConfigs.each {
-      if (it.group_name == 'default' || (hostGroup && it.group_name.contains(hostGroup))) {
+      if (it.group_name.equalsIgnoreCase('default') || (hostGroup && it.group_name.contains(hostGroup))) {
         it.configurations.each {
           def type = it.type
           Map props = result.get(type)
