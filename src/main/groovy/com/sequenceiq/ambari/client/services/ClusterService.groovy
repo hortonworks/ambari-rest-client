@@ -74,8 +74,7 @@ trait ClusterService extends CommonService {
     return utils.getRawResource(resourceRequestMap)
   }
 
-  private String createClusterJson(String name, Map hostGroups, String strategy,
-    String principal, String key, String type) {
+  private String createClusterJson(String name, Map hostGroups, String defaultPassword, String strategy, String principal, String key, String type) {
     def builder = new JsonBuilder()
     def isAmbariVersionOk = isAmbariGreaterThan221(ambariServerVersion())
     def groups = hostGroups.collect {
@@ -91,14 +90,14 @@ trait ClusterService extends CommonService {
     if (principal) {
       def credential = [["alias": "kdc.admin.credential", "principal": principal, "key": key, type: type]]
       builder {
-        blueprint name; default_password "admin"; host_groups groups;
+        blueprint name; default_password defaultPassword; host_groups groups;
         credentials credential
         config_recommendation_strategy strategy
       }
     } else {
-      builder { blueprint name; default_password "admin"; host_groups groups; config_recommendation_strategy strategy }
+      builder { blueprint name; default_password defaultPassword; host_groups groups; config_recommendation_strategy strategy }
     }
-    builder.toPrettyString()
+    return builder.toPrettyString()
   }
 
   /**
@@ -108,16 +107,20 @@ trait ClusterService extends CommonService {
    * @param blueprintName blueprint id used to create this cluster
    * @param hostGroups Map<String, List<String> key - host group, value - host list
    * @param recommendationStrategy 'NEVER_APPLY', 'ONLY_STACK_DEFAULTS_APPLY', 'ALWAYS_APPLY'
+   * @param defaultPassword default password used for the services
    * @return true if the creation was successful false otherwise
    * @throws HttpResponseException in case of error
+   *
+   * @return cluster creation template
    */
-  def void createCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
-    String recommendationStrategy) throws HttpResponseException {
+  def String createCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
+    String recommendationStrategy, String defaultPassword) throws HttpResponseException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
-    ambari.post(path: "clusters/$clusterName", body:
-      createClusterJson(blueprintName, hostGroups, recommendationStrategy, null, null, null), { it })
+    def template = createClusterJson(blueprintName, hostGroups, defaultPassword, recommendationStrategy, null, null, null)
+    ambari.post(path: "clusters/$clusterName", body: template, { it })
+    return template
   }
 
   /**
@@ -127,19 +130,23 @@ trait ClusterService extends CommonService {
    * @param blueprintName blueprint id used to create this cluster
    * @param hostGroups Map<String, List<String> key - host group, value - host list
    * @param recommendationStrategy 'NEVER_APPLY', 'ONLY_STACK_DEFAULTS_APPLY', 'ALWAYS_APPLY'
+   * @param defaultPassword default password used for the services
    * @param principal KDC principal (like: admin/admin)
    * @param key key for KDC principal (like: admin)
    * @param type type of the principal can be either 'TEMPORARY' or 'PERSISTED'
    * @return true if the creation was successful false otherwise
    * @throws HttpResponseException in case of error
+   *
+   * @return cluster creation template
    */
-  def void createSecureCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
-    String recommendationStrategy, String principal, String key, String type) throws HttpResponseException {
+  def String createSecureCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
+                                 String recommendationStrategy, String defaultPassword, String principal, String key, String type) throws HttpResponseException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
-    ambari.post(path: "clusters/$clusterName", body:
-      createClusterJson(blueprintName, hostGroups, recommendationStrategy, principal, key, type), { it })
+    def template = createClusterJson(blueprintName, hostGroups, defaultPassword, recommendationStrategy, principal, key, type)
+    ambari.post(path: "clusters/$clusterName", body: template, { it })
+    return template
   }
 
   /**
