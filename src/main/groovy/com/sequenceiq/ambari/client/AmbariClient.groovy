@@ -104,6 +104,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, HBa
   def Map<String, Map<Long, Long>> getDFSSpace() {
     def result = [:]
     def response = utils.slurp("clusters/${getClusterName()}/services/HDFS/components/NAMENODE", 'metrics/dfs')
+    log.info("Returned metrics/dfs: {}", response)
     def liveNodes = slurper.parseText(response?.metrics?.dfs?.namenode?.LiveNodes as String)
     if (liveNodes) {
       liveNodes.each {
