@@ -84,4 +84,20 @@ trait ViewService extends ClusterService {
     ambari.post(path: "views/${type.toUpperCase()}/versions/1.0.0/instances/${type.toLowerCase()}", body: body, { it })
   }
 
+  def getViewDefinitions() {
+    Map<String, String> result = new HashMap<>()
+    try {
+      def slurper = new groovy.json.JsonSlurper()
+      def body = ambari.get(path: "views/", query: ['fields': 'versions/ViewVersionInfo/version'])?.data?.text
+      def resultJson = slurper.parseText(body);
+      for (int i = 0; i < resultJson.items.size(); i++) {
+        def tmp = resultJson.items[i];
+        result.put(tmp.ViewInfo.view_name, tmp.versions.ViewVersionInfo.version[0]);
+      }
+    } catch (e) {
+      log.error('Error occurred during GET request to viewinfo, exception: ', e)
+    }
+    return result
+  }
+
 }
