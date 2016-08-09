@@ -92,7 +92,7 @@ trait ViewService extends ClusterService {
       def resultJson = slurper.parseText(body);
       for (int i = 0; i < resultJson.items.size(); i++) {
         def tmp = resultJson.items[i];
-        result.put(tmp.ViewInfo.view_name, tmp.versions.ViewVersionInfo.version[0]);
+        result.put(tmp.ViewInfo.view_name, tmp.versions.ViewVersionInfo.version[tmp.versions.ViewVersionInfo.version.size()-1]);
       }
     } catch (e) {
       log.error('Error occurred during GET request to viewinfo, exception: ', e)
