@@ -272,9 +272,15 @@ trait ClusterService extends CommonService {
   }
 
   private def boolean isAmbariGreaterThan221(version) {
-    [version.split('\\.'), [2, 2, 1]]
-            .transpose()
-            .collect { it[0].toInteger() >= it[1].toInteger() }
-            .every { it == true }
+    def minver = [2, 2, 1]
+    def act = version.split('\\.')
+    for (i =0; i<minver.size(); i++) {
+      if (act[i].toInteger() > minver[i].toInteger()) {
+        return true
+      } else if (act[i].toInteger() < minver[i].toInteger()) {
+        return false
+      }
+    }
+    return true
   }
 }
