@@ -21,7 +21,6 @@ import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
-import static CommonService.PAD
 
 @Slf4j
 trait ServiceAndHostService extends ClusterService {
@@ -604,6 +603,7 @@ trait ServiceAndHostService extends ClusterService {
   }
 
   private int manageService(String context, String state, String service) {
+    log.info('ManageService. context: {}, state: {}, service: {}', context, state, service)
     Map bodyMap = [
             RequestInfo: [context: context],
             ServiceInfo: [state: state]
@@ -619,6 +619,7 @@ trait ServiceAndHostService extends ClusterService {
     putRequestMap.put('query', ['params/run_smoke_test': 'false'])
     putRequestMap.put('body', builder.toPrettyString());
 
+    log.info('ManageService. requestMap: {}', putRequestMap)
     utils.putAndGetId(putRequestMap)
   }
 

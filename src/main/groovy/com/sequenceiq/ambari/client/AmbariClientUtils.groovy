@@ -201,7 +201,10 @@ class AmbariClientUtils {
   }
 
   def int putAndGetId(def Map<String, ?> putRequestMap) {
+    log.info('AmbariClient putAndGetId, requestMap: {}', putRequestMap)
     def response = ambariClient.ambari.put(putRequestMap)
-    ambariClient.slurper.parseText(response.getAt('responseData')?.getAt('str') as String)?.Requests?.id
+    def responseData = response.getAt('responseData')?.getAt('str') as String
+    log.info('AmbariClient statusLine: {}, responseData: {}', response.getAt('statusLine'), responseData)
+    ambariClient.slurper.parseText(responseData)?.Requests?.id
   }
 }
