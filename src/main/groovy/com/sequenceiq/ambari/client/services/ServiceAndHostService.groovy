@@ -680,4 +680,28 @@ trait ServiceAndHostService extends ClusterService {
     }
     result
   }
+
+  def Map<String, String> getConfigValuesByConfigIds(List<String> configIds) {
+    def configMap = new HashMap<String, String>();
+    def rawConfigs = utils.getAllPredictedResources('configurations/service_config_versions',
+            ['is_current': 'true', 'fields': '*']).items
+    rawConfigs.each {
+      def configurations = it.configurations
+      configurations.each {
+        def properties = it.properties
+        properties.each {
+          for (String actualConfig : configIds) {
+            if (actualConfig == it.key) {
+              configMap.put(actualConfig, it.value);
+              break;
+            }
+          }
+        }
+      }
+    }
+    configIds.each {
+
+    }
+    return configMap
+  }
 }
