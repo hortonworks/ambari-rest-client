@@ -699,9 +699,6 @@ trait ServiceAndHostService extends ClusterService {
         }
       }
     }
-    configIds.each {
-
-    }
     return configMap
   }
 }
