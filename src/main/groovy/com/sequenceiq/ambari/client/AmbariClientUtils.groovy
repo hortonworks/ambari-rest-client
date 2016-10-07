@@ -70,22 +70,26 @@ class AmbariClientUtils {
    * @param resourceRequestMap
    */
   def getRawResource(Map resourceRequestMap) {
-    def rawResource = null;
+    def responseData = null;
     try {
       if (ambariClient.debugEnabled) {
         println "[DEBUG] GET ${resourceRequestMap.get('path')}"
       }
-      rawResource = ambariClient.ambari.get(resourceRequestMap)?.data?.text
+      log.info('AmbariClient getRawResource, resourceRequestMap: {}', resourceRequestMap)
+      def responseDecorator = ambariClient.ambari.get(resourceRequestMap)
+      responseData = responseDecorator?.data?.text
+      log.debug('AmbariClient statusLine: {}, responseData: {}', responseDecorator?.statusLine, responseData)
     } catch (e) {
       def clazz = e.class
-      log.error('Error occurred during GET request to {}, exception: ', resourceRequestMap?.get('path'), e)
+      log.error('AmbariClient statusLine: {}, responseData: {}', responseDecorator?.statusLine, responseData)
+      log.error('Error occurred during GET request to {}, exception: ', resourceRequestMap, e)
       if (clazz == NoHttpResponseException.class || clazz == ConnectException.class
               || clazz == ClientProtocolException.class || clazz == NoRouteToHostException.class
               || clazz == UnknownHostException.class || (clazz == HttpResponseException.class && e.message == 'Bad credentials')) {
         throw new AmbariConnectionException("Cannot connect to Ambari ${ambariClient.ambari.getUri()}")
       }
     }
-    return rawResource
+    return responseData
   }
 
   def getAllResources(resourceName, fields = '') {

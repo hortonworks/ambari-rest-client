@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package com.sequenceiq.ambari.client
+
 import com.sequenceiq.ambari.client.services.AlertService
 import com.sequenceiq.ambari.client.services.BlueprintService
 import com.sequenceiq.ambari.client.services.ConfigService
@@ -35,6 +36,7 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 
 import javax.net.ssl.SSLContext
+
 /**
  * Basic client to send requests to the Ambari server.
  */
@@ -58,22 +60,38 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, HBa
    */
   AmbariClient(String host = 'localhost', String port = '8080', String user = 'admin', String password = 'admin',
                String clientCertPath = null, String clientKeyPath = null, String serverCertPath = null) {
+    validateClientParams(host, port, user, password)
     def http = clientCertPath == null ? 'http' : 'https';
-    ambari = new RESTClient("$http://${host}:${port}/api/v1/" as String)
+    ambari = new RESTClient("${http}://${host}:${port}/api/v1/" as String)
 
     if (clientCertPath) {
       SSLContext sslContext = utils.setupSSLContext(clientCertPath, clientKeyPath, serverCertPath);
       PoolingHttpClientConnectionManager connectionManager =
-        new PoolingHttpClientConnectionManager(utils.setupSchemeRegistry(sslContext));
+              new PoolingHttpClientConnectionManager(utils.setupSchemeRegistry(sslContext));
       connectionManager.setMaxTotal(1000);
       connectionManager.setDefaultMaxPerRoute(500);
       def httpClient = HttpClientBuilder.create().setConnectionManager(connectionManager)
-        .setDefaultRequestConfig().build();
+              .setDefaultRequestConfig().build();
       ambari.setClient(httpClient)
     }
 
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
     ambari.headers['X-Requested-By'] = 'ambari'
+  }
+
+  def void validateClientParams(String host, String port, String user, String password) {
+    if (host == null) {
+      throw new AmbariConnectionException("Ambari hostname cannot be null");
+    }
+    if (port == null) {
+      throw new AmbariConnectionException("Ambari port cannot be null");
+    }
+    if (user == null) {
+      throw new AmbariConnectionException("Ambari user cannot be null");
+    }
+    if (password == null) {
+      throw new AmbariConnectionException("Ambari password cannot be null");
+    }
   }
 
   /**
