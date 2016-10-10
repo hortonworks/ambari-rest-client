@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 package com.sequenceiq.ambari.client
+
 import com.sequenceiq.ambari.client.services.CommonService
 import groovy.text.SimpleTemplateEngine
 import groovy.util.logging.Slf4j
@@ -77,11 +78,11 @@ class AmbariClientUtils {
       }
       log.info('AmbariClient getRawResource, resourceRequestMap: {}', resourceRequestMap)
       def responseDecorator = ambariClient.ambari.get(resourceRequestMap)
+      def statusLine = responseDecorator?.statusLine
       responseData = responseDecorator?.data?.text
-      log.debug('AmbariClient statusLine: {}, responseData: {}', responseDecorator?.statusLine, responseData)
+      log.debug('AmbariClient statusLine: {}, responseData: {}', statusLine, responseData)
     } catch (e) {
       def clazz = e.class
-      log.error('AmbariClient statusLine: {}, responseData: {}', responseDecorator?.statusLine, responseData)
       log.error('Error occurred during GET request to {}, exception: ', resourceRequestMap, e)
       if (clazz == NoHttpResponseException.class || clazz == ConnectException.class
               || clazz == ClientProtocolException.class || clazz == NoRouteToHostException.class
