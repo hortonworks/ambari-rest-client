@@ -74,18 +74,32 @@ trait ClusterService extends CommonService {
     return utils.getRawResource(resourceRequestMap)
   }
 
-  private String createClusterJson(String name, Map hostGroups, String defaultPassword, String strategy, String principal, String key, String type) {
+  private String createClusterJson(String name, Map<String, List<Map<String, String>>> hostGroups, String defaultPassword, String strategy,
+                                   String principal, String key, String type) {
     def builder = new JsonBuilder()
-    def isAmbariVersionOk = isAmbariGreaterThan221(ambariServerVersion())
-    def groups = hostGroups.collect {
-      def hostList = it.value.collect { instanceMeta ->
-                                          def tempMap = ['fqdn': instanceMeta.fqdn]
-                                          if (isAmbariVersionOk && instanceMeta.rack != null) {
-                                            tempMap.rack_info = instanceMeta.rack
-                                          }
-                                          tempMap
-                                      }
-      [name: it.key, hosts: hostList]
+    def isAmbariVersionOk = true //isAmbariGreaterThan221(ambariServerVersion())
+    List groups = new ArrayList();
+    for (Map.Entry entry : hostGroups.entrySet()){
+      List hosts = new ArrayList();
+      for(Map<String, String> map: entry.value) {
+        def tempMap
+        for (Map.Entry tmpEntry: map.entrySet()) {
+          if (tmpEntry.key == 'fqdn') {
+            tempMap = ['fqdn': tmpEntry.value]
+          } else if(tmpEntry.key == 'rack' && isAmbariVersionOk) {
+            tempMap.rack_info= tmpEntry.value
+          }
+        }
+        if (tempMap) {
+          hosts.add(tempMap)
+        }
+      }
+
+      if (hosts.size() != 0) {
+        groups.add([name: entry.key, hosts: hosts])
+      } else {
+        groups.add([name: entry.key, host_count: 99])
+      }
     }
     if (principal) {
       def credential = [["alias": "kdc.admin.credential", "principal": principal, "key": key, type: type]]
