@@ -97,8 +97,6 @@ trait ClusterService extends CommonService {
 
       if (hosts.size() != 0) {
         groups.add([name: entry.key, hosts: hosts])
-      } else {
-        groups.add([name: entry.key, host_count: 99])
       }
     }
     if (principal) {
