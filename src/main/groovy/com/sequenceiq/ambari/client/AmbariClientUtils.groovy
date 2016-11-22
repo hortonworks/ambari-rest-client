@@ -86,7 +86,8 @@ class AmbariClientUtils {
       log.error('Error occurred during GET request to {}, exception: ', resourceRequestMap, e)
       if (clazz == NoHttpResponseException.class || clazz == ConnectException.class
               || clazz == ClientProtocolException.class || clazz == NoRouteToHostException.class
-              || clazz == UnknownHostException.class || (clazz == HttpResponseException.class && e.message == 'Bad credentials')) {
+              || clazz == UnknownHostException.class
+              || (clazz == HttpResponseException.class && (e.message == 'Bad credentials' || e.statusCode == 403))) {
         throw new AmbariConnectionException("Cannot connect to Ambari ${ambariClient.ambari.getUri()}")
       }
     }
