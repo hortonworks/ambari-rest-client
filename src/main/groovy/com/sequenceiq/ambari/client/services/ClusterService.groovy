@@ -85,7 +85,11 @@ trait ClusterService extends CommonService {
                                           }
                                           tempMap
                                       }
-      [name: it.key, hosts: hostList]
+      if (hostList.size() == 0) {
+        [name: it.key, host_count: 99]
+      } else {
+        [name: it.key, hosts: hostList]
+      }
     }
     if (principal) {
       def credential = [["alias": "kdc.admin.credential", "principal": principal, "key": key, type: type]]
