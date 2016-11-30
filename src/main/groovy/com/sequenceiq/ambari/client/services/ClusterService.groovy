@@ -77,7 +77,7 @@ trait ClusterService extends CommonService {
   private String createClusterJson(String name, Map hostGroups, String defaultPassword, String strategy, String principal, String key, String type) {
     def builder = new JsonBuilder()
     def isAmbariVersionOk = isAmbariGreaterThan221(ambariServerVersion())
-    def groups = hostGroups.collect {
+    def groups = hostGroups.findResults {
       def hostList = it.value.collect { instanceMeta ->
                                           def tempMap = ['fqdn': instanceMeta.fqdn]
                                           if (isAmbariVersionOk && instanceMeta.rack != null) {
@@ -85,11 +85,7 @@ trait ClusterService extends CommonService {
                                           }
                                           tempMap
                                       }
-      if (hostList.size() == 0) {
-        [name: it.key, host_count: 99]
-      } else {
-        [name: it.key, hosts: hostList]
-      }
+      hostList.size() != 0 ? [name: it.key, hosts: hostList] : null
     }
     if (principal) {
       def credential = [["alias": "kdc.admin.credential", "principal": principal, "key": key, type: type]]
