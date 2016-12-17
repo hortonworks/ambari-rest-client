@@ -120,8 +120,8 @@ trait KerberosService extends BlueprintService {
                        "encryption_types": "aes des3-cbc-sha1 rc4 des-cbc-md5", "ldap_url": ldapUrl == null ? "" : ldapUrl,
                        "container_dn": containerDn == null ? "" : containerDn],
     ]
-    if (useUdp) {
-      config["krb5-conf"] = ["domains": domains, "manage_krb5_conf": "true", "content": krb5_conf_content]
+    if (!useUdp) {
+      config["krb5-conf"] = ["domains": domains, "manage_krb5_conf": "true", "content": krb5_conf_content.toString()]
     } else {
       config["krb5-conf"] = ["domains": domains, "manage_krb5_conf": "true"]
     }

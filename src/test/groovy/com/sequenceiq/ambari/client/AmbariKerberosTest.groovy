@@ -122,7 +122,7 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn.json").text
 
     when:
-    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, false)
+    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, true)
 
     then:
     def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-kerb.json").text)
@@ -135,7 +135,7 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-default-kerb.json").text
 
     when:
-    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, false)
+    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, true)
 
     then:
     def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-kerb.json").text)
@@ -148,7 +148,7 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-default-kerb_descriptor.json").text
 
     when:
-    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, true)
+    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, false)
 
     then:
     def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-default-kerb_descriptor_fixed.json").text)
