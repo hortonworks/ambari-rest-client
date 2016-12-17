@@ -112,13 +112,19 @@ trait KerberosService extends BlueprintService {
    * @param domains comma separated domain names
    * @return Returns the blueprint in JSON format with the extended kerberos configuration
    */
-  def String extendBlueprintWithKerberos(String blueprint,String kdcType, String kdcHosts, String realm, String domains, String ldapUrl, String containerDn) {
+  def String extendBlueprintWithKerberos(String blueprint,String kdcType, String kdcHosts, String realm, String domains, String ldapUrl, String containerDn,
+                                         Boolean useUdp) {
+    String krb5_conf_content = utils.getResourceContent('templates/krb5-conf-template.conf').replaceAll("udp_preference_limit_content", useUdp == true ? "0" : "1");
     def config = [
       "kerberos-env": ["realm"           : realm, "kdc_type": kdcType, "kdc_hosts": kdcHosts, "admin_server_host": kdcHosts,
                        "encryption_types": "aes des3-cbc-sha1 rc4 des-cbc-md5", "ldap_url": ldapUrl == null ? "" : ldapUrl,
                        "container_dn": containerDn == null ? "" : containerDn],
-      "krb5-conf"   : ["domains": domains, "manage_krb5_conf": "true"]
     ]
+    if (useUdp) {
+      config["krb5-conf"] = ["domains": domains, "manage_krb5_conf": "true", "content": krb5_conf_content]
+    } else {
+      config["krb5-conf"] = ["domains": domains, "manage_krb5_conf": "true"]
+    }
     def blueprintMap = slurper.parseText(blueprint)
     blueprintMap.host_groups.each {
       def kbClient = ["name": "KERBEROS_CLIENT"]
