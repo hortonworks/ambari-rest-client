@@ -233,6 +233,18 @@ trait ServiceAndHostService extends ClusterService {
     result
   }
 
+  /**
+   * Returns all possible state what found for component on host
+   */
+  def Map<String, String> getComponentStates(String hostName, String component) {
+    def response = utils.slurp("clusters/${getClusterName()}/hosts/${hostName}/host_components/${component}")
+    def states = [:]
+    ["desired_admin_state", "desired_state", "maintenance_state", "state", "upgrade_state"].each {
+      states[it] = response?.HostRoles?.get(it)
+    }
+    return states
+  }
+
   private def Map<String, Integer> setComponentsState(String hostName, List<String> components, String state)
           throws HttpResponseException {
     def resp = [:]
