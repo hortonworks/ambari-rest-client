@@ -32,11 +32,15 @@ trait BlueprintService extends ClusterService {
    * @param blueprint json
    * @return response message
    */
-  private void postBlueprint(String blueprint) {
+  private void postBlueprint(String blueprint, Boolean topologyValidation=true) {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}blueprints/bp"
     }
-    ambari.post(path: 'blueprints/bp', body: blueprint, { it })
+    if (topologyValidation == null || topologyValidation) {
+      ambari.post(path: 'blueprints/bp', body: blueprint, { it })
+    } else {
+      ambari.post(path: 'blueprints/bp?validate_topology=false', body: blueprint, { it })
+    }
   }
 
   /**
