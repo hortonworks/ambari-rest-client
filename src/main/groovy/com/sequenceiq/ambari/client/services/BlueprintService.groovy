@@ -160,8 +160,8 @@ trait BlueprintService extends ClusterService {
    * @param json blueprint as json
    * @throws groovyx.net.http.HttpResponseException in case of error
    */
-  def String addBlueprint(String json) throws HttpResponseException {
-    postBlueprint(json)
+  def String addBlueprint(String json, Boolean topologyValidation=true) throws HttpResponseException {
+    postBlueprint(json, topologyValidation)
   }
 
   /**
