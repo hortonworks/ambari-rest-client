@@ -39,7 +39,7 @@ trait BlueprintService extends ClusterService {
     if (topologyValidation == null || topologyValidation) {
       ambari.post(path: 'blueprints/bp', body: blueprint, { it })
     } else {
-      ambari.post(path: 'blueprints/bp?validate_topology=false', body: blueprint, { it })
+      ambari.post(path: 'blueprints/bp', 'query': ["validate_topology": "false"], body: blueprint, { it })
     }
   }
 
