@@ -32,7 +32,8 @@ enum TestResources {
   SERVICE_COMPONENTS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/services/HDFS/components"),
   HOST_COMPONENTS("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/hosts/host/host_components"),
   GET_DECOM_NODES("http://localhost:8080/api/v1/clusters/MySingleNodeCluster/services/HDFS/components/NAMENODE"),
-  STACKS("http://localhost:8080/api/v1/stacks/HDP/versions/2.2/operating_systems/redhat6/repositories/HDP-2.2")
+  STACKS("http://localhost:8080/api/v1/stacks/HDP/versions/2.2/operating_systems/redhat6/repositories/HDP-2.2"),
+  GET_AMBARI_VERSION("services/AMBARI/components/AMBARI_SERVER")
 
   String uri;
 

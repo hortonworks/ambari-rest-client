@@ -74,28 +74,35 @@ trait ClusterService extends CommonService {
     return utils.getRawResource(resourceRequestMap)
   }
 
-  private String createClusterJson(String name, Map hostGroups, String defaultPassword, String strategy, String principal, String key, String type) {
+  def String createClusterJson(String name, Map hostGroups, String defaultPassword, String strategy,
+    String principal, String key, String type, boolean hideQuickLinks) {
     def builder = new JsonBuilder()
-    def isAmbariVersionOk = isAmbariGreaterThan221(ambariServerVersion())
+    def ambariVersion = ambariServerVersion()
+    def isAmbariVersionGreaterThan221 = isAmbariGreaterThan([2, 2, 1], ambariVersion)
     def groups = hostGroups.findResults {
       def hostList = it.value.collect { instanceMeta ->
-                                          def tempMap = ['fqdn': instanceMeta.fqdn]
-                                          if (isAmbariVersionOk && instanceMeta.rack != null) {
-                                            tempMap.rack_info = instanceMeta.rack
-                                          }
-                                          tempMap
-                                      }
+        def tempMap = ['fqdn': instanceMeta.fqdn]
+        if (isAmbariVersionGreaterThan221 && instanceMeta.rack != null) {
+          tempMap.rack_info = instanceMeta.rack
+        }
+        tempMap
+      }
       hostList.size() != 0 ? [name: it.key, hosts: hostList] : null
     }
-    if (principal) {
-      def credential = [["alias": "kdc.admin.credential", "principal": principal, "key": key, type: type]]
-      builder {
-        blueprint name; default_password defaultPassword; host_groups groups;
+    def isAmbariVersionGreaterThan250 = isAmbariGreaterThan([2, 5, 0], ambariVersion)
+    builder {
+      blueprint name
+      default_password defaultPassword
+      host_groups groups
+      config_recommendation_strategy strategy
+      if (principal) {
+        def credential = [["alias": "kdc.admin.credential", "principal": principal, "key": key, type: type]]
         credentials credential
-        config_recommendation_strategy strategy
       }
-    } else {
-      builder { blueprint name; default_password defaultPassword; host_groups groups; config_recommendation_strategy strategy }
+      if (hideQuickLinks && isAmbariVersionGreaterThan250) {
+        def filters = ["filters": [["visible": false]]]
+        quicklinks_profile filters
+      }
     }
     return builder.toPrettyString()
   }
@@ -108,17 +115,19 @@ trait ClusterService extends CommonService {
    * @param hostGroups Map<String, List<String> key - host group, value - host list
    * @param recommendationStrategy 'NEVER_APPLY', 'ONLY_STACK_DEFAULTS_APPLY', 'ALWAYS_APPLY'
    * @param defaultPassword default password used for the services
+   * @param hideQuickLinks whether to hide the quick links on the Ambari UI
    * @return true if the creation was successful false otherwise
    * @throws HttpResponseException in case of error
    *
    * @return cluster creation template
    */
   def String createCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
-    String recommendationStrategy, String defaultPassword) throws HttpResponseException {
+    String recommendationStrategy, String defaultPassword, boolean hideQuickLinks) throws HttpResponseException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
-    def template = createClusterJson(blueprintName, hostGroups, defaultPassword, recommendationStrategy, null, null, null)
+    def template = createClusterJson(blueprintName, hostGroups, defaultPassword,
+      recommendationStrategy, null, null, null, hideQuickLinks)
     ambari.post(path: "clusters/$clusterName", body: template, { it })
     return template
   }
@@ -134,17 +143,20 @@ trait ClusterService extends CommonService {
    * @param principal KDC principal (like: admin/admin)
    * @param key key for KDC principal (like: admin)
    * @param type type of the principal can be either 'TEMPORARY' or 'PERSISTED'
+   * @param hideQuickLinks whether to hide the quick links on the Ambari UI
    * @return true if the creation was successful false otherwise
    * @throws HttpResponseException in case of error
    *
    * @return cluster creation template
    */
   def String createSecureCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
-                                 String recommendationStrategy, String defaultPassword, String principal, String key, String type) throws HttpResponseException {
+    String recommendationStrategy, String defaultPassword,
+    String principal, String key, String type, boolean hideQuickLinks) throws HttpResponseException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
-    def template = createClusterJson(blueprintName, hostGroups, defaultPassword, recommendationStrategy, principal, key, type)
+    def template = createClusterJson(blueprintName, hostGroups, defaultPassword,
+      recommendationStrategy, principal, key, type, hideQuickLinks)
     ambari.post(path: "clusters/$clusterName", body: template, { it })
     return template
   }
@@ -271,13 +283,12 @@ trait ClusterService extends CommonService {
     json.RootServiceComponents.component_version
   }
 
-  private def boolean isAmbariGreaterThan221(version) {
-    def minver = [2, 2, 1]
+  private boolean isAmbariGreaterThan(List baseVersion, version) {
     def act = version.split('\\.')
-    for (int i =0; i<minver.size(); i++) {
-      if (act[i].toInteger() > minver[i].toInteger()) {
+    for (int i = 0; i < baseVersion.size(); i++) {
+      if (act[i].toInteger() > baseVersion[i].toInteger()) {
         return true
-      } else if (act[i].toInteger() < minver[i].toInteger()) {
+      } else if (act[i].toInteger() < baseVersion[i].toInteger()) {
         return false
       }
     }

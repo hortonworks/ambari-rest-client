@@ -1,0 +1,19 @@
+{
+  "href": "http://172.21.250.138/api/v1/services/AMBARI/components/AMBARI_SERVER",
+  "RootServiceComponents": {
+    "component_name": "AMBARI_SERVER",
+    "component_version": "2.5.0.0",
+    "server_clock": 1489154689,
+    "service_name": "AMBARI"
+  },
+  "hostComponents": [
+    {
+      "href": "http://172.21.250.138/api/v1/services/AMBARI/hosts/host-10-0-0-3.openstacklocal/hostComponents/AMBARI_SERVER",
+      "RootServiceHostComponents": {
+        "component_name": "AMBARI_SERVER",
+        "host_name": "host-10-0-0-3.openstacklocal",
+        "service_name": "AMBARI"
+      }
+    }
+  ]
+}

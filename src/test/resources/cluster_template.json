@@ -1,0 +1,24 @@
+{
+  "blueprint": "test-bp",
+  "default_password": "admin",
+  "host_groups": [
+
+  ],
+  "config_recommendation_strategy": "ALWAYS_APPLY",
+  "credentials": [
+    {
+      "alias": "kdc.admin.credential",
+      "principal": "admin/admin",
+      "key": "key",
+      "type": "MIT-KDC"
+    }
+  ],
+  "quicklinks_profile": {
+    "filters": [
+      {
+        "visible": false
+      }
+    ]
+  }
+}
+
