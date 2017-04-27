@@ -113,14 +113,21 @@ trait KerberosService extends BlueprintService {
    * @return Returns the blueprint in JSON format with the extended kerberos configuration
    */
   def String extendBlueprintWithKerberos(String blueprint,String kdcType, String kdcHosts, String realm, String domains, String ldapUrl, String containerDn,
-                                         Boolean useUdp) {
-    String krb5_conf_content = utils.getResourceContent('templates/krb5-conf-template.conf').replaceAll("udp_preference_limit_content", useUdp == true ? "0" : "1");
+                                         Boolean useUdp, Integer kpropPort) {
+    String krb5_conf_content = utils.getResourceContent('templates/krb5-conf-template.conf').replaceAll("udp_preference_limit_content", useUdp ? "0" : "1");
+    if (kpropPort != null) {
+      krb5_conf_content = krb5_conf_content.replaceAll("iprop_enable_content", "true")
+      krb5_conf_content = krb5_conf_content.replaceAll("iprop_port_content", kpropPort.toString())
+    } else {
+      krb5_conf_content = krb5_conf_content.replaceAll("iprop_enable_content", "false")
+      krb5_conf_content = krb5_conf_content.replaceAll("iprop_port_content", "8888")
+    }
     def config = [
       "kerberos-env": ["realm"           : realm, "kdc_type": kdcType, "kdc_hosts": kdcHosts, "admin_server_host": kdcHosts,
                        "encryption_types": "aes des3-cbc-sha1 rc4 des-cbc-md5", "ldap_url": ldapUrl == null ? "" : ldapUrl,
                        "container_dn": containerDn == null ? "" : containerDn],
     ]
-    if (!useUdp) {
+    if (!useUdp || kpropPort != null) {
       config["krb5-conf"] = ["domains": domains, "manage_krb5_conf": "true", "content": krb5_conf_content.toString()]
     } else {
       config["krb5-conf"] = ["domains": domains, "manage_krb5_conf": "true"]
