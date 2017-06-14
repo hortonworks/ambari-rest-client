@@ -234,6 +234,10 @@ trait ClusterService extends CommonService {
     if (status && status.equals('FAILED')) {
       return new BigDecimal(-1)
     }
+    def Integer taskCount = response?.Requests?.task_count
+    if (status && status.equals('COMPLETED') && taskCount != null && taskCount == 0) {
+      return new BigDecimal(0)
+    }
     return response?.Requests?.progress_percent
   }
 
