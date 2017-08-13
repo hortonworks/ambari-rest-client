@@ -22,9 +22,9 @@ import java.security.spec.X509EncodedKeySpec
  */
 public class KeystoreUtils {
 
-  public static KeyStore createKeyStore(final String clientCertPath, String clientKeyPath) throws Exception {
-    KeyPair keyPair = loadPrivateKey(clientKeyPath);
-    Certificate privateCertificate = loadCertificate(clientCertPath);
+  public static KeyStore createKeyStore(final String clientCert, String clientKey) throws Exception {
+    KeyPair keyPair = loadPrivateKey(clientKey);
+    Certificate privateCertificate = loadCertificate(clientCert);
 
     KeyStore keyStore = KeyStore.getInstance('JKS');
     keyStore.load(null);
@@ -34,9 +34,8 @@ public class KeystoreUtils {
     return keyStore;
   }
 
-  public static KeyStore createTrustStore(final String serverCertPath) throws Exception {
-    File serverCertFile = new File(serverCertPath);
-    BufferedReader reader = new BufferedReader(new FileReader(serverCertFile));
+  public static KeyStore createTrustStore(final String serverCert) throws Exception {
+    def reader = new StringReader(serverCert);
     PEMParser pemParser = null;
 
     try {
@@ -61,9 +60,8 @@ public class KeystoreUtils {
 
   }
 
-  private static Certificate loadCertificate(final String certPath) throws IOException, CertificateException {
-    File certificate = new File(certPath);
-    BufferedReader reader = new BufferedReader(new FileReader(certificate));
+  private static Certificate loadCertificate(final String cert) throws IOException, CertificateException {
+    def reader = new StringReader(cert)
     PEMParser pemParser = null;
 
     try {
@@ -83,10 +81,8 @@ public class KeystoreUtils {
   }
 
   private static KeyPair loadPrivateKey(
-    final String clientKeyPath) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-    File privateKeyFile = new File(clientKeyPath);
-    BufferedReader reader = new BufferedReader(new FileReader(privateKeyFile));
-
+    final String clientKey) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+    def reader = new StringReader(clientKey)
     PEMParser pemParser = null;
 
     try {

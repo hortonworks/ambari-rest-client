@@ -188,11 +188,11 @@ class AmbariClientUtils {
     templateProcessor.createTemplate(new InputStreamReader(inPut)).make(bindings);
   }
 
-  def SSLContext setupSSLContext(String clientCertPath, String clientKeyPath, String serverCertPath) {
+  def SSLContext setupSSLContext(String clientCert, String clientKey, String serverCert) {
     Security.addProvider(new BouncyCastleProvider());
     SSLContext context = SSLContexts.custom()
-            .loadTrustMaterial(KeystoreUtils.createTrustStore(serverCertPath))
-            .loadKeyMaterial(KeystoreUtils.createKeyStore(clientCertPath, clientKeyPath), 'consul'.toCharArray())
+            .loadTrustMaterial(KeystoreUtils.createTrustStore(serverCert))
+            .loadKeyMaterial(KeystoreUtils.createKeyStore(clientCert, clientKey), 'consul'.toCharArray())
             .build();
     return context;
   }

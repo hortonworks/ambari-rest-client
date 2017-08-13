@@ -56,18 +56,18 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    * @param port port of the Ambari server; default value is 8080
    * @param user username of the Ambari server; default is admin
    * @param password password fom the Ambari server; default is admin
-   * @param clientCertPath client certificate path, used in 2-way-ssl
-   * @param clientKeyPath client key path, used in 2-way-ssl
-   * @param serverCertPath server certificate path, used in 2-way-ssl
+   * @param clientCert client certificate, used in 2-way-ssl
+   * @param clientKey client key, used in 2-way-ssl
+   * @param serverCert server certificate, used in 2-way-ssl
    */
   AmbariClient(String host = 'localhost', String port = '8080', String user = 'admin', String password = 'admin',
-               String clientCertPath = null, String clientKeyPath = null, String serverCertPath = null) {
+               String clientCert = null, String clientKey = null, String serverCert = null) {
     validateClientParams(host, port, user, password)
-    def http = clientCertPath == null ? 'http' : 'https';
+    def http = clientCert == null ? 'http' : 'https';
     ambari = new RESTClient("${http}://${host}:${port}/api/v1/" as String)
 
-    if (clientCertPath) {
-      SSLContext sslContext = utils.setupSSLContext(clientCertPath, clientKeyPath, serverCertPath);
+    if (clientCert) {
+      SSLContext sslContext = utils.setupSSLContext(clientCert, clientKey, serverCert);
       PoolingHttpClientConnectionManager connectionManager =
               new PoolingHttpClientConnectionManager(utils.setupSchemeRegistry(sslContext));
       connectionManager.setMaxTotal(1000);
