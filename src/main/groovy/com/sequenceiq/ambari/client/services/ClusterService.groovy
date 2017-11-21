@@ -21,6 +21,7 @@ import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
+import org.apache.commons.lang.StringUtils
 
 @Slf4j
 trait ClusterService extends CommonService {
@@ -75,7 +76,7 @@ trait ClusterService extends CommonService {
   }
 
   def String createClusterJson(String name, Map hostGroups, String defaultPassword, String strategy,
-    String principal, String key, String type, boolean hideQuickLinks) {
+    String principal, String key, String type, boolean hideQuickLinks, String repositoryVersion) {
     def builder = new JsonBuilder()
     def ambariVersion = ambariServerVersion()
     def isAmbariVersionGreaterThan221 = isAmbariGreaterThan([2, 2, 1], ambariVersion)
@@ -103,6 +104,9 @@ trait ClusterService extends CommonService {
         def filters = ["filters": [["visible": false]]]
         quicklinks_profile filters
       }
+      if (StringUtils.isNotEmpty(repositoryVersion)) {
+        repository_version repositoryVersion
+      }
     }
     return builder.toPrettyString()
   }
@@ -122,12 +126,12 @@ trait ClusterService extends CommonService {
    * @return cluster creation template
    */
   def String createCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
-    String recommendationStrategy, String defaultPassword, boolean hideQuickLinks) throws HttpResponseException {
+    String recommendationStrategy, String defaultPassword, boolean hideQuickLinks, String repositoryVersion) throws HttpResponseException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
     def template = createClusterJson(blueprintName, hostGroups, defaultPassword,
-      recommendationStrategy, null, null, null, hideQuickLinks)
+      recommendationStrategy, null, null, null, hideQuickLinks, repositoryVersion)
     ambari.post(path: "clusters/$clusterName", body: template, { it })
     return template
   }
@@ -151,12 +155,12 @@ trait ClusterService extends CommonService {
    */
   def String createSecureCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
     String recommendationStrategy, String defaultPassword,
-    String principal, String key, String type, boolean hideQuickLinks) throws HttpResponseException {
+    String principal, String key, String type, boolean hideQuickLinks, String repositoryVersion) throws HttpResponseException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
     def template = createClusterJson(blueprintName, hostGroups, defaultPassword,
-      recommendationStrategy, principal, key, type, hideQuickLinks)
+      recommendationStrategy, principal, key, type, hideQuickLinks, repositoryVersion)
     ambari.post(path: "clusters/$clusterName", body: template, { it })
     return template
   }
@@ -285,6 +289,24 @@ trait ClusterService extends CommonService {
   def String ambariServerVersion() {
     def json = utils.getSlurpedResource([path: 'services/AMBARI/components/AMBARI_SERVER', headers: ['Accept': ContentType.TEXT], query: [fields: 'RootServiceComponents/component_version']])
     json.RootServiceComponents.component_version
+  }
+
+  /**
+   * Registers a VDF(Version Definition File) file.
+   *
+   * @param versionDefinitionFileUrl the URL or server's local path to the VDF file
+   * @return the request body which has sent to server
+   */
+  def String createVersionDefinition(String versionDefinitionFileUrl) {
+    def builder = new JsonBuilder()
+    builder {
+      VersionDefinition {
+        version_url versionDefinitionFileUrl
+      }
+    }
+    def template = builder.toPrettyString()
+    ambari.post(path: "version_definitions", body: template, { it })
+    return template
   }
 
   private boolean isAmbariGreaterThan(List baseVersion, version) {
