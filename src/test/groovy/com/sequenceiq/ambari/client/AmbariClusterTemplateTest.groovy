@@ -1,6 +1,5 @@
 package com.sequenceiq.ambari.client
 
-import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 
@@ -17,7 +16,7 @@ class AmbariClusterTemplateTest extends AbstractAmbariClientTest {
 
         when:
         def result = ambari.createClusterJson("test-bp", [:], "admin", "ALWAYS_APPLY",
-          "admin/admin", "key", "MIT-KDC", true)
+          "admin/admin", "key", "MIT-KDC", true, "")
 
         then:
         def expected = new JsonSlurper().parseText(getClass().getClassLoader().getResourceAsStream("cluster_template.json")?.text)
