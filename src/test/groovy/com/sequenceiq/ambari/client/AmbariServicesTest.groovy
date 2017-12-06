@@ -122,6 +122,7 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
     def context
     ambari.getClusterName() >> "cluster"
     ambari.getAmbari().metaClass.put = { Map request ->
+      request.responseData = [str: ""]
       context = request
     }
     ambari.getSlurper().metaClass.parseText { String text -> return ["Requests": ["id": 1]] }
@@ -142,6 +143,7 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
     def context
     ambari.getClusterName() >> "cluster"
     ambari.getAmbari().metaClass.put = { Map request ->
+      request.responseData = [str: ""]
       context = request
     }
     ambari.getSlurper().metaClass.parseText { String text -> return ["Requests": ["id": 1]] }
@@ -162,6 +164,7 @@ class AmbariServicesTest extends AbstractAmbariClientTest {
     def context
     ambari.getClusterName() >> "cluster"
     ambari.getAmbari().metaClass.put = { Map request ->
+      request.responseData = [str: ""]
       context = request
     }
     ambari.getSlurper().metaClass.parseText { String text -> return ["Requests": ["id": 1]] }
