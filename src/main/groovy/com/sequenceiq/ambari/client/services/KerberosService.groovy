@@ -79,10 +79,23 @@ trait KerberosService extends BlueprintService {
    * @return id of the request
    */
   def int enableKerberos() {
-    def Map<String, ?> putRequestMap = [:]
+    changeKerberosState('KERBEROS')
+  }
+
+  /**
+   * Disbles kerberos security on the cluster.
+   *
+   * @return id of the request
+   */
+  def int disableKerberos() {
+    changeKerberosState('NONE')
+  }
+
+  private int changeKerberosState(String state) {
+    Map<String, ?> putRequestMap = [:]
     putRequestMap.put('requestContentType', ContentType.URLENC)
     putRequestMap.put('path', "clusters/${getClusterName()}")
-    putRequestMap.put('body', new JsonBuilder(['Clusters': ['security_type': 'KERBEROS']]).toPrettyString())
+    putRequestMap.put('body', new JsonBuilder(['Clusters': ['security_type': state]]).toPrettyString())
 
     utils.putAndGetId(putRequestMap)
   }

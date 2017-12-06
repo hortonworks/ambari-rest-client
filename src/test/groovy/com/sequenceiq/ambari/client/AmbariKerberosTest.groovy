@@ -70,7 +70,7 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     'KERBEROS' == body?.artifact_data?.services?.find { it.name == 'KERBEROS' }?.name
   }
 
-  def "test enable cluster"() {
+  def "test enable kerberos"() {
     given:
     def context
     ambari.getClusterName() >> "cluster"
@@ -83,6 +83,21 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     then:
     def body = slurper.parseText(context.body)
     'KERBEROS' == body?.Clusters?.security_type
+  }
+
+  def "test disable kerberos"() {
+    given:
+    def context
+    ambari.getClusterName() >> "cluster"
+    ambari.getAmbari().metaClass.put = { Map request -> context = request }
+    ambari.getSlurper().metaClass.parseText { String text -> return ["Requests": ["id": 1]] }
+
+    when:
+    ambari.disableKerberos()
+
+    then:
+    def body = slurper.parseText(context.body)
+    'NONE' == body?.Clusters?.security_type
   }
 
   def "test generate missing keytabs"() {

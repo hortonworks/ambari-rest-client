@@ -211,6 +211,6 @@ class AmbariClientUtils {
     def response = ambariClient.ambari.put(putRequestMap)
     def responseData = response.getAt('responseData')?.getAt('str') as String
     log.info('AmbariClient statusLine: {}, responseData: {}', response.getAt('statusLine'), responseData)
-    ambariClient.slurper.parseText(responseData)?.Requests?.id
+    responseData == null ? -1 : ambariClient.slurper.parseText(responseData)?.Requests?.id
   }
 }
