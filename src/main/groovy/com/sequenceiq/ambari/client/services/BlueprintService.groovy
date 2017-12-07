@@ -188,10 +188,9 @@ trait BlueprintService extends ClusterService {
           configurations << ["$site": ['properties': it.value]]
         } else {
           def existingConf = configurations.get(index)
-          if (existingConf."$site".properties == null) {
-            existingConf."$site" << it.value
-          } else {
-            existingConf."$site".properties << it.value
+          def sitemap = existingConf."$site".properties == null ? existingConf."$site" : existingConf."$site".properties
+          it.value.each {
+            sitemap.putIfAbsent(it.key, it.value)
           }
         }
       }
@@ -208,26 +207,40 @@ trait BlueprintService extends ClusterService {
    */
   def String extendBlueprintHostGroupConfiguration(String blueprintJson, Map<String, Map<String, Map<String, String>>> newConfigs) {
     def blueprintMap = slurper.parseText(blueprintJson)
-    for (int j = 0; j < newConfigs.size(); j++) {
-      def configurations = blueprintMap.host_groups.find { it.name == newConfigs.keySet().getAt(j) }.configurations
+    def globalConfigs = blueprintMap.configurations ?: [:]
+    def filteredNewConfigs = [:]
+    newConfigs.each { hostgroup, hostgroupConfig ->
+      def filteredHostgroupConfigs = [:]
+      filteredNewConfigs.put(hostgroup, filteredHostgroupConfigs)
+      hostgroupConfig.each { hostgroupSite, siteMap ->
+        def filteredSiteMap = [:]
+        filteredHostgroupConfigs.put(hostgroupSite, filteredSiteMap)
+        def index = utils.indexOfConfig(globalConfigs, hostgroupSite)
+        def globalSiteMap = index != -1 ? globalConfigs.get(index)."$hostgroupSite" : [:]
+        if (globalSiteMap.properties) {
+          globalSiteMap = globalSiteMap.properties
+        }
+        filteredSiteMap.putAll(siteMap.findAll { !globalSiteMap.containsKey(it.key) })
+      }
+    }
+
+    for (int j = 0; j < filteredNewConfigs.size(); j++) {
+      def configurations = blueprintMap.host_groups.find { it.name == filteredNewConfigs.keySet().getAt(j) }.configurations
       if (!configurations) {
-        if (newConfigs) {
-          def conf = []
-          newConfigs.get(newConfigs.keySet().getAt(j)).each { conf << [(it.key): it.value] }
-          blueprintMap.host_groups.find { it.name == newConfigs.keySet().getAt(j) } << ['configurations': conf]
+        if (filteredNewConfigs) {
+          def conf = filteredNewConfigs.get(filteredNewConfigs.keySet().getAt(j)).collect { [(it.key): it.value] }
+          blueprintMap.host_groups.find { it.name == filteredNewConfigs.keySet().getAt(j) } << ['configurations': conf]
         }
       } else {
-        newConfigs.get(newConfigs.keySet().getAt(j)).each {
-          def site = it.key
+        filteredNewConfigs.get(filteredNewConfigs.keySet().getAt(j)).each { site, values ->
           def index = utils.indexOfConfig(configurations, site)
           if (index == -1) {
-            configurations << ["$site": it.value]
+            configurations << ["$site": values]
           } else {
             def existingConf = configurations.get(index)
-            if (existingConf."$site".properties == null) {
-              existingConf."$site" << it.value
-            } else {
-              existingConf."$site".properties << it.value
+            def sitemap = existingConf."$site".properties == null ? existingConf."$site" : existingConf."$site".properties
+            values.each {
+              sitemap.putIfAbsent(it.key, it.value)
             }
           }
         }
