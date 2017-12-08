@@ -17,7 +17,7 @@
     {
       "yarn-site": {
         "properties": {
-          "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/",
+          "yarn.nodemanager.local-dirs": "apple",
           "property-key": "property-value"
         }
       }
