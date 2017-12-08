@@ -126,7 +126,7 @@ trait KerberosService extends BlueprintService {
    * @return Returns the blueprint in JSON format with the extended kerberos configuration
    */
   def String extendBlueprintWithKerberos(String blueprint,String kdcType, String kdcHosts, String realm, String domains, String ldapUrl, String containerDn,
-                                         Boolean useUdp, Integer kpropPort) {
+                                         Boolean useUdp, Integer kpropPort, boolean forced = false) {
     String krb5_conf_content = utils.getResourceContent('templates/krb5-conf-template.conf').replaceAll("udp_preference_limit_content", useUdp ? "0" : "1");
     if (kpropPort != null) {
       krb5_conf_content = krb5_conf_content.replaceAll("iprop_enable_content", "true")
@@ -159,6 +159,6 @@ trait KerberosService extends BlueprintService {
     } else {
       bpDetails << ["security": kerbType]
     }
-    extendBlueprintGlobalConfiguration(new JsonBuilder(blueprintMap).toPrettyString(), config)
+    extendBlueprintGlobalConfiguration(new JsonBuilder(blueprintMap).toPrettyString(), config, forced)
   }
 }

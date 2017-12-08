@@ -140,25 +140,30 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, true, null)
 
     then:
-    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-kerb.json").text)
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-kerb-forced.json").text)
     def actual = slurper.parseText(blueprint)
     actual == expected
   }
 
-  def "test add kerberos config to kerberos configured blueprint"() {
+  def "test add kerberos config to kerberos configured blueprint"(boolean forced, String resultFile) {
     given:
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-default-kerb.json").text
 
     when:
-    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, true, null)
+    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, true, null, forced)
 
     then:
-    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-kerb.json").text)
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream(resultFile).text)
     def actual = slurper.parseText(blueprint)
     actual == expected
+
+    where:
+    forced | resultFile
+    false  | "multi-node-hdfs-yarn-kerb.json"
+    true   | "multi-node-hdfs-yarn-kerb-forced.json"
   }
 
-  def "test add kerberos config to kerberos configured blueprint with descriptor"() {
+  def "test add kerberos config to kerberos configured blueprint with descriptor"(boolean forced, String resultFile) {
     given:
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-default-kerb_descriptor.json").text
 
@@ -169,6 +174,11 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-default-kerb_descriptor_fixed.json").text)
     def actual = slurper.parseText(blueprint)
     actual == expected
+
+    where:
+    forced | resultFile
+    false  | "multi-node-hdfs-yarn-default-kerb_descriptor_fixed.json"
+    true   | "multi-node-hdfs-yarn-default-kerb_descriptor_forced_fixed.json"
   }
 
   def protected String selectResponseJson(Map resourceRequestMap, String scenarioStr) {

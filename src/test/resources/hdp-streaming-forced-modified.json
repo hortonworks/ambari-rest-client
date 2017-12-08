@@ -279,7 +279,7 @@
           "*.max.retry.failure.count": "1",
           "*.falcon.security.authorization.enabled": "false",
           "*.entity.topic": "FALCON.ENTITY.TOPIC",
-          "*.falcon.graph.serialize.path": "/mnt/hadoop/falcon/data/lineage",
+          "*.falcon.graph.serialize.path": "/hadoopfs/fs1/falcon",
           "prism.application.services": "org.apache.falcon.entity.store.ConfigurationStore",
           "*.application.services": "org.apache.falcon.security.AuthenticationInitializationService,\\\n      org.apache.falcon.workflow.WorkflowJobEndNotificationService, \\\n      org.apache.falcon.service.ProcessSubscriberService,\\\n      org.apache.falcon.entity.store.ConfigurationStore,\\\n      org.apache.falcon.rerun.service.RetryService,\\\n      org.apache.falcon.rerun.service.LateRunService,\\\n      org.apache.falcon.service.LogCleanupService,\\\n      org.apache.falcon.metadata.MetadataMappingService",
           "*.journal.impl": "org.apache.falcon.transaction.SharedFileSystemJournal",
@@ -293,7 +293,7 @@
           "*.falcon.http.authentication.kerberos.name.rules": "DEFAULT",
           "*.falcon.http.authentication.token.validity": "36000",
           "*.system.lib.location": "${falcon.home}/server/webapp/${falcon.app.type}/WEB-INF/lib",
-          "*.falcon.graph.storage.directory": "/mnt/hadoop/falcon/data/lineage/graphdb",
+          "*.falcon.graph.storage.directory": "/hadoopfs/fs1/falcon",
           "*.retry.recorder.path": "${falcon.log.dir}/retry",
           "*.falcon.http.authentication.blacklisted.users": "",
           "*.falcon.http.authentication.cookie.domain": "EXAMPLE.COM",
@@ -1510,7 +1510,7 @@
           "tickTime": "2000",
           "syncLimit": "5",
           "autopurge.purgeInterval": "24",
-          "dataDir": "/mnt/hadoop/zookeeper"
+          "dataDir": "/hadoopfs/fs1/zookeeper"
         }
       }
     },

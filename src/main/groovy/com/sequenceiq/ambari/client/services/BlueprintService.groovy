@@ -171,7 +171,7 @@ trait BlueprintService extends ClusterService {
    * @param newConfigs global configuration map - <site_config_name <config_name, config_value>>
    * @return extended blueprints JSON as String
    */
-  def String extendBlueprintGlobalConfiguration(String blueprintJson, Map<String, Map<String, String>> newConfigs) {
+  def String extendBlueprintGlobalConfiguration(String blueprintJson, Map<String, Map<String, String>> newConfigs, boolean forced = false) {
     def blueprintMap = slurper.parseText(blueprintJson)
     def configurations = blueprintMap.configurations
     if (!configurations) {
@@ -189,8 +189,10 @@ trait BlueprintService extends ClusterService {
         } else {
           def existingConf = configurations.get(index)
           def sitemap = existingConf."$site".properties == null ? existingConf."$site" : existingConf."$site".properties
-          it.value.each {
-            sitemap.putIfAbsent(it.key, it.value)
+          if (forced) {
+            sitemap.putAll(it.value)
+          } else {
+            it.value.each { sitemap.putIfAbsent(it.key, it.value) }
           }
         }
       }
@@ -205,25 +207,29 @@ trait BlueprintService extends ClusterService {
    * @param newConfigs host group level configurations - <host_group_name <site_config_name <config_name, config_value>>>
    * @return extended blueprints JSON as String
    */
-  def String extendBlueprintHostGroupConfiguration(String blueprintJson, Map<String, Map<String, Map<String, String>>> newConfigs) {
+  def String extendBlueprintHostGroupConfiguration(String blueprintJson, Map<String, Map<String, Map<String, String>>> newConfigs, boolean forced = false) {
     def blueprintMap = slurper.parseText(blueprintJson)
     def globalConfigs = blueprintMap.configurations ?: [:]
-    def filteredNewConfigs = [:]
-    newConfigs.each { hostgroup, hostgroupConfig ->
-      def filteredHostgroupConfigs = [:]
-      filteredNewConfigs.put(hostgroup, filteredHostgroupConfigs)
-      hostgroupConfig.each { hostgroupSite, siteMap ->
-        def filteredSiteMap = [:]
-        filteredHostgroupConfigs.put(hostgroupSite, filteredSiteMap)
-        def index = utils.indexOfConfig(globalConfigs, hostgroupSite)
-        def globalSiteMap = index != -1 ? globalConfigs.get(index)."$hostgroupSite" : [:]
-        if (globalSiteMap.properties) {
-          globalSiteMap = globalSiteMap.properties
+    def filteredNewConfigs
+    if (forced) {
+      filteredNewConfigs = newConfigs
+    } else {
+        filteredNewConfigs = [:]
+        newConfigs.each { hostgroup, hostgroupConfig ->
+            def filteredHostgroupConfigs = [:]
+            filteredNewConfigs.put(hostgroup, filteredHostgroupConfigs)
+            hostgroupConfig.each { hostgroupSite, siteMap ->
+                def filteredSiteMap = [:]
+                filteredHostgroupConfigs.put(hostgroupSite, filteredSiteMap)
+                def index = utils.indexOfConfig(globalConfigs, hostgroupSite)
+                def globalSiteMap = index != -1 ? globalConfigs.get(index)."$hostgroupSite" : [:]
+                if (globalSiteMap.properties) {
+                    globalSiteMap = globalSiteMap.properties
+                }
+                filteredSiteMap.putAll(siteMap.findAll { !globalSiteMap.containsKey(it.key) })
+            }
         }
-        filteredSiteMap.putAll(siteMap.findAll { !globalSiteMap.containsKey(it.key) })
-      }
     }
-
     for (int j = 0; j < filteredNewConfigs.size(); j++) {
       def configurations = blueprintMap.host_groups.find { it.name == filteredNewConfigs.keySet().getAt(j) }.configurations
       if (!configurations) {
@@ -239,8 +245,10 @@ trait BlueprintService extends ClusterService {
           } else {
             def existingConf = configurations.get(index)
             def sitemap = existingConf."$site".properties == null ? existingConf."$site" : existingConf."$site".properties
-            values.each {
-              sitemap.putIfAbsent(it.key, it.value)
+            if (forced) {
+              sitemap.putAll(values)
+            } else {
+              values.each { sitemap.putIfAbsent(it.key, it.value) }
             }
           }
         }

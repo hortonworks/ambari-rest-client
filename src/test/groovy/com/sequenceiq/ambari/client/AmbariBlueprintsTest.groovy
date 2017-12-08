@@ -158,7 +158,7 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
     actual == expected
   }
 
-  def "test extend blueprint with existing configuration"() {
+  def "test extend blueprint with existing configuration"(boolean forced, String resultFile) {
     given:
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn.json").text
 
@@ -168,15 +168,20 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
             "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"],
             "core-site": ["fs.defaultFS": "localhost:9000"]
     ]
-    def blueprint = ambari.extendBlueprintGlobalConfiguration(json, config)
+    def blueprint = ambari.extendBlueprintGlobalConfiguration(json, config, forced)
 
     then:
-    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-config.json").text)
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream(resultFile).text)
     def actual = slurper.parseText(blueprint)
     actual == expected
+
+    where:
+    forced | resultFile
+    false  | "multi-node-hdfs-yarn-config.json"
+    true   | "multi-node-hdfs-yarn-forced-config.json"
   }
 
-  def "test extend blueprint with existing configuration advanced"() {
+  def "test extend blueprint with existing configuration advanced"(boolean forced, String resultFile) {
     given:
     def json = getClass().getClassLoader().getResourceAsStream("hdp-streaming.json").text
 
@@ -186,12 +191,17 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
                                           "*.falcon.graph.storage.directory": "/hadoopfs/fs1/falcon"],
             "zoo.cfg"                  : ["dataDir": "/hadoopfs/fs1/zookeeper"]
     ]
-    def blueprint = ambari.extendBlueprintGlobalConfiguration(json, config)
+    def blueprint = ambari.extendBlueprintGlobalConfiguration(json, config, forced)
 
     then:
-    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("hdp-streaming-modified.json").text)
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream(resultFile).text)
     def actual = slurper.parseText(blueprint)
     actual == expected
+
+    where:
+    forced | resultFile
+    false  | "hdp-streaming-modified.json"
+    true   | "hdp-streaming-forced-modified.json"
   }
 
   def "test extend blueprint with empty configuration"() {
@@ -207,7 +217,7 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
     actual == expected
   }
 
-  def "test extend blueprint with master heterogen configuration"() {
+  def "test extend blueprint with master heterogen configuration"(boolean forced, String resultFile) {
     given:
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen.json").text
 
@@ -218,15 +228,20 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
                     "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
             ]
     ]
-    def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, config)
+    def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, config, forced)
 
     then:
-    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen-config.json").text)
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream(resultFile).text)
     def actual = slurper.parseText(blueprint)
     actual == expected
+
+    where:
+    forced | resultFile
+    false  | "multi-node-hdfs-yarn-heterogen-config.json"
+    true   | "multi-node-hdfs-yarn-heterogen-forced-config.json"
   }
 
-  def "test extend blueprint with master and slave_1 heterogen configuration"() {
+  def "test extend blueprint with master and slave_1 heterogen configuration"(boolean forced, String resultFile) {
     given:
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen.json").text
 
@@ -241,15 +256,20 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
                     "hdfs-site": ["dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"]
             ]
     ]
-    def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, config)
+    def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, config, forced)
 
     then:
-    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen-master-slave-config.json").text)
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream(resultFile).text)
     def actual = slurper.parseText(blueprint)
     actual == expected
+
+    where:
+    forced | resultFile
+    false  | "multi-node-hdfs-yarn-heterogen-master-slave-config.json"
+    true   | "multi-node-hdfs-yarn-heterogen-master-slave-forced-config.json"
   }
 
-  def "test extend blueprint with master and slave_1 heterogen configuration with existing config"() {
+  def "test extend blueprint with master and slave_1 heterogen configuration with existing config"(boolean forced, String resultFile) {
     given:
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen-with-config.json").text
 
@@ -259,12 +279,17 @@ class AmbariBlueprintsTest extends AbstractAmbariClientTest {
                     "yarn-site": ["property-key": "property-value", "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"]
             ]
     ]
-    def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, config)
+    def blueprint = ambari.extendBlueprintHostGroupConfiguration(json, config, forced)
 
     then:
-    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-heterogen-with-config-result.json").text)
+    def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream(resultFile).text)
     def actual = slurper.parseText(blueprint)
     actual == expected
+
+    where:
+    forced | resultFile
+    false  | "multi-node-hdfs-yarn-heterogen-with-config-result.json"
+    true   | "multi-node-hdfs-yarn-heterogen-with-forced-config-result.json"
   }
 
   def "test extend blueprint global configuration with existing config and property block"() {

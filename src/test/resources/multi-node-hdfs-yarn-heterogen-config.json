@@ -33,13 +33,11 @@
       "configurations": [
         {
           "yarn-site": {
-            "property-key": "property-value",
-            "yarn.nodemanager.local-dirs": "/mnt/fs1/,/mnt/fs2/"
+            "property-key": "property-value"
           }
         },
         {
           "hdfs-site": {
-            "dfs.datanode.data.dir": "/mnt/fs1/,/mnt/fs2/"
           }
         }
       ],
