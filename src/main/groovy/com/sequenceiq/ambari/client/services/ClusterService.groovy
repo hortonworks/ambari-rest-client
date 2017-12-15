@@ -309,6 +309,12 @@ trait ClusterService extends CommonService {
     return template
   }
 
+  def String getVersionDefinition(String stackType, String repositoryVersion) {
+    Map resourceRequestMap = utils.getResourceRequestMap('version_definitions', ["VersionDefinition/stack_name": stackType,
+                                                                                 "VersionDefinition/repository_version": repositoryVersion])
+    return utils.getRawResource(resourceRequestMap)
+  }
+
   private boolean isAmbariGreaterThan(List baseVersion, version) {
     def act = version.split('\\.')
     for (int i = 0; i < baseVersion.size(); i++) {
