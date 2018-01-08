@@ -137,7 +137,7 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn.json").text
 
     when:
-    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, true, null)
+    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "hostname1.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, true, null)
 
     then:
     def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-kerb-forced.json").text)
@@ -150,7 +150,7 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-default-kerb.json").text
 
     when:
-    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, true, null, forced)
+    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "hostname1.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, true, null, forced)
 
     then:
     def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream(resultFile).text)
@@ -168,7 +168,7 @@ class AmbariKerberosTest extends AbstractAmbariClientTest {
     def json = getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-default-kerb_descriptor.json").text
 
     when:
-    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, false, null)
+    def blueprint = ambari.extendBlueprintWithKerberos(json, "mit-kdc", "hostname.node.dc1.consul", "hostname1.node.dc1.consul", "NODE.DC1.CONSUL", "node.dc1.consul,node.consul", null, null, false, null)
 
     then:
     def expected = slurper.parseText(getClass().getClassLoader().getResourceAsStream("multi-node-hdfs-yarn-default-kerb_descriptor_fixed.json").text)
