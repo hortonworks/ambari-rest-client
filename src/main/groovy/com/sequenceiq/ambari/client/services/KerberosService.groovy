@@ -125,7 +125,7 @@ trait KerberosService extends BlueprintService {
    * @param domains comma separated domain names
    * @return Returns the blueprint in JSON format with the extended kerberos configuration
    */
-  def String extendBlueprintWithKerberos(String blueprint,String kdcType, String kdcHosts, String realm, String domains, String ldapUrl, String containerDn,
+  def String extendBlueprintWithKerberos(String blueprint,String kdcType, String kdcHosts, String kdcAdminHost, String realm, String domains, String ldapUrl, String containerDn,
                                          Boolean useUdp, Integer kpropPort, boolean forced = false) {
     String krb5_conf_content = utils.getResourceContent('templates/krb5-conf-template.conf').replaceAll("udp_preference_limit_content", useUdp ? "0" : "1");
     if (kpropPort != null) {
@@ -136,7 +136,7 @@ trait KerberosService extends BlueprintService {
       krb5_conf_content = krb5_conf_content.replaceAll("iprop_port_content", "8888")
     }
     def config = [
-      "kerberos-env": ["realm"           : realm, "kdc_type": kdcType, "kdc_hosts": kdcHosts, "admin_server_host": kdcHosts,
+      "kerberos-env": ["realm"           : realm, "kdc_type": kdcType, "kdc_hosts": kdcHosts, "admin_server_host": kdcAdminHost,
                        "encryption_types": "aes des3-cbc-sha1 rc4 des-cbc-md5", "ldap_url": ldapUrl == null ? "" : ldapUrl,
                        "container_dn": containerDn == null ? "" : containerDn],
     ]
