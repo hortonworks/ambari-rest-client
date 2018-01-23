@@ -227,13 +227,26 @@ trait ClusterService extends CommonService {
   }
 
   /**
+   * Returns the full state of install process.
+   *
+   * @param request request id; default is 1
+   * @return progress in percentage
+   */
+  def Map<String, Object> getRequestStatus(Integer request) {
+    return utils.getAllResources("requests/$request", 'Requests')
+  }
+
+  /**
    * Returns the install progress state. If the install failed -1 returned.
    *
    * @param request request id; default is 1
    * @return progress in percentage
    */
-  def BigDecimal getRequestProgress(request) {
-    def response = utils.getAllResources("requests/$request", 'Requests')
+  def BigDecimal getRequestProgress(Integer request) {
+    return getRequestProgress(getRequestStatus(request))
+  }
+
+  def BigDecimal getRequestProgress(Map<String, Object> response) {
     def String status = response?.Requests?.request_status
     if (status && status.equals('FAILED')) {
       return new BigDecimal(-1)
