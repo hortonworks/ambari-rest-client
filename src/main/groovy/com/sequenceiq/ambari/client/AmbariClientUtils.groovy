@@ -30,12 +30,15 @@ import org.apache.http.conn.socket.ConnectionSocketFactory
 import org.apache.http.conn.socket.PlainConnectionSocketFactory
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.conn.ssl.SSLContexts
+import org.apache.http.conn.ssl.X509HostnameVerifier
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 
-import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLException
 import javax.net.ssl.SSLSession
+import javax.net.ssl.SSLSocket
 import java.security.Security
+import java.security.cert.X509Certificate
 
 @Slf4j
 class AmbariClientUtils {
@@ -197,6 +200,27 @@ class AmbariClientUtils {
             .loadKeyMaterial(KeystoreUtils.createKeyStore(clientCert, clientKey), 'consul'.toCharArray())
             .build();
     return context;
+  }
+
+  public static X509HostnameVerifier hostnameVerifier() {
+    return new X509HostnameVerifier() {
+      @Override
+      void verify(String s, SSLSocket sslSocket) throws IOException {
+      }
+
+      @Override
+      void verify(String s, X509Certificate x509Certificate) throws SSLException {
+      }
+
+      @Override
+      void verify(String s, String[] strings, String[] strings1) throws SSLException {
+      }
+
+      @Override
+      boolean verify(String s, SSLSession sslSession) {
+        return true
+      }
+    }
   }
 
   def Registry<ConnectionSocketFactory> setupSchemeRegistry(SSLContext sslContext) {

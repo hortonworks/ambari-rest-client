@@ -36,7 +36,6 @@ import groovyx.net.http.RESTClient
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 
-import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
 
 /**
@@ -74,7 +73,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
       connectionManager.setMaxTotal(1000);
       connectionManager.setDefaultMaxPerRoute(500);
       def httpClient = HttpClientBuilder.create()
-        .setHostnameVerifier(nullHostnameVerifier as HostnameVerifier)
+        .setHostnameVerifier(utils.hostnameVerifier())
         .setConnectionManager(connectionManager)
         .setDefaultRequestConfig().build();
       ambari.setClient(httpClient)
