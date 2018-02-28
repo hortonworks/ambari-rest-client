@@ -199,15 +199,6 @@ class AmbariClientUtils {
     return context;
   }
 
-  def HostnameVerifier hostnameVerifier() {
-    return new HostnameVerifier() {
-      @Override
-      boolean verify(String s, SSLSession sslSession) {
-        return true
-      }
-    }
-  }
-
   def Registry<ConnectionSocketFactory> setupSchemeRegistry(SSLContext sslContext) {
     RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.create();
     registryBuilder.register('http', PlainConnectionSocketFactory.getSocketFactory());
