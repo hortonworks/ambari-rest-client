@@ -73,7 +73,6 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
       connectionManager.setMaxTotal(1000);
       connectionManager.setDefaultMaxPerRoute(500);
       def httpClient = HttpClientBuilder.create()
-        .setHostnameVerifier(utils.hostnameVerifier())
         .setConnectionManager(connectionManager)
         .setDefaultRequestConfig().build();
       ambari.setClient(httpClient)

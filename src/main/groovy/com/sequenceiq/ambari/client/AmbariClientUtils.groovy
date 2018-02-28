@@ -227,7 +227,8 @@ class AmbariClientUtils {
     RegistryBuilder<ConnectionSocketFactory> registryBuilder = RegistryBuilder.create();
     registryBuilder.register('http', PlainConnectionSocketFactory.getSocketFactory());
     if (sslContext != null) {
-      registryBuilder.register('https', new SSLConnectionSocketFactory(sslContext));
+      SSLConnectionSocketFactory socketFactory = new SSLConnectionSocketFactory(sslContext, hostnameVerifier());
+      registryBuilder.register('https', socketFactory);
     }
     return registryBuilder.build();
   }
