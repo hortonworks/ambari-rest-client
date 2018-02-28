@@ -209,7 +209,7 @@ trait BlueprintService extends ClusterService {
    */
   def String extendBlueprintHostGroupConfiguration(String blueprintJson, Map<String, Map<String, Map<String, String>>> newConfigs, boolean forced = false) {
     def blueprintMap = slurper.parseText(blueprintJson)
-    def globalConfigs = blueprintMap.configurations ?: [:]
+    def globalConfigs = blueprintMap.configurations ?: []
     def filteredNewConfigs
     if (forced) {
       filteredNewConfigs = newConfigs

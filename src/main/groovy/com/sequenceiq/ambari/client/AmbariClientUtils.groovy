@@ -32,7 +32,9 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.conn.ssl.SSLContexts
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 
+import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLSession
 import java.security.Security
 
 @Slf4j
@@ -195,6 +197,15 @@ class AmbariClientUtils {
             .loadKeyMaterial(KeystoreUtils.createKeyStore(clientCert, clientKey), 'consul'.toCharArray())
             .build();
     return context;
+  }
+
+  def HostnameVerifier hostnameVerifier() {
+    return new HostnameVerifier() {
+      @Override
+      boolean verify(String s, SSLSession sslSession) {
+        return true
+      }
+    }
   }
 
   def Registry<ConnectionSocketFactory> setupSchemeRegistry(SSLContext sslContext) {
