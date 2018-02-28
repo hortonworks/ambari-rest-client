@@ -72,7 +72,9 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
               new PoolingHttpClientConnectionManager(utils.setupSchemeRegistry(sslContext));
       connectionManager.setMaxTotal(1000);
       connectionManager.setDefaultMaxPerRoute(500);
-      def httpClient = HttpClientBuilder.create().setConnectionManager(connectionManager)
+      def httpClient = HttpClientBuilder.create()
+        .setHostnameVerifier(utils.hostnameVerifier())
+        .setConnectionManager(connectionManager)
               .setDefaultRequestConfig().build();
       ambari.setClient(httpClient)
     }
