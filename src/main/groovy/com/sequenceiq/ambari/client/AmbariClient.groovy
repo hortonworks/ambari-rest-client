@@ -76,7 +76,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
       def httpClient = HttpClientBuilder.create()
         .setHostnameVerifier(nullHostnameVerifier as HostnameVerifier)
         .setConnectionManager(connectionManager)
-              .setDefaultRequestConfig().build();
+        .setDefaultRequestConfig().build();
       ambari.setClient(httpClient)
     }
 
