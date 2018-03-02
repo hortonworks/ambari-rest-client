@@ -33,6 +33,7 @@ import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
+import org.apache.http.HttpHost
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 
@@ -61,7 +62,8 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    * @param serverCert server certificate, used in 2-way-ssl
    */
   AmbariClient(String host = 'localhost', String port = '8080', String user = 'admin', String password = 'admin',
-               String clientCert = null, String clientKey = null, String serverCert = null) {
+               String clientCert = null, String clientKey = null, String serverCert = null,
+               String proxyHost = null, Integer proxyPort = null, String proxyUser = null, String proxyPassword = null) {
     validateClientParams(host, port, user, password)
     def http = clientCert == null ? 'http' : 'https';
     ambari = new RESTClient("${http}://${host}:${port}/api/v1/" as String)
@@ -69,17 +71,32 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
     if (clientCert) {
       SSLContext sslContext = utils.setupSSLContext(clientCert, clientKey, serverCert);
       PoolingHttpClientConnectionManager connectionManager =
-              new PoolingHttpClientConnectionManager(utils.setupSchemeRegistry(sslContext));
+        new PoolingHttpClientConnectionManager(utils.setupSchemeRegistry(sslContext));
       connectionManager.setMaxTotal(1000);
       connectionManager.setDefaultMaxPerRoute(500);
-      def httpClient = HttpClientBuilder.create()
+      def httpClientBuilder = HttpClientBuilder.create()
         .setConnectionManager(connectionManager)
-        .setDefaultRequestConfig().build();
-      ambari.setClient(httpClient)
+        .setDefaultRequestConfig();
+      if (isProxySpecified(proxyHost, proxyPort)) {
+        httpClientBuilder
+          .setProxy(new HttpHost(proxyHost, proxyPort))
+      }
+      ambari.setClient(httpClientBuilder.build())
     }
 
+    if (isProxySpecified(proxyHost, proxyPort) && isProxyRequiresAuthentication(proxyUser, proxyPassword)) {
+      ambari.headers["Proxy-Authorization"] = 'Basic ' + "$proxyUser:$proxyPassword".getBytes('iso-8859-1').encodeBase64()
+    }
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
     ambari.headers['X-Requested-By'] = 'ambari'
+  }
+
+  private boolean isProxySpecified(String proxyHost, Integer proxyPort) {
+    proxyHost != null && proxyPort != null
+  }
+
+  private boolean isProxyRequiresAuthentication(String proxyUser, String proxyPass) {
+    proxyUser != null && proxyPass != null
   }
 
   def nullHostnameVerifier = [
