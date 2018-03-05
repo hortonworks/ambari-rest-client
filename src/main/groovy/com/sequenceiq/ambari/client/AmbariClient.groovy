@@ -34,6 +34,10 @@ import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 import org.apache.http.HttpHost
+import org.apache.http.auth.AuthScope
+import org.apache.http.auth.UsernamePasswordCredentials
+import org.apache.http.client.CredentialsProvider
+import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 
@@ -78,15 +82,17 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
         .setConnectionManager(connectionManager)
         .setDefaultRequestConfig();
       if (isProxySpecified(proxyHost, proxyPort)) {
-        httpClientBuilder
-          .setProxy(new HttpHost(proxyHost, proxyPort))
+        httpClientBuilder.setProxy(new HttpHost(proxyHost, proxyPort))
+        if (isProxyRequiresAuthentication(proxyUser, proxyPassword)) {
+          CredentialsProvider credsProvider = new BasicCredentialsProvider();
+          credsProvider.setCredentials(new AuthScope(proxyHost, proxyPort),
+            new UsernamePasswordCredentials(proxyUser, proxyPassword));
+          httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
+        }
       }
       ambari.setClient(httpClientBuilder.build())
     }
 
-    if (isProxySpecified(proxyHost, proxyPort) && isProxyRequiresAuthentication(proxyUser, proxyPassword)) {
-      ambari.headers["Proxy-Authorization"] = 'Basic ' + "$proxyUser:$proxyPassword".getBytes('iso-8859-1').encodeBase64()
-    }
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
     ambari.headers['X-Requested-By'] = 'ambari'
   }
