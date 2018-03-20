@@ -125,6 +125,7 @@ trait KerberosService extends BlueprintService {
    * @param domains comma separated domain names
    * @return Returns the blueprint in JSON format with the extended kerberos configuration
    */
+  @Deprecated
   def String extendBlueprintWithKerberos(String blueprint,String kdcType, String kdcHosts, String kdcAdminHost, String realm, String domains, String ldapUrl, String containerDn,
                                          Boolean useUdp, Integer kpropPort, boolean forced = false) {
     String krb5_conf_content = utils.getResourceContent('templates/krb5-conf-template.conf').replaceAll("udp_preference_limit_content", useUdp ? "0" : "1");
