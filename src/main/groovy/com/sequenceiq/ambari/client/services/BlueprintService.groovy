@@ -171,6 +171,7 @@ trait BlueprintService extends ClusterService {
    * @param newConfigs global configuration map - <site_config_name <config_name, config_value>>
    * @return extended blueprints JSON as String
    */
+  @Deprecated
   def String extendBlueprintGlobalConfiguration(String blueprintJson, Map<String, Map<String, String>> newConfigs, boolean forced = false) {
     def blueprintMap = slurper.parseText(blueprintJson)
     def configurations = blueprintMap.configurations
@@ -207,6 +208,7 @@ trait BlueprintService extends ClusterService {
    * @param newConfigs host group level configurations - <host_group_name <site_config_name <config_name, config_value>>>
    * @return extended blueprints JSON as String
    */
+  @Deprecated
   def String extendBlueprintHostGroupConfiguration(String blueprintJson, Map<String, Map<String, Map<String, String>>> newConfigs, boolean forced = false) {
     def blueprintMap = slurper.parseText(blueprintJson)
     def globalConfigs = blueprintMap.configurations ?: []
