@@ -112,6 +112,22 @@ trait ClusterService extends CommonService {
   }
 
   /**
+   * Creates a cluster with the given cluster creation template
+   *
+   * @param clusterName name of the cluster
+   * @param template the cluster creation template
+   * @return the template with method was invoked
+   * @throws HttpResponseException in case of error
+   */
+  def String createClusterFromTemplate(String clusterName, String template) throws HttpResponseException {
+      if (debugEnabled) {
+        println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
+      }
+      ambari.post(path: "clusters/$clusterName", body: template, { it })
+      return template
+  }
+
+  /**
    * Creates a cluster with the given blueprint and host group - host association.
    *
    * @param clusterName name of the cluster
