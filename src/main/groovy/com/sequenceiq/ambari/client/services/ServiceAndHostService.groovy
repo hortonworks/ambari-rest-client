@@ -409,6 +409,27 @@ trait ServiceAndHostService extends ClusterService {
   }
 
   /**
+   * Returns all the components states and categories grouped by hosts.
+   *
+   * @return host name - [component name - state]
+   */
+  def List<Map<String, String>> getHostComponentsStatesCategorized() {
+    def componentList = []
+    utils.getAllResources('hosts', 'host_components/HostRoles/state,host_components/component/ServiceComponentInfo/category')
+            .items.collectEntries {
+      def hostName = it.Hosts.host_name
+      it.host_components.collectEntries {
+        componentList << [('host'): hostName,
+         ('component_name'): it.component[0].ServiceComponentInfo.component_name,
+         ('category'): it.component[0].ServiceComponentInfo.category,
+         ('state'): it.HostRoles.state]
+      }
+    }
+
+    componentList
+  }
+
+  /**
    * Stops all the components on the specified hosts.
    *
    * @param hostNames list of FQDN
