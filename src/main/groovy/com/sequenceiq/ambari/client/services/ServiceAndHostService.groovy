@@ -419,10 +419,13 @@ trait ServiceAndHostService extends ClusterService {
             .items.collectEntries {
       def hostName = it.Hosts.host_name
       it.host_components.collectEntries {
-        componentList << [('host'): hostName,
-         ('component_name'): it.component[0].ServiceComponentInfo.component_name,
-         ('category'): it.component[0].ServiceComponentInfo.category,
-         ('state'): it.HostRoles.state]
+        def state = it.HostRoles.state
+        it.component.collectEntries {
+          componentList << [('host')          : hostName,
+                            ('component_name'): it.ServiceComponentInfo.component_name,
+                            ('category')      : it.ServiceComponentInfo.category,
+                            ('state')         : state]
+        }
       }
     }
 
