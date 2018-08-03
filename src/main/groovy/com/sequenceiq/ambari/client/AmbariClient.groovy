@@ -23,6 +23,8 @@ import com.sequenceiq.ambari.client.services.ConfigService
 import com.sequenceiq.ambari.client.services.GroupService
 import com.sequenceiq.ambari.client.services.HBaseService
 import com.sequenceiq.ambari.client.services.KerberosService
+import com.sequenceiq.ambari.client.services.LdapService
+import com.sequenceiq.ambari.client.services.SSOService
 import com.sequenceiq.ambari.client.services.ServiceAndHostService
 import com.sequenceiq.ambari.client.services.StackService
 import com.sequenceiq.ambari.client.services.TaskService
@@ -48,7 +50,7 @@ import javax.net.ssl.SSLContext
  */
 @Slf4j
 class AmbariClient implements AlertService, BlueprintService, ConfigService, GroupService, HBaseService, KerberosService, ServiceAndHostService, StackService,
-    TaskService, UserService, ViewService {
+    TaskService, UserService, ViewService, SSOService, LdapService {
 
   private static final String SLAVE = 'slave_'
 
