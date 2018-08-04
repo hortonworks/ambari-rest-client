@@ -10,6 +10,7 @@ apply plugin: 'groovy'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 sourceCompatibility = 1.7
 group = 'com.sequenceiq'
@@ -46,6 +47,16 @@ repositories {
     mavenCentral()
     maven { url "https://cloudbreak-maven.s3.amazonaws.com/snapshots" }
     maven { url "https://cloudbreak-maven.s3.amazonaws.com/releases" }
+}
+
+publishing {
+  publications {
+    maven(MavenPublication) {
+      artifactId = jar.baseName
+
+      from components.java
+    }
+  }
 }
 
 dependencies {
