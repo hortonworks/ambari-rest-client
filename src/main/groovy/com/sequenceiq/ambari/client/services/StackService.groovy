@@ -40,6 +40,22 @@ trait StackService extends ClusterService {
     return utils.getRawResource(resourceRequestMap)
   }
 
+  def String getLatestStackRepositoryAsJson(String cluster, String osType, String repoId) throws HttpResponseException {
+    def versions = getStackAndRepositoryVersions(cluster)
+    String path = "clusters/$cluster/stack_versions/${versions["stackVersion"]}/repository_versions/${versions["repoVersion"]}/operating_systems/$osType/repositories/$repoId";
+    Map resourceRequestMap = utils.getResourceRequestMap(path, null)
+    return utils.getRawResource(resourceRequestMap)
+  }
+
+  def getStackAndRepositoryVersions(String cluster) {
+    String path = "clusters/$cluster/stack_versions/";
+    def stackVersionsJson = utils.slurp(path, null)
+    return [
+            stackVersion: stackVersionsJson.items.last().ClusterStackVersions.id,
+            repoVersion: stackVersionsJson.items.last().ClusterStackVersions.repository_version
+    ]
+  }
+
   /**
    * Adds a Stack Repository to the Ambari server.
    * This API may be invoked multiple times to set Base URL for multiple OS types or Stack versions. If this step is not performed,
