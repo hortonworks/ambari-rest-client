@@ -33,11 +33,8 @@ uploadArchives {
     repositories {
         mavenDeployer {
             configuration = configurations.deployerJars
-            repository(url: "s3://cloudbreak-maven/releases") {
-                authentication(userName: "$System.env.AWS_ACCESS_KEY", passphrase: "$System.env.AWS_SECRET_ACCESS_KEY")
-            }
-            snapshotRepository(url: "s3://cloudbreak-maven/snapshots") {
-                authentication(userName: "$System.env.AWS_ACCESS_KEY", passphrase: "$System.env.AWS_SECRET_ACCESS_KEY")
+            repository(url: "$System.env.NEXUS_URL") {
+                authentication(userName: "$System.env.NEXUS_USER", password: "$System.env.NEXUS_PASSWORD")
             }
         }
     }
@@ -45,8 +42,6 @@ uploadArchives {
 
 repositories {
     mavenCentral()
-    maven { url "https://cloudbreak-maven.s3.amazonaws.com/snapshots" }
-    maven { url "https://cloudbreak-maven.s3.amazonaws.com/releases" }
 }
 
 publishing {
