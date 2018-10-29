@@ -19,6 +19,7 @@ package com.sequenceiq.ambari.client.services
 
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
+import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
 
 @Slf4j
@@ -285,5 +286,46 @@ trait BlueprintService extends ClusterService {
     ambari.post(path: "clusters/${getClusterName()}/hosts", body: json, {
       utils.getRequestId(it)
     })
+  }
+
+  /**
+   * Add hosts with rack infos to the cluster and install all the services defined in the blueprint's host group.
+   *
+   * @param bpName name of the blueprint
+   * @param hostGroup which host group to add the hosts to
+   * @param hostsWithRackInfo list of hosts in form of FQDN with rack info
+   */
+  def int addHostsAndRackInfoWithBlueprint(String bpName, String hostGroup, Map<String, String> hostsWithRackInfo) throws HttpResponseException {
+    def hostMap = hostsWithRackInfo.collect { ["blueprint": bpName, "host_group": hostGroup, "host_name": it.key, "rack_info": it.value] }
+    def json = new JsonBuilder(hostMap).toPrettyString()
+    ambari.post(path: "clusters/${getClusterName()}/hosts", body: json, {
+      utils.getRequestId(it)
+    })
+  }
+
+  /**
+   * Update rack information for host
+   *
+   * @param host
+   * @param rackInfo
+   * @throws HttpResponseException
+   */
+  def void updateRack(String host, String rackInfo) throws HttpResponseException {
+    def request = [
+            RequestInfo: [
+                    context: "Set Rack",
+                    query: "Hosts/host_name.in(" + host + ")"
+            ],
+            Body: [
+                    Hosts: [
+                            rack_info: rackInfo
+                    ]
+            ]
+    ]
+    def Map<String, ?> putRequestMap = [:]
+    putRequestMap.put('requestContentType', ContentType.URLENC)
+    putRequestMap.put('path', "clusters/${getClusterName()}/hosts")
+    putRequestMap.put('body', new JsonBuilder(request).toPrettyString());
+    ambari.put(putRequestMap)
   }
 }
