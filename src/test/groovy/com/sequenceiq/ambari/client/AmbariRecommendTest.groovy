@@ -138,7 +138,7 @@ class AmbariRecommendTest extends AbstractAmbariClientTest {
     } else if (thePath == TestResources.BLUEPRINT_MULTI2.uri()) {
       json = "hdp-multinode-default2.json"
     } else {
-      log.error("Unsupported resource path: {}", thePath)
+      log.info("Unsupported resource path: {}", thePath)
     }
     return json
   }

@@ -85,7 +85,7 @@ class AmbariTasksTest extends AbstractAmbariClientTest {
           break
       }
     } else {
-      log.error("Unsupported resource path: {}", thePath)
+      log.info("Unsupported resource path: {}", thePath)
     }
     return json
   }
