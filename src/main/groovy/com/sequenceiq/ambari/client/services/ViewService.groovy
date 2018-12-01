@@ -100,7 +100,7 @@ trait ViewService extends ClusterService {
           }
       }
     } catch (e) {
-      log.error('Error occurred during GET request to viewinfo, exception: ', e)
+      log.info('Error occurred during GET request to viewinfo, exception: ', e)
     }
     return result
   }

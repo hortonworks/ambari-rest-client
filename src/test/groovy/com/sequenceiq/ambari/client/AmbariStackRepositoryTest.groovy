@@ -70,7 +70,7 @@ class AmbariStackRepositoryTest extends AbstractAmbariClientTest {
     if (thePath == TestResources.STACKS.uri()) {
       json = "stack_repository.json"
     } else {
-      log.error("Unsupported resource path: {}", thePath)
+      log.info("Unsupported resource path: {}", thePath)
     }
     return json
   }

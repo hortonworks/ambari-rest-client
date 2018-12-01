@@ -75,7 +75,7 @@ class AmbariServiceConfigurationTest extends AbstractAmbariClientTest {
     } else if (thePath == TestResources.CONFIGURATIONS.uri()) {
         json = "service-config-versions.json"
     } else {
-      log.error("Unsupported resource path: {}", thePath)
+      log.info("Unsupported resource path: {}", thePath)
     }
     return json
   }
