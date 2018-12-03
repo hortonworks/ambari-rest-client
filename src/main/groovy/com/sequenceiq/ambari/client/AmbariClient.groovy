@@ -39,18 +39,22 @@ import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.CredentialsProvider
+import org.apache.http.conn.ssl.SSLContextBuilder
+import org.apache.http.conn.ssl.TrustStrategy
 import org.apache.http.impl.client.BasicCredentialsProvider
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 
 import javax.net.ssl.SSLContext
+import java.security.cert.CertificateException
+import java.security.cert.X509Certificate
 
 /**
  * Basic client to send requests to the Ambari server.
  */
 @Slf4j
 class AmbariClient implements AlertService, BlueprintService, ConfigService, GroupService, HBaseService, KerberosService, ServiceAndHostService, StackService,
-    TaskService, UserService, ViewService, SSOService, LdapService {
+        TaskService, UserService, ViewService, SSOService, LdapService {
 
   private static final String SLAVE = 'slave_'
 
@@ -69,32 +73,57 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    */
   AmbariClient(String host = 'localhost', String port = '8080', String user = 'admin', String password = 'admin',
                String clientCert = null, String clientKey = null, String serverCert = null,
-               String proxyHost = null, Integer proxyPort = null, String proxyUser = null, String proxyPassword = null) {
+               String proxyHost = null, Integer proxyPort = null, String proxyUser = null, String proxyPassword = null,
+               String basePath = "", boolean https = false) {
     validateClientParams(host, port, user, password)
-    def http = clientCert == null ? 'http' : 'https';
-    ambari = new RESTClient("${http}://${host}:${port}/api/v1/" as String)
+    def http = clientCert == null && !https ? 'http' : 'https';
+    ambari = new RESTClient("${http}://${host}:${port}${basePath}/api/v1/" as String)
 
     if (clientCert) {
       SSLContext sslContext = utils.setupSSLContext(clientCert, clientKey, serverCert);
       PoolingHttpClientConnectionManager connectionManager =
-        new PoolingHttpClientConnectionManager(utils.setupSchemeRegistry(sslContext));
+              new PoolingHttpClientConnectionManager(utils.setupSchemeRegistry(sslContext));
       connectionManager.setMaxTotal(1000);
       connectionManager.setDefaultMaxPerRoute(500);
       def httpClientBuilder = HttpClientBuilder.create()
-        .setConnectionManager(connectionManager)
-        .setDefaultRequestConfig();
+              .setConnectionManager(connectionManager)
+              .setDefaultRequestConfig();
       if (isProxySpecified(proxyHost, proxyPort)) {
         httpClientBuilder.setProxy(new HttpHost(proxyHost, proxyPort))
         if (isProxyRequiresAuthentication(proxyUser, proxyPassword)) {
           CredentialsProvider credsProvider = new BasicCredentialsProvider();
           credsProvider.setCredentials(new AuthScope(proxyHost, proxyPort),
-            new UsernamePasswordCredentials(proxyUser, proxyPassword));
+                  new UsernamePasswordCredentials(proxyUser, proxyPassword));
           httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
         }
       }
       ambari.setClient(httpClientBuilder.build())
     }
 
+    ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
+    ambari.headers['X-Requested-By'] = 'ambari'
+  }
+
+  AmbariClient(String host, String port, String user, String password, String basePath, boolean https) {
+    validateClientParams(host, port, user, password)
+    def http = https ? 'https' : 'http';
+    ambari = new RESTClient("${http}://${host}:${port}${basePath}/api/v1/" as String)
+    if (https) {
+      def sslContext = new SSLContextBuilder().loadTrustMaterial(null, new TrustStrategy()
+        {
+          public boolean isTrusted(X509Certificate[] arg0, String arg1) throws CertificateException {
+            return true;
+          }
+        }).build()
+      PoolingHttpClientConnectionManager connectionManager =
+              new PoolingHttpClientConnectionManager(utils.setupSchemeRegistry(sslContext));
+      connectionManager.setMaxTotal(1000);
+      connectionManager.setDefaultMaxPerRoute(500);
+      def httpClientBuilder = HttpClientBuilder.create()
+              .setConnectionManager(connectionManager)
+              .setDefaultRequestConfig();
+      ambari.setClient(httpClientBuilder.build());
+    }
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
     ambari.headers['X-Requested-By'] = 'ambari'
   }
@@ -108,7 +137,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
   }
 
   def nullHostnameVerifier = [
-    verify: { hostname, session -> true }
+          verify: { hostname, session -> true }
   ]
 
   def void validateClientParams(String host, String port, String user, String password) {
