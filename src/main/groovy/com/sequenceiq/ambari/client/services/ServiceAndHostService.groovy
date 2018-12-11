@@ -297,6 +297,16 @@ trait ServiceAndHostService extends ClusterService {
   }
 
   /**
+   * Init the given components on a host.
+   *
+   * @return map of the component names and their request id since its an async call
+   * @throws HttpResponseException in case the component is not found
+   */
+  def Map<String, Integer> initComponentsOnHost(String hostName, List<String> components) throws HttpResponseException {
+    setComponentsState(hostName, components, 'INIT')
+  }
+
+  /**
    * Restarts the given components of a service.
    */
   def int restartServiceComponents(String service, List<String> components) {
