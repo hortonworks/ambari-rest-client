@@ -17,6 +17,7 @@
  */
 package com.sequenceiq.ambari.client.services
 
+
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
@@ -249,7 +250,7 @@ trait ServiceAndHostService extends ClusterService {
           throws HttpResponseException {
     def resp = [:]
     components.each {
-      def id = setComponentState(hostName, it, state)
+      def id = setComponentState.call(hostName, it, state)
       if (id) {
         resp << [(it): id]
       }
@@ -257,7 +258,7 @@ trait ServiceAndHostService extends ClusterService {
     return resp
   }
 
-  private def setComponentState(String hostName, String component, String state) {
+  private def setComponentState = { String hostName, String component, String state ->
     if (debugEnabled) {
       println "[DEBUG] PUT ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components/$component"
     }
