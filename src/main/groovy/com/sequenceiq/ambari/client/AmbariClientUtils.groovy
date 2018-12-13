@@ -26,6 +26,7 @@ import org.apache.http.NoHttpResponseException
 import org.apache.http.client.ClientProtocolException
 import org.apache.http.config.Registry
 import org.apache.http.config.RegistryBuilder
+import org.apache.http.conn.HttpHostConnectException
 import org.apache.http.conn.socket.ConnectionSocketFactory
 import org.apache.http.conn.socket.PlainConnectionSocketFactory
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
@@ -89,9 +90,12 @@ class AmbariClientUtils {
     } catch (e) {
       def clazz = e.class
       log.info('Error occurred during GET request to {}, exception: ', resourceRequestMap, e)
-      if (clazz == NoHttpResponseException.class || clazz == ConnectException.class
-              || clazz == ClientProtocolException.class || clazz == NoRouteToHostException.class
+      if (clazz == NoHttpResponseException.class
+              || clazz == ConnectException.class
+              || clazz == ClientProtocolException.class
+              || clazz == NoRouteToHostException.class
               || clazz == UnknownHostException.class
+              || clazz == HttpHostConnectException.class
               || (clazz == HttpResponseException.class && (e.message == 'Bad credentials' || e.statusCode == 403))) {
         throw new AmbariConnectionException("Cannot connect to Ambari ${ambariClient.ambari.getUri()}")
       }
