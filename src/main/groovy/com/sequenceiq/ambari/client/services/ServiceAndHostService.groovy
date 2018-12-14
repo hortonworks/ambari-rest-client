@@ -248,32 +248,29 @@ trait ServiceAndHostService extends ClusterService {
 
   private def Map<String, Integer> setComponentsState(String hostName, List<String> components, String state)
           throws HttpResponseException {
-    def resp = [:]
-    components.each {
-      def id = setComponentState.call(hostName, it, state)
-      if (id) {
-        resp << [(it): id]
-      }
-    }
-    return resp
-  }
-
-  private def setComponentState = { String hostName, String component, String state ->
     if (debugEnabled) {
-      println "[DEBUG] PUT ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components/$component"
+      println "[DEBUG] PUT ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components"
     }
     Map bodyMap = [
-            HostRoles  : [state: state.toUpperCase()],
-            RequestInfo: [context: "${component.toUpperCase()} ${state.toUpperCase()}"]
+            RequestInfo : [
+                    context : "${hostName.toUpperCase()} components ${state.toUpperCase()}",
+                    operation_level : [
+                            level : "HOST",
+                            cluster_name : getClusterName(),
+                            host_name : hostName
+                    ],
+                    query : "HostRoles/component_name.in(" + components.join(',') + ")"
+            ],
+            HostRoles : [
+                    state : state.toUpperCase()
+            ]
     ]
     def Map<String, ?> putRequestMap = [:]
     putRequestMap.put('requestContentType', ContentType.URLENC)
-    putRequestMap.put('path', "clusters/${getClusterName()}/hosts/$hostName/host_components/${component.toUpperCase()}")
+    putRequestMap.put('path', "clusters/${getClusterName()}/hosts/$hostName/host_components")
     putRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
     def response = ambari.put(putRequestMap).getAt('responseData')?.getAt('str')
-    if (response) {
-      slurper.parseText(response)?.Requests?.id
-    }
+    return response ? ["SET_STATE_$state" : slurper.parseText(response)?.Requests?.id] : ["SET_STATE_$state" : -1]
   }
 
   /**
