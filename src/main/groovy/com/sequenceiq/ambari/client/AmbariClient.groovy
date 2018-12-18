@@ -88,15 +88,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
       def httpClientBuilder = HttpClientBuilder.create()
               .setConnectionManager(connectionManager)
               .setDefaultRequestConfig();
-      if (isProxySpecified(proxyHost, proxyPort)) {
-        httpClientBuilder.setProxy(new HttpHost(proxyHost, proxyPort))
-        if (isProxyRequiresAuthentication(proxyUser, proxyPassword)) {
-          CredentialsProvider credsProvider = new BasicCredentialsProvider();
-          credsProvider.setCredentials(new AuthScope(proxyHost, proxyPort),
-                  new UsernamePasswordCredentials(proxyUser, proxyPassword));
-          httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
-        }
-      }
+      setupProxy(httpClientBuilder, proxyHost, proxyPort, proxyUser, proxyPassword)
       ambari.setClient(httpClientBuilder.build())
     }
 
@@ -104,7 +96,20 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
     ambari.headers['X-Requested-By'] = 'ambari'
   }
 
-  AmbariClient(String host, String port, String user, String password, String basePath, boolean https) {
+  private void setupProxy(HttpClientBuilder httpClientBuilder, String proxyHost, int proxyPort, String proxyUser, String proxyPassword) {
+    if (isProxySpecified(proxyHost, proxyPort)) {
+      httpClientBuilder.setProxy(new HttpHost(proxyHost, proxyPort))
+      if (isProxyRequiresAuthentication(proxyUser, proxyPassword)) {
+        CredentialsProvider credsProvider = new BasicCredentialsProvider();
+        credsProvider.setCredentials(new AuthScope(proxyHost, proxyPort),
+                new UsernamePasswordCredentials(proxyUser, proxyPassword));
+        httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
+      }
+    }
+  }
+
+  AmbariClient(String host, String port, String user, String password, String basePath, boolean https,
+               String proxyHost = null, Integer proxyPort = null, String proxyUser = null, String proxyPassword = null) {
     validateClientParams(host, port, user, password)
     def http = https ? 'https' : 'http';
     ambari = new RESTClient("${http}://${host}:${port}${basePath}/api/v1/" as String)
@@ -122,6 +127,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
       def httpClientBuilder = HttpClientBuilder.create()
               .setConnectionManager(connectionManager)
               .setDefaultRequestConfig();
+      setupProxy(httpClientBuilder, proxyHost, proxyPort, proxyUser, proxyPassword)
       ambari.setClient(httpClientBuilder.build());
     }
     ambari.headers['Authorization'] = 'Basic ' + "$user:$password".getBytes('iso-8859-1').encodeBase64()
