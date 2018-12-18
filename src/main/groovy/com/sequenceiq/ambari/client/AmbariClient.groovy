@@ -96,7 +96,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
     ambari.headers['X-Requested-By'] = 'ambari'
   }
 
-  private void setupProxy(HttpClientBuilder httpClientBuilder, String proxyHost, int proxyPort, String proxyUser, String proxyPassword) {
+  private void setupProxy(HttpClientBuilder httpClientBuilder, String proxyHost, Integer proxyPort, String proxyUser, String proxyPassword) {
     if (isProxySpecified(proxyHost, proxyPort)) {
       httpClientBuilder.setProxy(new HttpHost(proxyHost, proxyPort))
       if (isProxyRequiresAuthentication(proxyUser, proxyPassword)) {
