@@ -72,6 +72,15 @@ trait KerberosService extends BlueprintService {
     ambari.put(kdcPut)
   }
 
+  def void setKerberosPrincipal(String principal, String password) {
+    def body = ['Credential': ['principal': principal, 'key': password, 'type':'temporary']]
+    def Map<String, ?> kdcPost = [:]
+    kdcPost.put('requestContentType', ContentType.URLENC)
+    kdcPost.put('path', "clusters/${getClusterName()}/credentials/kdc.admin.credential")
+    kdcPost.put('body', new JsonBuilder(body).toPrettyString())
+    ambari.post(kdcPost)
+  }
+
   /**
    * Enables kerberos security on the cluster. It will generate the necessary keytabs using the previously
    * provided krb5-conf.
