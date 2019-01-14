@@ -305,6 +305,21 @@ trait ServiceAndHostService extends ClusterService {
   }
 
   /**
+   * Restart all components on all hosts in a cluster
+   * @param clusterName
+   * @return Operation id
+   */
+  def int restartAllServices(String clusterName){
+    Map bodyMap = [
+            'RequestInfo'              : [command: 'RESTART', context: 'Restart all services', operation_level:'host_component'],
+            'Requests/resource_filters': [[hosts_predicate: "HostRoles/cluster_name=$clusterName"]]
+    ]
+    ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), {
+      utils.getRequestId(it)
+    })
+  }
+
+  /**
    * Restarts the given components of a service.
    */
   def int restartServiceComponents(String service, List<String> components) {
