@@ -23,7 +23,7 @@ class AmbariClientMain {
   public static void main(String[] args) {
     def host = 'localhost'
     def port = '8080'
-    if (args.size == 2) {
+    if (args.length == 2) {
       host = args[0]
       port = args[1]
     }
