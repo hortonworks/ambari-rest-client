@@ -296,7 +296,7 @@ trait BlueprintService extends ClusterService {
    * @param hostsWithRackInfo list of hosts in form of FQDN with rack info
    */
   def int addHostsAndRackInfoWithBlueprint(String bpName, String hostGroup, Map<String, String> hostsWithRackInfo) throws HttpResponseException {
-    def hostMap = hostsWithRackInfo.collect { ["blueprint": bpName, "host_group": hostGroup, "host_name": it.key, "rack_info": it.value] }
+    def hostMap = hostsWithRackInfo.collect { ["blueprint": bpName, "host_group": hostGroup, "host_name": it.key, "Hosts/rack_info": it.value] }
     def json = new JsonBuilder(hostMap).toPrettyString()
     ambari.post(path: "clusters/${getClusterName()}/hosts", body: json, {
       utils.getRequestId(it)
