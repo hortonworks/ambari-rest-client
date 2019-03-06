@@ -19,6 +19,8 @@ package com.sequenceiq.ambari.client.services
 
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
+import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait ViewService extends ClusterService {
@@ -26,7 +28,7 @@ trait ViewService extends ClusterService {
   /**
    * Creates a default files view to browse HDFS.
    */
-  def void createFilesView() {
+  def void createFilesView() throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def viewInfo = [
       "instance_name" : "files",
       "label"         : "Files View",
@@ -40,7 +42,7 @@ trait ViewService extends ClusterService {
   /**
    * Creates a default PIG view.
    */
-  def void createPigView() {
+  def void createPigView() throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def viewInfo = [
       "instance_name" : "pig",
       "label"         : "Pig View",
@@ -58,7 +60,7 @@ trait ViewService extends ClusterService {
   /**
    * Creates a default HIVE view.
    */
-  def void createHiveView() {
+  def void createHiveView() throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def viewInfo = [
       "instance_name" : "hive",
       "label"         : "Hive View",
@@ -79,12 +81,12 @@ trait ViewService extends ClusterService {
    * @param viewInfo required properties for the view
    * @param type type of the view
    */
-  def void createView(Map viewInfo, String type) {
+  def void createView(Map viewInfo, String type) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def body = new JsonBuilder(["ViewInstanceInfo": viewInfo]).toPrettyString()
     ambari.post(path: "views/${type.toUpperCase()}/versions/1.0.0/instances/${type.toLowerCase()}", body: body, { it })
   }
 
-  def getViewDefinitions() {
+  def getViewDefinitions() throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     List<String> result = new ArrayList<>()
     try {
       def slurper = new groovy.json.JsonSlurper()
@@ -104,5 +106,4 @@ trait ViewService extends ClusterService {
     }
     return result
   }
-
 }

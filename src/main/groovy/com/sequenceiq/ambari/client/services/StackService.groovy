@@ -17,10 +17,12 @@
  */
 package com.sequenceiq.ambari.client.services
 
+import com.sequenceiq.ambari.client.AmbariConnectionException
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait StackService extends ClusterService {
@@ -32,22 +34,21 @@ trait StackService extends ClusterService {
    * @param stackVersion version of the stack e.g. 2.2
    * @param osType type of os e.g redhat6
    * @param repoId e.g HDP-2.2 or HDP-UTILS-1.1.0.20
-   * @throws HttpResponseException in case of error
    */
-  def String getStackRepositoryAsJson(String stack, String stackVersion, String osType, String repoId) throws HttpResponseException {
+  def String getStackRepositoryAsJson(String stack, String stackVersion, String osType, String repoId) throws AmbariConnectionException {
     String path = "stacks/$stack/versions/$stackVersion/operating_systems/$osType/repositories/$repoId";
     Map resourceRequestMap = utils.getResourceRequestMap(path, null)
     return utils.getRawResource(resourceRequestMap)
   }
 
-  def String getLatestStackRepositoryAsJson(String cluster, String osType, String repoId) throws HttpResponseException {
+  def String getLatestStackRepositoryAsJson(String cluster, String osType, String repoId) throws AmbariConnectionException {
     def versions = getStackAndRepositoryVersions(cluster)
     String path = "clusters/$cluster/stack_versions/${versions["stackVersion"]}/repository_versions/${versions["repoVersion"]}/operating_systems/$osType/repositories/$repoId";
     Map resourceRequestMap = utils.getResourceRequestMap(path, null)
     return utils.getRawResource(resourceRequestMap)
   }
 
-  def getStackAndRepositoryVersions(String cluster) {
+  def getStackAndRepositoryVersions(String cluster) throws AmbariConnectionException {
     String path = "clusters/$cluster/stack_versions/";
     def stackVersionsJson = utils.slurp(path, null)
     return [
@@ -67,9 +68,9 @@ trait StackService extends ClusterService {
    * @param repoId e.g HDP-2.2 or HDP-UTILS-1.1.0.20
    * @param baseUrl the url of repo
    * @param verify verify the base url
-   * @throws groovyx.net.http.HttpResponseException in case of error
    */
-  def String addStackRepository(String stack, String stackVersion, String osType, String repoId, String baseUrl, boolean verify) throws HttpResponseException {
+  def String addStackRepository(String stack, String stackVersion, String osType, String repoId, String baseUrl, boolean verify)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def Map bodyMap = [
             'Repositories': ['base_url': baseUrl, 'verify_base_url': verify]
     ]

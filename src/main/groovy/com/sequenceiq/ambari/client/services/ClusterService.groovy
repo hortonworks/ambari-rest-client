@@ -17,11 +17,13 @@
  */
 package com.sequenceiq.ambari.client.services
 
+import com.sequenceiq.ambari.client.AmbariConnectionException
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
 import org.apache.commons.lang.StringUtils
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait ClusterService extends CommonService {
@@ -31,7 +33,7 @@ trait ClusterService extends CommonService {
    *
    * @return the name of the cluster of null if no cluster yet
    */
-  def String getClusterName() {
+  def String getClusterName() throws AmbariConnectionException {
     if (!clusterNameCache) {
       def clusters = utils.getClusters();
       if (clusters) {
@@ -46,7 +48,7 @@ trait ClusterService extends CommonService {
    *
    * @return pre-formatted cluster list
    */
-  def String showClusterList() {
+  def String showClusterList() throws AmbariConnectionException {
     utils.getClusters().items.collect {
       "[$it.Clusters.cluster_id] $it.Clusters.cluster_name:$it.Clusters.version"
     }.join('\n')
@@ -56,9 +58,8 @@ trait ClusterService extends CommonService {
    * Returns all clusters as json
    *
    * @return json String
-   * @throws HttpResponseException in case of error
    */
-  def getClustersAsJson() throws HttpResponseException {
+  def getClustersAsJson() throws AmbariConnectionException {
     Map resourceRequestMap = utils.getResourceRequestMap('clusters', null)
     return utils.getRawResource(resourceRequestMap)
   }
@@ -67,9 +68,8 @@ trait ClusterService extends CommonService {
    * Returns the active cluster as json
    *
    * @return cluster as json String
-   * @throws HttpResponseException in case of error
    */
-  def String getClusterAsJson() throws HttpResponseException {
+  def String getClusterAsJson() throws AmbariConnectionException {
     String path = 'clusters/' + getClusterName();
     Map resourceRequestMap = utils.getResourceRequestMap(path, null)
     return utils.getRawResource(resourceRequestMap)
@@ -117,9 +117,8 @@ trait ClusterService extends CommonService {
    * @param clusterName name of the cluster
    * @param template the cluster creation template
    * @return the template with method was invoked
-   * @throws HttpResponseException in case of error
    */
-  def String createClusterFromTemplate(String clusterName, String template) throws HttpResponseException {
+  def String createClusterFromTemplate(String clusterName, String template) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
       if (debugEnabled) {
         println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
       }
@@ -137,12 +136,12 @@ trait ClusterService extends CommonService {
    * @param defaultPassword default password used for the services
    * @param hideQuickLinks whether to hide the quick links on the Ambari UI
    * @return true if the creation was successful false otherwise
-   * @throws HttpResponseException in case of error
    *
    * @return cluster creation template
    */
   def String createCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
-    String recommendationStrategy, String defaultPassword, boolean hideQuickLinks, String repositoryVersion) throws HttpResponseException {
+    String recommendationStrategy, String defaultPassword, boolean hideQuickLinks, String repositoryVersion)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
@@ -165,13 +164,13 @@ trait ClusterService extends CommonService {
    * @param type type of the principal can be either 'TEMPORARY' or 'PERSISTED'
    * @param hideQuickLinks whether to hide the quick links on the Ambari UI
    * @return true if the creation was successful false otherwise
-   * @throws HttpResponseException in case of error
    *
    * @return cluster creation template
    */
   def String createSecureCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
     String recommendationStrategy, String defaultPassword,
-    String principal, String key, String type, boolean hideQuickLinks, String repositoryVersion) throws HttpResponseException {
+    String principal, String key, String type, boolean hideQuickLinks, String repositoryVersion)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
@@ -185,9 +184,8 @@ trait ClusterService extends CommonService {
    * Deletes the cluster.
    *
    * @param clusterName name of the cluster
-   * @throws HttpResponseException in case of error
    */
-  def void deleteCluster(String clusterName) throws HttpResponseException {
+  def void deleteCluster(String clusterName) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     if (debugEnabled) {
       println "[DEBUG] DELETE ${ambari.getUri()}clusters/$clusterName"
     }
@@ -201,7 +199,8 @@ trait ClusterService extends CommonService {
    * @param serviceName where the slave belongs to
    * @param componentName where the slave belongs to
    */
-  def int decommission(List<String> hosts, String slaveName, String serviceName, String componentName) {
+  def int decommission(List<String> hosts, String slaveName, String serviceName, String componentName)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def requestInfo = [
       command   : 'DECOMMISSION',
       context   : "Decommission $slaveName",
@@ -223,7 +222,7 @@ trait ClusterService extends CommonService {
    * Does not return until all the requests are finished.
    * @param requestIds ids of the requests
    */
-  def waitForRequestsToFinish(List<Integer> requestIds) {
+  def waitForRequestsToFinish(List<Integer> requestIds) throws AmbariConnectionException {
     def stopped = false
     while (!stopped) {
       def state = true
@@ -238,7 +237,7 @@ trait ClusterService extends CommonService {
     }
   }
 
-  def BigDecimal getRequestProgress() {
+  def BigDecimal getRequestProgress() throws AmbariConnectionException {
     return getRequestProgress(1)
   }
 
@@ -248,7 +247,7 @@ trait ClusterService extends CommonService {
    * @param request request id; default is 1
    * @return progress in percentage
    */
-  def Map<String, Object> getRequestStatus(Integer request) {
+  def Map<String, Object> getRequestStatus(Integer request) throws AmbariConnectionException {
     return utils.getAllResources("requests/$request", 'Requests')
   }
 
@@ -258,7 +257,7 @@ trait ClusterService extends CommonService {
    * @param request request id; default is 1
    * @return progress in percentage
    */
-  def BigDecimal getRequestProgress(Integer request) {
+  def BigDecimal getRequestProgress(Integer request) throws AmbariConnectionException {
     return getRequestProgress(getRequestStatus(request))
   }
 
@@ -279,7 +278,7 @@ trait ClusterService extends CommonService {
    * @param statuses the relevant statuses
    * @return the status map
    */
-  def Map<String, List<Integer>> getRequests(String... statuses) {
+  def Map<String, List<Integer>> getRequests(String... statuses) throws AmbariConnectionException {
     def reqs = utils.getAllResources('requests', 'Requests/request_status,Requests/id')?.items?.Requests
     def resp = [:]
     reqs.each {
@@ -303,7 +302,7 @@ trait ClusterService extends CommonService {
    * @param status request's current status
    * @return id of the request or -1
    */
-  def int getRequestIdWithContext(String requestContext, String status) {
+  def int getRequestIdWithContext(String requestContext, String status) throws AmbariConnectionException {
     def response = utils.getAllResources('requests', 'Requests/request_status,Requests/id,Requests/request_context')
     def requests = response?.items?.Requests
     def result = requests.find { it.request_context.startsWith(requestContext) && it.request_status.equals(status) }
@@ -315,7 +314,7 @@ trait ClusterService extends CommonService {
    *
    * @return version
    */
-  def String ambariServerVersion() {
+  def String ambariServerVersion() throws AmbariConnectionException {
     def json = utils.getSlurpedResource([path: 'services/AMBARI/components/AMBARI_SERVER', headers: ['Accept': ContentType.TEXT], query: [fields: 'RootServiceComponents/component_version']])
     json.RootServiceComponents.component_version
   }
@@ -326,7 +325,7 @@ trait ClusterService extends CommonService {
    * @param versionDefinitionFileUrl the URL or server's local path to the VDF file
    * @return the request body which has sent to server
    */
-  def String createVersionDefinition(String versionDefinitionFileUrl) {
+  def String createVersionDefinition(String versionDefinitionFileUrl) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def builder = new JsonBuilder()
     builder {
       VersionDefinition {
@@ -338,7 +337,7 @@ trait ClusterService extends CommonService {
     return template
   }
 
-  def String getVersionDefinition(String stackType, String repositoryVersion) {
+  def String getVersionDefinition(String stackType, String repositoryVersion) throws AmbariConnectionException {
     Map resourceRequestMap = utils.getResourceRequestMap('version_definitions', ["VersionDefinition/stack_name": stackType,
                                                                                  "VersionDefinition/repository_version": repositoryVersion])
     return utils.getRawResource(resourceRequestMap)

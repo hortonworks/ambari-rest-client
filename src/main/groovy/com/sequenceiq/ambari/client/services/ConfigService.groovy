@@ -17,9 +17,12 @@
  */
 package com.sequenceiq.ambari.client.services
 
+import com.sequenceiq.ambari.client.AmbariConnectionException
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
+import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait ConfigService extends ClusterService {
@@ -32,7 +35,7 @@ trait ConfigService extends ClusterService {
    * @param hosts hosts to be added to the groups
    * @param tag tag of the config group
    */
-  def void addHostsToConfigGroups(List<String> hosts, String tag) {
+  def void addHostsToConfigGroups(List<String> hosts, String tag) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def groups = getConfigGroups(tag)
     if (groups) {
       groups.each {
@@ -57,7 +60,7 @@ trait ConfigService extends ClusterService {
    * @param type type of the configuration e.g capacity-scheduler
    * @param properties properties to be used
    */
-  def modifyConfiguration(String type, Map<String, String> properties) {
+  def modifyConfiguration(String type, Map<String, String> properties) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     Map bodyMap = [
             'Clusters': ['desired_config': ['type': type, 'tag': "version${System.currentTimeMillis()}", 'properties': properties]]
     ]
@@ -68,7 +71,7 @@ trait ConfigService extends ClusterService {
     ambari.put(putRequestMap)
   }
 
-  private List getConfigGroups(String tag) {
+  private List getConfigGroups(String tag) throws AmbariConnectionException {
     def groups = utils.getAllResources('config_groups', 'ConfigGroup')
     groups.items.findAll {
       it.ConfigGroup.group_name.endsWith(tag)

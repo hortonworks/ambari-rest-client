@@ -33,6 +33,7 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.conn.ssl.SSLContexts
 import org.apache.http.conn.ssl.X509HostnameVerifier
 import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.codehaus.groovy.control.CompilationFailedException
 
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLException
@@ -75,8 +76,9 @@ class AmbariClientUtils {
    * Gets the resource as a text as it;s returned by the server.
    *
    * @param resourceRequestMap
+   * @trhows AmbariConnectionException
    */
-  def getRawResource(Map resourceRequestMap) {
+  def getRawResource(Map resourceRequestMap) throws AmbariConnectionException {
     def responseData = null;
     try {
       if (ambariClient.debugEnabled) {
@@ -103,20 +105,20 @@ class AmbariClientUtils {
     return responseData
   }
 
-  def getAllResources(resourceName, fields = '') {
+  def getAllResources(resourceName, fields = '') throws AmbariConnectionException {
     slurp("clusters/${ambariClient.getClusterName()}/$resourceName", fields ? "$fields/*" : '')
   }
 
-  def getAllPredictedResources(resourceName, predicate) {
+  def getAllPredictedResources(resourceName, predicate) throws AmbariConnectionException {
     slurpPredicate("clusters/${ambariClient.getClusterName()}/$resourceName", predicate)
   }
 
-  def slurpPredicate(String path, Map predicate) {
+  def slurpPredicate(String path, Map predicate) throws AmbariConnectionException {
     def Map resourceReqMap = getResourceRequestMap(path, predicate)
     getSlurpedResource(resourceReqMap)
   }
 
-  def slurp(path, fields = '') {
+  def slurp(path, fields = '') throws AmbariConnectionException {
     def fieldsMap = fields ? ['fields': fields] : [:]
     def Map resourceReqMap = getResourceRequestMap(path, fieldsMap)
     def result = getSlurpedResource(resourceReqMap)
@@ -129,7 +131,7 @@ class AmbariClientUtils {
    * @param resourceRequestMap a map wrapping the resource request components
    * @return an Object as it's created by the JsonSlurper
    */
-  def getSlurpedResource(Map resourceRequestMap) {
+  def getSlurpedResource(Map resourceRequestMap) throws AmbariConnectionException {
     def rawResource = getRawResource(resourceRequestMap)
     def slurpedResource = (rawResource != null) ? ambariClient.slurper.parseText(rawResource) : rawResource
     return slurpedResource
@@ -141,7 +143,7 @@ class AmbariClientUtils {
    * @param id id of the blueprint
    * @return properties as Map
    */
-  def getBlueprint(id) {
+  def getBlueprint(id) throws AmbariConnectionException {
     slurp("blueprints/$id", 'host_groups,Blueprints')
   }
 
@@ -150,7 +152,7 @@ class AmbariClientUtils {
    *
    * @return blueprint's properties as Map or empty Map
    */
-  def getBlueprints() {
+  def getBlueprints() throws AmbariConnectionException {
     slurp('blueprints', 'Blueprints')
   }
 
@@ -159,7 +161,7 @@ class AmbariClientUtils {
    *
    * @return cluster's properties as Map or empty Map
    */
-  def getClusters() {
+  def getClusters() throws AmbariConnectionException {
     slurp('clusters', 'Clusters')
   }
 
@@ -168,7 +170,7 @@ class AmbariClientUtils {
    *
    * @return Map containing the hosts properties
    */
-  def getHosts() {
+  def getHosts() throws AmbariConnectionException {
     slurp('hosts', 'Hosts')
   }
 
@@ -178,7 +180,7 @@ class AmbariClientUtils {
    * @param host which host's components are requested
    * @return component properties as Map
    */
-  def getHostComponents(host) {
+  def getHostComponents(host) throws AmbariConnectionException {
     getAllResources("hosts/$host/host_components", 'HostRoles')
   }
 
@@ -192,12 +194,12 @@ class AmbariClientUtils {
     return requestMap
   }
 
-  def String createJson(String templateName, Map bindings) throws Exception {
+  def String createJson(String templateName, Map bindings) throws CompilationFailedException, IOException {
     def InputStream inPut = this.getClass().getClassLoader().getResourceAsStream("templates/$templateName");
     templateProcessor.createTemplate(new InputStreamReader(inPut)).make(bindings);
   }
 
-  def SSLContext setupSSLContext(String clientCert, String clientKey, String serverCert) {
+  def SSLContext setupSSLContext(String clientCert, String clientKey, String serverCert) throws Exception {
     Security.addProvider(new BouncyCastleProvider());
     SSLContext context = SSLContexts.custom()
             .loadTrustMaterial(KeystoreUtils.createTrustStore(serverCert))
@@ -237,7 +239,7 @@ class AmbariClientUtils {
     return registryBuilder.build();
   }
 
-  def int putAndGetId(def Map<String, ?> putRequestMap) {
+  def int putAndGetId(def Map<String, ?> putRequestMap) throws URISyntaxException, ClientProtocolException, IOException {
     log.info('AmbariClient putAndGetId, requestMap: {}', putRequestMap)
     def response = ambariClient.ambari.put(putRequestMap)
     def responseData = response.getAt('responseData')?.getAt('str') as String

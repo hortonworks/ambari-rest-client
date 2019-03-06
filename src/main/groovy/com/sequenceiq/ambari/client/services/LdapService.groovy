@@ -20,6 +20,8 @@ package com.sequenceiq.ambari.client.services
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
+import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait LdapService extends CommonService {
@@ -29,7 +31,7 @@ trait LdapService extends CommonService {
    *
    * @param ldapProperties
    */
-  def void configureLdap(Map ldapProperties) {
+  def void configureLdap(Map ldapProperties) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def Map<String, ?> putRequestMap = [:]
     putRequestMap.put('requestContentType', ContentType.URLENC)
     putRequestMap.put('path', "services/AMBARI/components/AMBARI_SERVER/configurations/ldap-configuration")
@@ -45,7 +47,7 @@ trait LdapService extends CommonService {
   /**
    * Sync ldap
    */
-  def void syncLdap() {
+  def void syncLdap() throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def body = new JsonBuilder([['Event': ['specs': [
             [
                     'principal_type': 'users',

@@ -17,8 +17,11 @@
  */
 package com.sequenceiq.ambari.client.services
 
+import com.sequenceiq.ambari.client.AmbariConnectionException
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
+import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait GroupService extends CommonService {
@@ -31,7 +34,7 @@ trait GroupService extends CommonService {
   /**
    * Create a new group.
    */
-  def createGroup(String group) {
+  def createGroup(String group) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def context = ["$JSON_KEY/group_name": group]
     ambari.post(path: GROUPS, body: new JsonBuilder(context).toPrettyString(), { it })
   }
@@ -39,14 +42,14 @@ trait GroupService extends CommonService {
   /**
    * Delete a group.
    */
-  def deleteGroup(String group) {
+  def deleteGroup(String group) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     ambari.delete(path: "$GROUPS/$group")
   }
 
   /**
    * Get the details of a group.
    */
-  def getGroup(String group) {
+  def getGroup(String group) throws AmbariConnectionException {
     def result = utils.slurp("$GROUPS/$group", JSON_KEY)
     result ? result[JSON_KEY] : [:]
   }
@@ -54,7 +57,7 @@ trait GroupService extends CommonService {
   /**
    * Get the names of users that belong to the group.
    */
-  def getGroupMembers(String group) {
+  def getGroupMembers(String group) throws AmbariConnectionException {
     def result = utils.slurp("$GROUPS/$group/$MEMBERS", MEMBER_INFO)
     result ? result.items?.collect { it[MEMBER_INFO]['user_name'] } : []
   }
@@ -62,15 +65,14 @@ trait GroupService extends CommonService {
   /**
    * Add a user to the group.
    */
-  def addMemberToGroup(String group, String user) {
+  def addMemberToGroup(String group, String user) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     ambari.post(path: "$GROUPS/$group/$MEMBERS/$user")
   }
 
   /**
    * Remove a user from the group.
    */
-  def removeMemberFromGroup(String group, String user) {
+  def removeMemberFromGroup(String group, String user) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     ambari.delete(path: "$GROUPS/$group/$MEMBERS/$user")
   }
-
 }

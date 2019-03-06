@@ -1,6 +1,7 @@
 .classpath
 .settings
 .project
+.env
 target
 lib
 /build

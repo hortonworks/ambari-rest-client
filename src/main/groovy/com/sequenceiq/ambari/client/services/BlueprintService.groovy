@@ -17,10 +17,12 @@
  */
 package com.sequenceiq.ambari.client.services
 
+import com.sequenceiq.ambari.client.AmbariConnectionException
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait BlueprintService extends ClusterService {
@@ -33,7 +35,8 @@ trait BlueprintService extends ClusterService {
    * @param blueprint json
    * @return response message
    */
-  private void postBlueprint(String blueprint, Boolean topologyValidation=true) {
+  private void postBlueprint(String blueprint, Boolean topologyValidation = true)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}blueprints/bp"
     }
@@ -50,7 +53,7 @@ trait BlueprintService extends ClusterService {
    * @param id id of the blueprint
    * @return json as String, exception if thrown is it fails
    */
-  def String getBlueprintAsJson(id) {
+  def String getBlueprintAsJson(id) throws AmbariConnectionException {
     Map resourceRequestMap = utils.getResourceRequestMap("blueprints/$id", ['fields': 'host_groups,Blueprints'])
     return utils.getRawResource(resourceRequestMap)
   }
@@ -61,7 +64,7 @@ trait BlueprintService extends ClusterService {
    * @param id id of the blueprint
    * @return true if exists false otherwise
    */
-  def boolean doesBlueprintExist(String id) {
+  def boolean doesBlueprintExist(String id) throws AmbariConnectionException {
     def result = false
     try {
       def Map resourceRequest = utils.getResourceRequestMap("blueprints/$id", ['fields': 'Blueprints'])
@@ -78,7 +81,7 @@ trait BlueprintService extends ClusterService {
    *
    * @return true if blueprints are available false otherwise
    */
-  def boolean isBlueprintAvailable() {
+  def boolean isBlueprintAvailable() throws AmbariConnectionException {
     return utils.getBlueprints().items?.size > 0
   }
 
@@ -88,7 +91,7 @@ trait BlueprintService extends ClusterService {
    * @param id id of the blueprint
    * @return formatted String
    */
-  def String showBlueprint(String id) {
+  def String showBlueprint(String id) throws AmbariConnectionException {
     def resp = utils.getBlueprint(id)
     if (resp) {
       def groups = resp.host_groups.collect {
@@ -107,7 +110,7 @@ trait BlueprintService extends ClusterService {
    * @param id id of the blueprint
    * @return Map where the key is the host group and the value is the list of components
    */
-  def Map<String, List<String>> getBlueprintMap(String id) {
+  def Map<String, List<String>> getBlueprintMap(String id) throws AmbariConnectionException {
     def result = utils.getBlueprint(id)?.host_groups?.collectEntries { [(it.name): it.components.collect { it.name }] }
     result ?: [:]
   }
@@ -117,7 +120,7 @@ trait BlueprintService extends ClusterService {
    *
    * @return formatted blueprint list
    */
-  def String showBlueprints() {
+  def String showBlueprints() throws AmbariConnectionException {
     utils.getBlueprints().items.collect {
       "${it.Blueprints.blueprint_name.padRight(PAD)} [${it.Blueprints.stack_name}:${it.Blueprints.stack_version}]"
     }.join('\n')
@@ -128,7 +131,7 @@ trait BlueprintService extends ClusterService {
    *
    * @return Map where the key is the blueprint's name value is the used stack
    */
-  def Map<String, String> getBlueprintsMap() {
+  def Map<String, String> getBlueprintsMap() throws AmbariConnectionException {
     def result = utils.getBlueprints().items?.collectEntries {
       [(it.Blueprints.blueprint_name): it.Blueprints.stack_name + ':' + it.Blueprints.stack_version]
     }
@@ -141,7 +144,7 @@ trait BlueprintService extends ClusterService {
    * @param blueprint id of the blueprint
    * @return host group list or empty list
    */
-  def List<String> getHostGroups(String blueprint) {
+  def List<String> getHostGroups(String blueprint) throws AmbariConnectionException {
     def result = utils.getBlueprint(blueprint)
     result ? result.host_groups.collect { it.name } : new ArrayList<String>()
   }
@@ -151,7 +154,7 @@ trait BlueprintService extends ClusterService {
    *
    * @return formatted String
    */
-  def String showClusterBlueprint() {
+  def String showClusterBlueprint() throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     ambari.get(path: "clusters/${getClusterName()}", query: ['format': 'blueprint']).data.text
   }
 
@@ -159,9 +162,8 @@ trait BlueprintService extends ClusterService {
    * Adds a blueprint to the Ambari server. Exception is thrown if fails.
    *
    * @param json blueprint as json
-   * @throws groovyx.net.http.HttpResponseException in case of error
    */
-  def String addBlueprint(String json, Boolean topologyValidation=true) throws HttpResponseException {
+  def String addBlueprint(String json, Boolean topologyValidation=true) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     postBlueprint(json, topologyValidation)
   }
 
@@ -262,10 +264,8 @@ trait BlueprintService extends ClusterService {
 
   /**
    * Adds the default blueprints.
-   *
-   * @throws HttpResponseException in case of error
    */
-  def void addDefaultBlueprints() throws HttpResponseException {
+  def void addDefaultBlueprints() throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     addBlueprint(utils.getResourceContent('blueprints/multi-node-hdfs-yarn'))
     addBlueprint(utils.getResourceContent('blueprints/single-node-hdfs-yarn'))
     addBlueprint(utils.getResourceContent('blueprints/lambda-architecture'))
@@ -280,7 +280,7 @@ trait BlueprintService extends ClusterService {
    * @param hostGroup which host group to add the hosts to
    * @param hosts list of hosts in form of FQDN
    */
-  def int addHostsWithBlueprint(String bpName, String hostGroup, List<String> hosts) throws HttpResponseException {
+  def int addHostsWithBlueprint(String bpName, String hostGroup, List<String> hosts) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def hostMap = hosts.collect { ["blueprint": bpName, "host_group": hostGroup, "host_name": it] }
     def json = new JsonBuilder(hostMap).toPrettyString()
     ambari.post(path: "clusters/${getClusterName()}/hosts", body: json, {
@@ -295,7 +295,8 @@ trait BlueprintService extends ClusterService {
    * @param hostGroup which host group to add the hosts to
    * @param hostsWithRackInfo list of hosts in form of FQDN with rack info
    */
-  def int addHostsAndRackInfoWithBlueprint(String bpName, String hostGroup, Map<String, String> hostsWithRackInfo) throws HttpResponseException {
+  def int addHostsAndRackInfoWithBlueprint(String bpName, String hostGroup, Map<String, String> hostsWithRackInfo)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def hostMap = hostsWithRackInfo.collect { ["blueprint": bpName, "host_group": hostGroup, "host_name": it.key, "Hosts/rack_info": it.value] }
     def json = new JsonBuilder(hostMap).toPrettyString()
     ambari.post(path: "clusters/${getClusterName()}/hosts", body: json, {
@@ -308,9 +309,8 @@ trait BlueprintService extends ClusterService {
    *
    * @param host
    * @param rackInfo
-   * @throws HttpResponseException
    */
-  def void updateRack(String host, String rackInfo) throws HttpResponseException {
+  def void updateRack(String host, String rackInfo) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def request = [
             RequestInfo: [
                     context: "Set Rack",

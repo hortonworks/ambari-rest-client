@@ -20,6 +20,8 @@ package com.sequenceiq.ambari.client.services
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
+import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait SSOService extends CommonService {
@@ -29,7 +31,7 @@ trait SSOService extends CommonService {
    *
    * @param ssoProperties
    */
-  def void configureSSO(Map ssoProperties) {
+  def void configureSSO(Map ssoProperties) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def Map<String, ?> putRequestMap = [:]
     putRequestMap.put('requestContentType', ContentType.URLENC)
     putRequestMap.put('path', "services/AMBARI/components/AMBARI_SERVER/configurations/sso-configuration")
