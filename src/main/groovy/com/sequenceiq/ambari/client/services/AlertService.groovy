@@ -27,7 +27,7 @@ trait AlertService extends ClusterService {
    *
    * @param definition alert definition as json
    */
-  def void createAlert(String definition) {
+  def void createAlert(String definition) throws Exception {
     ambari.post(path: "clusters/${getClusterName()}/alert_definitions", body: definition, { it })
   }
 

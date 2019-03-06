@@ -31,7 +31,7 @@ trait GroupService extends CommonService {
   /**
    * Create a new group.
    */
-  def createGroup(String group) {
+  def createGroup(String group) throws Exception {
     def context = ["$JSON_KEY/group_name": group]
     ambari.post(path: GROUPS, body: new JsonBuilder(context).toPrettyString(), { it })
   }
@@ -39,7 +39,7 @@ trait GroupService extends CommonService {
   /**
    * Delete a group.
    */
-  def deleteGroup(String group) {
+  def deleteGroup(String group) throws Exception {
     ambari.delete(path: "$GROUPS/$group")
   }
 
@@ -62,7 +62,7 @@ trait GroupService extends CommonService {
   /**
    * Add a user to the group.
    */
-  def addMemberToGroup(String group, String user) {
+  def addMemberToGroup(String group, String user) throws Exception {
     ambari.post(path: "$GROUPS/$group/$MEMBERS/$user")
   }
 

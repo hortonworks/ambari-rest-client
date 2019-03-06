@@ -31,7 +31,7 @@ trait KerberosService extends BlueprintService {
    * @param realm kerberos realm
    * @param domain kerberos domain
    */
-  def void createKerberosConfig(String kdcHosts, String realm, String domain) {
+  def void createKerberosConfig(String kdcHosts, String realm, String domain) throws Exception {
     def model = [
       'KDC_HOSTS'     : kdcHosts,
       'REALM'        : realm,
@@ -51,7 +51,7 @@ trait KerberosService extends BlueprintService {
    *
    * @param realm kerberos realm
    */
-  def void createKerberosDescriptor(String realm) {
+  def void createKerberosDescriptor(String realm) throws Exception {
     def json = utils.getResourceContent('templates/kerberos-descriptor').replaceAll('actual-realm', realm)
     ambari.post(path: "clusters/${getClusterName()}/artifacts/kerberos_descriptor", body: json, { it })
   }
@@ -63,7 +63,7 @@ trait KerberosService extends BlueprintService {
    * @param principal admin principal
    * @param password password for the admin principal
    */
-  def void setKerberosSession(String principal, String password) {
+  def void setKerberosSession(String principal, String password) throws Exception {
     def session = ['session_attributes': ['kerberos_admin': ['principal': principal, 'password': password]]]
     def Map<String, ?> kdcPut = [:]
     kdcPut.put('requestContentType', ContentType.URLENC)
@@ -72,7 +72,7 @@ trait KerberosService extends BlueprintService {
     ambari.put(kdcPut)
   }
 
-  def void setKerberosPrincipal(String principal, String password) {
+  def void setKerberosPrincipal(String principal, String password) throws Exception {
     def body = ['Credential': ['principal': principal, 'key': password, 'type':'temporary']]
     def Map<String, ?> kdcPost = [:]
     kdcPost.put('requestContentType', ContentType.URLENC)

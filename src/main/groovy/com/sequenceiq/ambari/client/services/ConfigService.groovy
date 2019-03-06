@@ -32,7 +32,7 @@ trait ConfigService extends ClusterService {
    * @param hosts hosts to be added to the groups
    * @param tag tag of the config group
    */
-  def void addHostsToConfigGroups(List<String> hosts, String tag) {
+  def void addHostsToConfigGroups(List<String> hosts, String tag) throws Exception {
     def groups = getConfigGroups(tag)
     if (groups) {
       groups.each {
@@ -57,7 +57,7 @@ trait ConfigService extends ClusterService {
    * @param type type of the configuration e.g capacity-scheduler
    * @param properties properties to be used
    */
-  def modifyConfiguration(String type, Map<String, String> properties) {
+  def modifyConfiguration(String type, Map<String, String> properties) throws Exception {
     Map bodyMap = [
             'Clusters': ['desired_config': ['type': type, 'tag': "version${System.currentTimeMillis()}", 'properties': properties]]
     ]

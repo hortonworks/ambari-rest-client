@@ -33,7 +33,7 @@ trait UserService extends CommonService {
   /**
    * Create a new Ambari user.
    */
-  def createUser(String user, String password, boolean admin) {
+  def createUser(String user, String password, boolean admin) throws Exception {
     def context = ["$JSON_KEY/$ACTIVE": true, "$JSON_KEY/$ADMIN": admin, "$JSON_KEY/$PASSWORD": password, "$JSON_KEY/user_name": user]
     ambari.post(path: USERS, body: new JsonBuilder(context).toPrettyString(), { it })
   }
@@ -41,7 +41,7 @@ trait UserService extends CommonService {
   /**
    * Delete an Ambari user.
    */
-  def deleteUser(String user) {
+  def deleteUser(String user) throws Exception {
     ambari.delete(path: "$USERS/$user")
   }
 
@@ -59,7 +59,7 @@ trait UserService extends CommonService {
    * @param oldPassword the password of AmbariClient's user, not necessarily the password being changed
    * @param admin ignored, kept for compatibility
    */
-  def changePassword(String user, String oldPassword, String newPassword, boolean admin = false) {
+  def changePassword(String user, String oldPassword, String newPassword, boolean admin = false) throws Exception {
     def context = ["$JSON_KEY/$PASSWORD": newPassword, "$JSON_KEY/old_password": oldPassword]
     ambari.put(path: "$USERS/$user", body: new JsonBuilder(context).toPrettyString(), requestContentType: ContentType.URLENC)
   }
@@ -68,7 +68,7 @@ trait UserService extends CommonService {
    * Grant or revoke admin privilege to a user.
    * @param grant if true, privilege will be granted, otherwise it will be revoked
    */
-  def grantAdminPrivilege(String user, boolean grant) {
+  def grantAdminPrivilege(String user, boolean grant) throws Exception {
     def context = ["$JSON_KEY/$ADMIN": grant]
     ambari.put(path: "$USERS/$user", body: new JsonBuilder(context).toPrettyString(), requestContentType: ContentType.URLENC)
   }
@@ -77,7 +77,7 @@ trait UserService extends CommonService {
    * Activate or inactivate a user.
    * @param active if true, user will be active, otherwise it will be inactive
    */
-  def setUserActive(String user, boolean active) {
+  def setUserActive(String user, boolean active) throws Exception {
     def context = ["$JSON_KEY/$ACTIVE": active]
     ambari.put(path: "$USERS/$user", body: new JsonBuilder(context).toPrettyString(), requestContentType: ContentType.URLENC)
   }

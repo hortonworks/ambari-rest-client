@@ -33,7 +33,7 @@ trait BlueprintService extends ClusterService {
    * @param blueprint json
    * @return response message
    */
-  private void postBlueprint(String blueprint, Boolean topologyValidation=true) {
+  private void postBlueprint(String blueprint, Boolean topologyValidation = true) throws Exception {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}blueprints/bp"
     }
@@ -151,7 +151,7 @@ trait BlueprintService extends ClusterService {
    *
    * @return formatted String
    */
-  def String showClusterBlueprint() {
+  def String showClusterBlueprint() throws Exception {
     ambari.get(path: "clusters/${getClusterName()}", query: ['format': 'blueprint']).data.text
   }
 
@@ -280,7 +280,7 @@ trait BlueprintService extends ClusterService {
    * @param hostGroup which host group to add the hosts to
    * @param hosts list of hosts in form of FQDN
    */
-  def int addHostsWithBlueprint(String bpName, String hostGroup, List<String> hosts) throws HttpResponseException {
+  def int addHostsWithBlueprint(String bpName, String hostGroup, List<String> hosts) throws Exception {
     def hostMap = hosts.collect { ["blueprint": bpName, "host_group": hostGroup, "host_name": it] }
     def json = new JsonBuilder(hostMap).toPrettyString()
     ambari.post(path: "clusters/${getClusterName()}/hosts", body: json, {
@@ -295,7 +295,7 @@ trait BlueprintService extends ClusterService {
    * @param hostGroup which host group to add the hosts to
    * @param hostsWithRackInfo list of hosts in form of FQDN with rack info
    */
-  def int addHostsAndRackInfoWithBlueprint(String bpName, String hostGroup, Map<String, String> hostsWithRackInfo) throws HttpResponseException {
+  def int addHostsAndRackInfoWithBlueprint(String bpName, String hostGroup, Map<String, String> hostsWithRackInfo) throws Exception {
     def hostMap = hostsWithRackInfo.collect { ["blueprint": bpName, "host_group": hostGroup, "host_name": it.key, "Hosts/rack_info": it.value] }
     def json = new JsonBuilder(hostMap).toPrettyString()
     ambari.post(path: "clusters/${getClusterName()}/hosts", body: json, {
@@ -308,9 +308,9 @@ trait BlueprintService extends ClusterService {
    *
    * @param host
    * @param rackInfo
-   * @throws HttpResponseException
+   * @throws Exception
    */
-  def void updateRack(String host, String rackInfo) throws HttpResponseException {
+  def void updateRack(String host, String rackInfo) throws Exception {
     def request = [
             RequestInfo: [
                     context: "Set Rack",

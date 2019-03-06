@@ -79,12 +79,12 @@ trait ViewService extends ClusterService {
    * @param viewInfo required properties for the view
    * @param type type of the view
    */
-  def void createView(Map viewInfo, String type) {
+  def void createView(Map viewInfo, String type) throws Exception {
     def body = new JsonBuilder(["ViewInstanceInfo": viewInfo]).toPrettyString()
     ambari.post(path: "views/${type.toUpperCase()}/versions/1.0.0/instances/${type.toLowerCase()}", body: body, { it })
   }
 
-  def getViewDefinitions() {
+  def getViewDefinitions() throws Exception {
     List<String> result = new ArrayList<>()
     try {
       def slurper = new groovy.json.JsonSlurper()

@@ -45,7 +45,7 @@ trait LdapService extends CommonService {
   /**
    * Sync ldap
    */
-  def void syncLdap() {
+  def void syncLdap() throws Exception {
     def body = new JsonBuilder([['Event': ['specs': [
             [
                     'principal_type': 'users',

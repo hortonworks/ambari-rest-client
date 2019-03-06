@@ -17,7 +17,7 @@
  */
 package com.sequenceiq.ambari.client
 
-class AmbariConnectionException extends RuntimeException {
+class AmbariConnectionException extends Exception {
   public AmbariConnectionException(String s) {
     super(s)
   }

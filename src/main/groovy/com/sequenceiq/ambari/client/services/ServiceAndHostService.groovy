@@ -65,9 +65,10 @@ trait ServiceAndHostService extends ClusterService {
    * Adds the registered nodes to the cluster.
    *
    * @param hosts list of hostname to add
+   * @throws Exception
    * @throws groovyx.net.http.HttpResponseException if a node is not registered with ambari
    */
-  def addHosts(List<String> hosts) throws HttpResponseException {
+  def addHosts(List<String> hosts) throws Exception {
     def requestBody = hosts.collectNested { ['Hosts': ['host_name': it]] }
     ambari.post(path: "clusters/${getClusterName()}/hosts", body: new JsonBuilder(requestBody).toPrettyString(), { it })
   }
@@ -155,7 +156,7 @@ trait ServiceAndHostService extends ClusterService {
   /**
    * Deletes the components from the host.
    */
-  def deleteHostComponents(String hostName, List<String> components) {
+  def deleteHostComponents(String hostName, List<String> components) throws Exception {
     components.each {
       ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName/host_components/$it")
     }
@@ -166,7 +167,7 @@ trait ServiceAndHostService extends ClusterService {
    * Note: Deleting a host from a cluster does not mean it is also
    * deleted/unregistered from Ambari. It will remain there with UNKNOWN state.
    */
-  def deleteHost(String hostName) {
+  def deleteHost(String hostName) throws Exception {
     ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName")
   }
 
@@ -175,7 +176,7 @@ trait ServiceAndHostService extends ClusterService {
    * Note: Deleting a host from a cluster does not mean it is also
    * deleted/unregistered from Ambari. It will remain there with UNKNOWN state.
    */
-  def unregisterHost(String hostName) {
+  def unregisterHost(String hostName) throws Exception {
     ambari.delete(path: "hosts/$hostName")
   }
 
@@ -247,7 +248,7 @@ trait ServiceAndHostService extends ClusterService {
   }
 
   private def Map<String, Integer> setComponentsState(String hostName, List<String> components, String state)
-          throws HttpResponseException {
+          throws Exception {
     if (debugEnabled) {
       println "[DEBUG] PUT ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components"
     }
@@ -309,7 +310,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param clusterName
    * @return Operation id
    */
-  def int restartAllServices(String clusterName){
+  def int restartAllServices(String clusterName) throws Exception {
     Map bodyMap = [
             'RequestInfo'              : [command: 'RESTART', context: 'Restart all services', operation_level:'host_component'],
             'Requests/resource_filters': [[hosts_predicate: "HostRoles/cluster_name=$clusterName"]]
@@ -322,7 +323,7 @@ trait ServiceAndHostService extends ClusterService {
   /**
    * Restarts the given components of a service.
    */
-  def int restartServiceComponents(String service, List<String> components) {
+  def int restartServiceComponents(String service, List<String> components) throws Exception {
     def filter = components.collect {
       ['service_name': service, 'component_name': it, 'hosts': getHostNamesByComponent(it).join(',')]
     }
@@ -341,7 +342,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param case id of the capture
    * @return the id of the Ambari request
    */
-  def int smartSenseCapture(int caseId) {
+  def int smartSenseCapture(int caseId) throws Exception {
     def component = "HST_AGENT"
     def filter = [service_name: "SMARTSENSE", component_name: component, 'hosts': getHostNamesByComponent(component).join(',')];
     Map bodyMap = [
@@ -409,7 +410,7 @@ trait ServiceAndHostService extends ClusterService {
     result ?: new HashMap()
   }
 
-  private addComponentToHost(String hostName, String component) {
+  private addComponentToHost(String hostName, String component) throws Exception {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components"
     }
@@ -489,7 +490,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param context context shown on the UI
    * @return id of the request
    */
-  private def int setAllComponentsState(clusterName, state, context, query) throws HttpResponseException {
+  private def int setAllComponentsState(clusterName, state, context, query) throws Exception {
     def reqInfo = [
             'context'        : context,
             'operation_level': ['level': 'HOST_COMPONENT', 'cluster_name': clusterName],
@@ -514,9 +515,9 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @param hostNames hosts to install the component to
    * @param components components to be installed
-   * @throws HttpResponseException in case the component's service is not installed
+   * @throws Exception in case the component's service is not installed
    */
-  def void addComponentsToHosts(List<String> hostNames, List<String> components) throws HttpResponseException {
+  def void addComponentsToHosts(List<String> hostNames, List<String> components) throws Exception {
     def commaSepHostNames = hostNames.join(',')
     def addRequest = [
             'RequestInfo': ['query': "Hosts/host_name.in($commaSepHostNames)"],
@@ -558,7 +559,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @param serviceName name of the service
    */
-  def void addService(String serviceName) {
+  def void addService(String serviceName) throws Exception {
     ambari.post(path: "clusters/${getClusterName()}/services",
             body: new JsonBuilder(['ServiceInfo': ['service_name': serviceName]]).toPrettyString(), { it })
   }
@@ -569,7 +570,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param serviceName name of the service
    * @param component component name
    */
-  def void addServiceComponent(String serviceName, String component) {
+  def void addServiceComponent(String serviceName, String component) throws Exception {
     def body = ['components': [['ServiceComponentInfo': ['component_name': component]]]]
     def Map<String, ?> requestMap = [:]
     requestMap.put('path', "clusters/${getClusterName()}/services")
@@ -689,7 +690,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param serviceName name of the service
    * @return id of the request
    */
-  def int runServiceCheck(String command, String serviceName) {
+  def int runServiceCheck(String command, String serviceName) throws Exception {
     Map bodyMap = [
             'RequestInfo'              : [command: command, context: command],
             'Requests/resource_filters': [[service_name: serviceName]]

@@ -69,7 +69,7 @@ trait StackService extends ClusterService {
    * @param verify verify the base url
    * @throws groovyx.net.http.HttpResponseException in case of error
    */
-  def String addStackRepository(String stack, String stackVersion, String osType, String repoId, String baseUrl, boolean verify) throws HttpResponseException {
+  def String addStackRepository(String stack, String stackVersion, String osType, String repoId, String baseUrl, boolean verify) throws Exception {
     def Map bodyMap = [
             'Repositories': ['base_url': baseUrl, 'verify_base_url': verify]
     ]

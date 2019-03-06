@@ -117,9 +117,9 @@ trait ClusterService extends CommonService {
    * @param clusterName name of the cluster
    * @param template the cluster creation template
    * @return the template with method was invoked
-   * @throws HttpResponseException in case of error
+   * @throws Exception in case of error
    */
-  def String createClusterFromTemplate(String clusterName, String template) throws HttpResponseException {
+  def String createClusterFromTemplate(String clusterName, String template) throws Exception {
       if (debugEnabled) {
         println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
       }
@@ -137,12 +137,12 @@ trait ClusterService extends CommonService {
    * @param defaultPassword default password used for the services
    * @param hideQuickLinks whether to hide the quick links on the Ambari UI
    * @return true if the creation was successful false otherwise
-   * @throws HttpResponseException in case of error
+   * @throws Exception in case of error
    *
    * @return cluster creation template
    */
   def String createCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
-    String recommendationStrategy, String defaultPassword, boolean hideQuickLinks, String repositoryVersion) throws HttpResponseException {
+    String recommendationStrategy, String defaultPassword, boolean hideQuickLinks, String repositoryVersion) throws Exception {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
@@ -165,13 +165,13 @@ trait ClusterService extends CommonService {
    * @param type type of the principal can be either 'TEMPORARY' or 'PERSISTED'
    * @param hideQuickLinks whether to hide the quick links on the Ambari UI
    * @return true if the creation was successful false otherwise
-   * @throws HttpResponseException in case of error
+   * @throws Exception in case of error
    *
    * @return cluster creation template
    */
   def String createSecureCluster(String clusterName, String blueprintName, Map<String, List<Map<String, String>>> hostGroups,
     String recommendationStrategy, String defaultPassword,
-    String principal, String key, String type, boolean hideQuickLinks, String repositoryVersion) throws HttpResponseException {
+    String principal, String key, String type, boolean hideQuickLinks, String repositoryVersion) throws Exception {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/$clusterName"
     }
@@ -185,9 +185,9 @@ trait ClusterService extends CommonService {
    * Deletes the cluster.
    *
    * @param clusterName name of the cluster
-   * @throws HttpResponseException in case of error
+   * @throws Exception in case of error
    */
-  def void deleteCluster(String clusterName) throws HttpResponseException {
+  def void deleteCluster(String clusterName) throws Exception {
     if (debugEnabled) {
       println "[DEBUG] DELETE ${ambari.getUri()}clusters/$clusterName"
     }
@@ -201,7 +201,7 @@ trait ClusterService extends CommonService {
    * @param serviceName where the slave belongs to
    * @param componentName where the slave belongs to
    */
-  def int decommission(List<String> hosts, String slaveName, String serviceName, String componentName) {
+  def int decommission(List<String> hosts, String slaveName, String serviceName, String componentName) throws Exception {
     def requestInfo = [
       command   : 'DECOMMISSION',
       context   : "Decommission $slaveName",
@@ -326,7 +326,7 @@ trait ClusterService extends CommonService {
    * @param versionDefinitionFileUrl the URL or server's local path to the VDF file
    * @return the request body which has sent to server
    */
-  def String createVersionDefinition(String versionDefinitionFileUrl) {
+  def String createVersionDefinition(String versionDefinitionFileUrl) throws Exception {
     def builder = new JsonBuilder()
     builder {
       VersionDefinition {

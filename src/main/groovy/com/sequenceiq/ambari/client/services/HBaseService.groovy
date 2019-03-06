@@ -49,7 +49,7 @@ trait HBaseService extends ClusterService {
    * @param hostName name of the host which is running the Region server
    * @param mode true to maintenance mode false to active mode
    */
-  def void setHBaseRegionServerToMaintenance(String hostName, boolean mode) {
+  def void setHBaseRegionServerToMaintenance(String hostName, boolean mode) throws Exception {
     def reqInfo = ['RequestInfo': ['context': 'Turn On Maintenance Mode for RegionServer'],
                    'Body'       : ['HostRoles': ['maintenance_state': mode ? 'ON' : 'OFF']]]
     def Map<String, ?> putRequestMap = [:]

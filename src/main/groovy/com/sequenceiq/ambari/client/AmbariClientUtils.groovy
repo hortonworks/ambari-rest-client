@@ -76,7 +76,7 @@ class AmbariClientUtils {
    *
    * @param resourceRequestMap
    */
-  def getRawResource(Map resourceRequestMap) {
+  def getRawResource(Map resourceRequestMap) throws AmbariConnectionException {
     def responseData = null;
     try {
       if (ambariClient.debugEnabled) {
@@ -237,7 +237,7 @@ class AmbariClientUtils {
     return registryBuilder.build();
   }
 
-  def int putAndGetId(def Map<String, ?> putRequestMap) {
+  def int putAndGetId(def Map<String, ?> putRequestMap) throws Exception {
     log.info('AmbariClient putAndGetId, requestMap: {}', putRequestMap)
     def response = ambariClient.ambari.put(putRequestMap)
     def responseData = response.getAt('responseData')?.getAt('str') as String
