@@ -33,11 +33,11 @@ import com.sequenceiq.ambari.client.services.ViewService
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
-import groovyx.net.http.HttpResponseException
 import groovyx.net.http.RESTClient
 import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
+import org.apache.http.client.ClientProtocolException
 import org.apache.http.client.CredentialsProvider
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
@@ -48,7 +48,6 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager
 import javax.net.ssl.SSLContext
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
-
 /**
  * Basic client to send requests to the Ambari server.
  */
@@ -146,7 +145,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
           verify: { hostname, session -> true }
   ]
 
-  def void validateClientParams(String host, String port, String user, String password) {
+  def void validateClientParams(String host, String port, String user, String password) throws AmbariConnectionException {
     if (host == null) {
       throw new AmbariConnectionException("Ambari hostname cannot be null");
     }
@@ -176,7 +175,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    * Runs a MapReduce service check which is a simple WordCount.
    * @return id of the request
    */
-  def int runMRServiceCheck() {
+  def int runMRServiceCheck() throws URISyntaxException, ClientProtocolException, IOException {
     runServiceCheck('MAPREDUCE2_SERVICE_CHECK', 'MAPREDUCE2')
   }
 
@@ -186,7 +185,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    * @return a Map where the key is the internal host name and the value
    *         is a Map where the key is the remaining space and the value is the used space in bytes
    */
-  def Map<String, Map<Long, Long>> getDFSSpace() {
+  def Map<String, Map<Long, Long>> getDFSSpace() throws AmbariConnectionException {
     def result = [:]
     def response = utils.slurp("clusters/${getClusterName()}/services/HDFS/components/NAMENODE", 'metrics/dfs')
     log.info("Returned metrics/dfs: {}", response)
@@ -214,7 +213,8 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    * @param blueprint id of the blueprint
    * @param hostGroup host group of the blueprint
    */
-  def void addComponentsToHosts(List<String> hostNames, String blueprint, String hostGroup) throws HttpResponseException {
+  def void addComponentsToHosts(List<String> hostNames, String blueprint, String hostGroup)
+          throws AmbariConnectionException, URISyntaxException, ClientProtocolException, IOException {
     def bpMap = utils.getBlueprint(blueprint)
     def components = bpMap?.host_groups?.find { it.name.equals(hostGroup) }?.components?.collect { it.name }
     if (components) {
@@ -228,9 +228,8 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    * @param blueprint id of the blueprint
    * @param hostGroup hostgroup of the blueprint
    * @return request id since its an async call
-   * @throws HttpResponseException in case of any rest exception
    */
-  def int startAllComponents(String blueprint, String hostGroup) throws HttpResponseException {
+  def int startAllComponents(String blueprint, String hostGroup) throws AmbariConnectionException, URISyntaxException, ClientProtocolException, IOException {
     def categories = getComponentsCategory(blueprint, hostGroup)
     def components = categories.findAll { it.value.equals('SLAVE') || it.value.equals('MASTER') }.keySet()
     def query = "HostRoles/component_name.in(${components.join(',')})"
@@ -244,7 +243,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    * @param blueprint id of the blueprint
    * @return recommended assignments
    */
-  def Map<String, List<String>> recommendAssignments(String blueprint) throws InvalidHostGroupHostAssociation {
+  def Map<String, List<String>> recommendAssignments(String blueprint) throws InvalidHostGroupHostAssociation, AmbariConnectionException {
     def result = [:]
     def hostNames = getHostStatuses().keySet() as List
     def groups = utils.getBlueprint(blueprint)?.host_groups?.collect { ['name': it.name, 'cardinality': it.cardinality] }
@@ -285,7 +284,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    * @param hostGroup host group's name in the blueprint
    * @return map where the key is the component's name and the value is the category
    */
-  def Map<String, String> getComponentsCategory(String blueprintId, String hostGroup) {
+  def Map<String, String> getComponentsCategory(String blueprintId, String hostGroup) throws AmbariConnectionException {
     def bpMap = utils.getBlueprint(blueprintId)
     def components = bpMap?.host_groups?.find { it.name.equals(hostGroup) }?.components?.collect { it.name }
     getComponentsCategory(components)
@@ -298,9 +297,9 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    * @param blueprintId if of the blueprint
    * @return map where the key is the component's name and the value is the category
    */
-  def Map<String, String> getComponentsCategory(String blueprintId) {
+  def Map<String, String> getComponentsCategory(String blueprintId) throws AmbariConnectionException {
     def bpMap = utils.getBlueprint(blueprintId)
-    def components = bpMap?.host_groups?.components?.name?.flatten()
+    List<String> components = bpMap?.host_groups?.components?.name?.flatten()
     getComponentsCategory(components)
   }
 
@@ -311,7 +310,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    * @param components list of the components
    * @return map where the key is the component's name and the value is the category
    */
-  def Map<String, String> getComponentsCategory(List<String> components) {
+  def Map<String, String> getComponentsCategory(List<String> components) throws AmbariConnectionException {
     def result = [:]
     components.each {
       def json = utils.slurp("clusters/${getClusterName()}/components/$it", 'ServiceComponentInfo')
@@ -328,7 +327,7 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
    *
    * @return status
    */
-  def String healthCheck() {
+  def String healthCheck() throws ClientProtocolException, IOException, URISyntaxException {
     ambari.get(path: 'check', headers: ['Accept': ContentType.TEXT]).data.text
   }
 

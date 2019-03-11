@@ -17,6 +17,7 @@
  */
 package com.sequenceiq.ambari.client.services
 
+import com.sequenceiq.ambari.client.AmbariConnectionException
 import groovy.util.logging.Slf4j
 
 @Slf4j
@@ -32,11 +33,11 @@ trait TaskService extends ClusterService {
    * @param request request id; default is 1
    * @return property Map or empty Map
    */
-  def getTasks(request) {
+  def getTasks(request) throws AmbariConnectionException {
     utils.getAllResources("requests/$request", 'tasks/Tasks')
   }
 
-  def String showTaskList() {
+  def String showTaskList() throws AmbariConnectionException {
     return showTaskList(1)
   }
   /**
@@ -45,11 +46,11 @@ trait TaskService extends ClusterService {
    * @param request request id; default is 1
    * @return pre-formatted task list
    */
-  def String showTaskList(request) {
+  def String showTaskList(request) throws AmbariConnectionException {
     getTasks(request)?.tasks.collect { "${it.Tasks.command_detail.padRight(PAD)} [${it.Tasks.status}]" }.join('\n')
   }
 
-  def Map<String, String> getTaskMap() {
+  def Map<String, String> getTaskMap() throws AmbariConnectionException {
     return getTaskMap(1)
   }
 
@@ -59,7 +60,7 @@ trait TaskService extends ClusterService {
    * @param request request id; default is 1
    * @return key task command detail; task value status
    */
-  def Map<String, String> getTaskMap(request) {
+  def Map<String, String> getTaskMap(request) throws AmbariConnectionException {
     def result = getTasks(request).tasks?.collectEntries { [(it.Tasks.command_detail): it.Tasks.status] }
     result ?: new HashMap()
   }

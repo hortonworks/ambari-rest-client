@@ -17,11 +17,12 @@
  */
 package com.sequenceiq.ambari.client.services
 
-
+import com.sequenceiq.ambari.client.AmbariConnectionException
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
 import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait ServiceAndHostService extends ClusterService {
@@ -29,7 +30,7 @@ trait ServiceAndHostService extends ClusterService {
   /**
    * Returns the public hostnames of the hosts which the host components are installed to.
    */
-  def List<String> getPublicHostNames(String hostComponent) {
+  def List<String> getPublicHostNames(String hostComponent) throws Exception {
     def hosts = getHostNamesByComponent(hostComponent)
     if (hosts) {
       return hosts.collect() { resolveInternalHostName(it) }
@@ -41,21 +42,21 @@ trait ServiceAndHostService extends ClusterService {
   /**
    * Returns the names of the hosts which are in the cluster.
    */
-  def List<String> getClusterHosts() {
+  def List<String> getClusterHosts() throws AmbariConnectionException {
     utils.slurp("clusters/${getClusterName()}")?.hosts?.Hosts?.host_name
   }
 
   /**
    * Resolves an internal hostname to a public one.
    */
-  def String resolveInternalHostName(String internalHostName) {
+  def String resolveInternalHostName(String internalHostName) throws AmbariConnectionException {
     utils.slurp("clusters/${getClusterName()}/hosts/$internalHostName")?.Hosts?.public_host_name
   }
 
   /**
    * Returns the internal host names of the hosts which the host components are installed to.
    */
-  def List<String> getHostNamesByComponent(String component) {
+  def List<String> getHostNamesByComponent(String component) throws AmbariConnectionException {
     def hostRoles = utils.getAllResources('host_components', 'HostRoles/component_name')
     def hosts = hostRoles?.items?.findAll { it.HostRoles.component_name.equals(component) }?.HostRoles?.host_name
     hosts ?: []
@@ -65,9 +66,8 @@ trait ServiceAndHostService extends ClusterService {
    * Adds the registered nodes to the cluster.
    *
    * @param hosts list of hostname to add
-   * @throws groovyx.net.http.HttpResponseException if a node is not registered with ambari
    */
-  def addHosts(List<String> hosts) throws HttpResponseException {
+  def addHosts(List<String> hosts) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def requestBody = hosts.collectNested { ['Hosts': ['host_name': it]] }
     ambari.post(path: "clusters/${getClusterName()}/hosts", body: new JsonBuilder(requestBody).toPrettyString(), { it })
   }
@@ -78,7 +78,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param host host's internal hostname
    * @return state of the host
    */
-  String getHostState(String host) {
+  String getHostState(String host) throws AmbariConnectionException {
     utils.getAllResources("hosts/$host").Hosts.host_status
   }
 
@@ -89,11 +89,11 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return hostname state association
    */
-  def Map<String, String> getHostStatuses() {
+  def Map<String, String> getHostStatuses() throws AmbariConnectionException {
     utils.getHosts().items.collectEntries { [(it.Hosts.host_name): it.Hosts.host_status] }
   }
 
-  def Map<String, String> getHostNames() {
+  def Map<String, String> getHostNames() throws AmbariConnectionException {
     utils.getHosts().items.collectEntries { [(it.Hosts.public_host_name): it.Hosts.host_name] }
   }
 
@@ -102,7 +102,7 @@ trait ServiceAndHostService extends ClusterService {
    * contains hosts which are not part of the cluster, but are connected
    * to ambari.
    */
-  def Map<String, String> getHostNamesByState(String state) {
+  def Map<String, String> getHostNamesByState(String state) throws AmbariConnectionException {
     getHostStatuses().findAll { it.value == state }
   }
 
@@ -120,7 +120,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @param hostName host to be deleted
    */
-  def removeHost(String hostName) {
+  def removeHost(String hostName) throws AmbariConnectionException, URISyntaxException, ClientProtocolException, IOException {
     def components = getHostComponentsMap(hostName).keySet() as List
 
     // decommission
@@ -155,7 +155,7 @@ trait ServiceAndHostService extends ClusterService {
   /**
    * Deletes the components from the host.
    */
-  def deleteHostComponents(String hostName, List<String> components) {
+  def deleteHostComponents(String hostName, List<String> components) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     components.each {
       ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName/host_components/$it")
     }
@@ -166,7 +166,7 @@ trait ServiceAndHostService extends ClusterService {
    * Note: Deleting a host from a cluster does not mean it is also
    * deleted/unregistered from Ambari. It will remain there with UNKNOWN state.
    */
-  def deleteHost(String hostName) {
+  def deleteHost(String hostName) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName")
   }
 
@@ -175,7 +175,7 @@ trait ServiceAndHostService extends ClusterService {
    * Note: Deleting a host from a cluster does not mean it is also
    * deleted/unregistered from Ambari. It will remain there with UNKNOWN state.
    */
-  def unregisterHost(String hostName) {
+  def unregisterHost(String hostName) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     ambari.delete(path: "hosts/$hostName")
   }
 
@@ -185,7 +185,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param host which host's components are requested
    * @return formatted String
    */
-  def String showHostComponentList(host) {
+  def String showHostComponentList(host) throws AmbariConnectionException {
     utils.getHostComponents(host).items.collect {
       "${it.HostRoles.component_name.padRight(PAD)} [$it.HostRoles.state]"
     }.join('\n')
@@ -197,7 +197,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param host which host's components are requested
    * @return component name - state association
    */
-  def Map<String, String> getHostComponentsMap(host) {
+  def Map<String, String> getHostComponentsMap(host) throws AmbariConnectionException {
     def result = utils.getHostComponents(host)?.items?.collectEntries { [(it.HostRoles.component_name): it.HostRoles.state] }
     result ?: [:]
   }
@@ -205,14 +205,14 @@ trait ServiceAndHostService extends ClusterService {
   /**
    * Decommission the node manager on the given hosts.
    */
-  def int decommissionNodeManagers(List<String> hosts) {
+  def int decommissionNodeManagers(List<String> hosts) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     decommission(hosts, 'NODEMANAGER', 'YARN', 'RESOURCEMANAGER')
   }
 
   /**
    * Decommission the data node on the given hosts.
    */
-  def int decommissionDataNodes(List<String> hosts) {
+  def int decommissionDataNodes(List<String> hosts) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     decommission(hosts, 'DATANODE', 'HDFS', 'NAMENODE')
   }
 
@@ -222,7 +222,7 @@ trait ServiceAndHostService extends ClusterService {
    * @return Map where the key is the internal host name of the node and the value
    *         is size of the replicated block
    */
-  def Map<String, Long> getDecommissioningDataNodes() {
+  def Map<String, Long> getDecommissioningDataNodes() throws AmbariConnectionException {
     def result = [:]
     def response = utils.slurp("clusters/${getClusterName()}/services/HDFS/components/NAMENODE", 'metrics/dfs/namenode/DecomNodes')
     def nodes = slurper.parseText(response?.metrics?.dfs?.namenode?.DecomNodes)
@@ -237,7 +237,7 @@ trait ServiceAndHostService extends ClusterService {
   /**
    * Returns all possible state what found for component on host
    */
-  def Map<String, String> getComponentStates(String hostName, String component) {
+  def Map<String, String> getComponentStates(String hostName, String component) throws AmbariConnectionException {
     def response = utils.slurp("clusters/${getClusterName()}/hosts/${hostName}/host_components/${component}")
     def states = [:]
     ["desired_admin_state", "desired_state", "maintenance_state", "state", "upgrade_state"].each {
@@ -247,7 +247,7 @@ trait ServiceAndHostService extends ClusterService {
   }
 
   private def Map<String, Integer> setComponentsState(String hostName, List<String> components, String state)
-          throws HttpResponseException {
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     if (debugEnabled) {
       println "[DEBUG] PUT ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components"
     }
@@ -278,9 +278,9 @@ trait ServiceAndHostService extends ClusterService {
    * To start all components on hosts use the {@link #startAllServices} method.
    *
    * @return map of the component names and their request id since its an async call
-   * @throws HttpResponseException in case the component is not found
    */
-  def Map<String, Integer> startComponentsOnHost(String hostName, List<String> components) throws HttpResponseException {
+  def Map<String, Integer> startComponentsOnHost(String hostName, List<String> components)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     setComponentsState(hostName, components, 'STARTED')
   }
 
@@ -288,9 +288,9 @@ trait ServiceAndHostService extends ClusterService {
    * Stops the given components on a host.
    *
    * @return map of the component names and their request id since its an async call
-   * @throws HttpResponseException in case the component is not found
    */
-  def Map<String, Integer> stopComponentsOnHost(String hostName, List<String> components) throws HttpResponseException {
+  def Map<String, Integer> stopComponentsOnHost(String hostName, List<String> components)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     setComponentsState(hostName, components, 'INSTALLED')
   }
 
@@ -298,9 +298,9 @@ trait ServiceAndHostService extends ClusterService {
    * Init the given components on a host.
    *
    * @return map of the component names and their request id since its an async call
-   * @throws HttpResponseException in case the component is not found
    */
-  def Map<String, Integer> initComponentsOnHost(String hostName, List<String> components) throws HttpResponseException {
+  def Map<String, Integer> initComponentsOnHost(String hostName, List<String> components)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     setComponentsState(hostName, components, 'INIT')
   }
 
@@ -309,7 +309,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param clusterName
    * @return Operation id
    */
-  def int restartAllServices(String clusterName){
+  def int restartAllServices(String clusterName) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     Map bodyMap = [
             'RequestInfo'              : [command: 'RESTART', context: 'Restart all services', operation_level:'host_component'],
             'Requests/resource_filters': [[hosts_predicate: "HostRoles/cluster_name=$clusterName"]]
@@ -322,7 +322,7 @@ trait ServiceAndHostService extends ClusterService {
   /**
    * Restarts the given components of a service.
    */
-  def int restartServiceComponents(String service, List<String> components) {
+  def int restartServiceComponents(String service, List<String> components) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def filter = components.collect {
       ['service_name': service, 'component_name': it, 'hosts': getHostNamesByComponent(it).join(',')]
     }
@@ -341,7 +341,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param case id of the capture
    * @return the id of the Ambari request
    */
-  def int smartSenseCapture(int caseId) {
+  def int smartSenseCapture(int caseId) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def component = "HST_AGENT"
     def filter = [service_name: "SMARTSENSE", component_name: component, 'hosts': getHostNamesByComponent(component).join(',')];
     Map bodyMap = [
@@ -358,7 +358,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return pre-formatted String
    */
-  def String showHostList() {
+  def String showHostList() throws AmbariConnectionException {
     utils.getHosts().items.collect {
       "$it.Hosts.host_name [$it.Hosts.host_status] $it.Hosts.ip $it.Hosts.os_type:$it.Hosts.os_arch"
     }.join('\n')
@@ -379,7 +379,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return pre-formatted String
    */
-  def String showServiceComponents() {
+  def String showServiceComponents() throws AmbariConnectionException {
     Closure getServiceComponents = this.getServiceComponents
     getServices().items.collect {
       String name = it.ServiceInfo.service_name
@@ -397,7 +397,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return service name - [component name - status]
    */
-  def Map<String, Map<String, String>> getServiceComponentsMap() {
+  def Map<String, Map<String, String>> getServiceComponentsMap() throws AmbariConnectionException {
     Closure getServiceComponents = this.getServiceComponents
     def result = getServices().items.collectEntries {
       String name = it.ServiceInfo.service_name
@@ -409,7 +409,7 @@ trait ServiceAndHostService extends ClusterService {
     result ?: new HashMap()
   }
 
-  private addComponentToHost(String hostName, String component) {
+  private addComponentToHost(String hostName, String component) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     if (debugEnabled) {
       println "[DEBUG] POST ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components"
     }
@@ -421,7 +421,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return host name - [component name - state]
    */
-  def Map<String, Map<String, String>> getHostComponentsStates() {
+  def Map<String, Map<String, String>> getHostComponentsStates() throws AmbariConnectionException {
     utils.getAllResources('hosts', 'host_components/HostRoles/state').items.collectEntries {
       def hostName = it.Hosts.host_name
       def components = it.host_components.collectEntries {
@@ -436,7 +436,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return host name - [component name - state]
    */
-  def List<Map<String, String>> getHostComponentsStatesCategorized() {
+  def List<Map<String, String>> getHostComponentsStatesCategorized() throws AmbariConnectionException {
     def componentList = []
     utils.getAllResources('hosts', 'host_components/HostRoles/state,host_components/component/ServiceComponentInfo/category')
             .items.collectEntries {
@@ -460,9 +460,8 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @param hostNames list of FQDN
    * @return request id since its an async call
-   * @throws HttpResponseException in case of any rest exception
    */
-  def int stopAllComponentsOnHosts(List<String> hostNames) throws HttpResponseException {
+  def int stopAllComponentsOnHosts(List<String> hostNames) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     setAllComponentsStateToInstalled(hostNames, 'Stop all components on hosts')
   }
 
@@ -471,13 +470,13 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @param hostNames list of FQDN
    * @return request id since its an async call
-   * @throws HttpResponseException in case of any rest exception
    */
-  def int installAllComponentsOnHosts(List<String> hostNames) throws HttpResponseException {
+  def int installAllComponentsOnHosts(List<String> hostNames) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     setAllComponentsStateToInstalled(hostNames, 'Install all components on hosts')
   }
 
-  private int setAllComponentsStateToInstalled(List<String> hostNames, String context) {
+  private int setAllComponentsStateToInstalled(List<String> hostNames, String context)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     setAllComponentsState(getClusterName(), 'INSTALLED', context, "HostRoles/host_name.in(${hostNames.join(',')})")
   }
 
@@ -489,7 +488,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param context context shown on the UI
    * @return id of the request
    */
-  private def int setAllComponentsState(clusterName, state, context, query) throws HttpResponseException {
+  private def int setAllComponentsState(clusterName, state, context, query) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def reqInfo = [
             'context'        : context,
             'operation_level': ['level': 'HOST_COMPONENT', 'cluster_name': clusterName],
@@ -514,9 +513,8 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @param hostNames hosts to install the component to
    * @param components components to be installed
-   * @throws HttpResponseException in case the component's service is not installed
    */
-  def void addComponentsToHosts(List<String> hostNames, List<String> components) throws HttpResponseException {
+  def void addComponentsToHosts(List<String> hostNames, List<String> components) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def commaSepHostNames = hostNames.join(',')
     def addRequest = [
             'RequestInfo': ['query': "Hosts/host_name.in($commaSepHostNames)"],
@@ -530,7 +528,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return service properties as Map
    */
-  private getServices() {
+  private getServices() throws AmbariConnectionException {
     utils.getAllResources('services', 'ServiceInfo')
   }
 
@@ -539,7 +537,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return formatted String
    */
-  def String showServiceList() {
+  def String showServiceList() throws AmbariConnectionException {
     getServices().items.collect { "${it.ServiceInfo.service_name.padRight(PAD)} [$it.ServiceInfo.state]" }.join('\n')
   }
 
@@ -548,7 +546,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return service name - service state association as Map
    */
-  def Map<String, String> getServicesMap() {
+  def Map<String, String> getServicesMap() throws AmbariConnectionException {
     def result = getServices().items.collectEntries { [(it.ServiceInfo.service_name): it.ServiceInfo.state] }
     result ?: new HashMap()
   }
@@ -558,7 +556,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @param serviceName name of the service
    */
-  def void addService(String serviceName) {
+  def void addService(String serviceName) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     ambari.post(path: "clusters/${getClusterName()}/services",
             body: new JsonBuilder(['ServiceInfo': ['service_name': serviceName]]).toPrettyString(), { it })
   }
@@ -569,7 +567,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param serviceName name of the service
    * @param component component name
    */
-  def void addServiceComponent(String serviceName, String component) {
+  def void addServiceComponent(String serviceName, String component) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def body = ['components': [['ServiceComponentInfo': ['component_name': component]]]]
     def Map<String, ?> requestMap = [:]
     requestMap.put('path', "clusters/${getClusterName()}/services")
@@ -585,7 +583,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param state desired state
    * @return id of the request
    */
-  def int setServiceState(String serviceName, String state) {
+  def int setServiceState(String serviceName, String state) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def body = ['RequestInfo': ['context'        : "Set service: $serviceName state to: $state",
                                 'operation_level': ['level': 'CLUSTER', 'cluster_name': getClusterName()]],
                 'Body'       : ['ServiceInfo': ['state': state]]]
@@ -603,7 +601,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return id of the request since its an async call
    */
-  def int startAllServices() {
+  def int startAllServices() throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     log.debug('Starting all services ...')
     manageService('Start All Services', 'STARTED')
   }
@@ -613,7 +611,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return id of the request since its an async call
    */
-  def int stopAllServices() {
+  def int stopAllServices() throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     log.debug('Stopping all services ...')
     manageService('Stop All Services', 'INSTALLED')
   }
@@ -624,7 +622,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param service name of the service
    * @return id of the request
    */
-  def int startService(String service) {
+  def int startService(String service) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     manageService("Starting $service", 'STARTED', service)
   }
 
@@ -634,19 +632,19 @@ trait ServiceAndHostService extends ClusterService {
    * @param service name of the service
    * @return id of the request
    */
-  def int stopService(String service) {
+  def int stopService(String service) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     manageService("Stopping $service", 'INSTALLED', service)
   }
 
-  def boolean servicesStarted() {
+  def boolean servicesStarted() throws AmbariConnectionException {
     return servicesStatus(true)
   }
 
-  def boolean servicesStopped() {
+  def boolean servicesStopped() throws AmbariConnectionException {
     return servicesStatus(false)
   }
 
-  private boolean servicesStatus(boolean starting) {
+  private boolean servicesStatus(boolean starting) throws AmbariConnectionException {
     def String status = (starting) ? 'STARTED' : 'INSTALLED'
     Map serviceComponents = getServicesMap()
     boolean allInState = true
@@ -657,11 +655,11 @@ trait ServiceAndHostService extends ClusterService {
     return allInState;
   }
 
-  private int manageService(String context, String state) {
+  private int manageService(String context, String state) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     return manageService(context, state, '')
   }
 
-  private int manageService(String context, String state, String service) {
+  private int manageService(String context, String state, String service) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     log.info('ManageService. context: {}, state: {}, service: {}', context, state, service)
     Map bodyMap = [
             RequestInfo: [context: context],
@@ -689,7 +687,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param serviceName name of the service
    * @return id of the request
    */
-  def int runServiceCheck(String command, String serviceName) {
+  def int runServiceCheck(String command, String serviceName) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     Map bodyMap = [
             'RequestInfo'              : [command: command, context: command],
             'Requests/resource_filters': [[service_name: serviceName]]
@@ -699,7 +697,7 @@ trait ServiceAndHostService extends ClusterService {
     })
   }
 
-  def Map<String, Map<String, String>> getServiceConfigMap() {
+  def Map<String, Map<String, String>> getServiceConfigMap() throws AmbariConnectionException {
     return getServiceConfigMap('')
   }
 
@@ -709,7 +707,7 @@ trait ServiceAndHostService extends ClusterService {
    *
    * @return a Map with entries of format <config-type, Map<property, value>>
    */
-  def Map<String, Map<String, String>> getServiceConfigMap(String type) {
+  def Map<String, Map<String, String>> getServiceConfigMap(String type) throws AmbariConnectionException {
     def configs = getServiceConfigMapByHostGroup(null)
     type ? [(type): configs.get(type)] : configs
   }
@@ -720,7 +718,7 @@ trait ServiceAndHostService extends ClusterService {
    * @param hostGroup name of the host group, in Ambari the config group's name is the same
    * @return return the configurations in the form of <config-type, <property_key, property_value>>
    */
-  def Map<String, Map<String, String>> getServiceConfigMapByHostGroup(String hostGroup) {
+  def Map<String, Map<String, String>> getServiceConfigMapByHostGroup(String hostGroup) throws AmbariConnectionException {
     Map<String, Map<String, String>> result = new HashMap<>()
     def rawConfigs = utils.getAllPredictedResources('configurations/service_config_versions',
             ['is_current': 'true', 'fields': '*']).items
@@ -740,7 +738,7 @@ trait ServiceAndHostService extends ClusterService {
     result
   }
 
-  def Map<String, String> getConfigValuesByConfigIds(List<String> configIds) {
+  def Map<String, String> getConfigValuesByConfigIds(List<String> configIds) throws AmbariConnectionException {
     def configMap = new HashMap<String, String>();
     def rawConfigs = utils.getAllPredictedResources('configurations/service_config_versions',
             ['is_current': 'true', 'fields': '*']).items
@@ -761,7 +759,7 @@ trait ServiceAndHostService extends ClusterService {
     return configMap
   }
 
-  def Map<String, String> getConfigValuesByConfigIdsAndType(List<String> configIds) {
+  def Map<String, String> getConfigValuesByConfigIdsAndType(List<String> configIds) throws AmbariConnectionException {
     def configMap = new HashMap<String, String>();
     def rawConfigs = utils.getAllPredictedResources('configurations/service_config_versions',
             ['is_current': 'true', 'fields': '*']).items

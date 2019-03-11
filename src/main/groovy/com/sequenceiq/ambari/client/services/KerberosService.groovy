@@ -20,6 +20,8 @@ package com.sequenceiq.ambari.client.services
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
+import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait KerberosService extends BlueprintService {
@@ -31,7 +33,7 @@ trait KerberosService extends BlueprintService {
    * @param realm kerberos realm
    * @param domain kerberos domain
    */
-  def void createKerberosConfig(String kdcHosts, String realm, String domain) {
+  def void createKerberosConfig(String kdcHosts, String realm, String domain) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def model = [
       'KDC_HOSTS'     : kdcHosts,
       'REALM'        : realm,
@@ -51,7 +53,7 @@ trait KerberosService extends BlueprintService {
    *
    * @param realm kerberos realm
    */
-  def void createKerberosDescriptor(String realm) {
+  def void createKerberosDescriptor(String realm) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def json = utils.getResourceContent('templates/kerberos-descriptor').replaceAll('actual-realm', realm)
     ambari.post(path: "clusters/${getClusterName()}/artifacts/kerberos_descriptor", body: json, { it })
   }
@@ -63,7 +65,7 @@ trait KerberosService extends BlueprintService {
    * @param principal admin principal
    * @param password password for the admin principal
    */
-  def void setKerberosSession(String principal, String password) {
+  def void setKerberosSession(String principal, String password) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def session = ['session_attributes': ['kerberos_admin': ['principal': principal, 'password': password]]]
     def Map<String, ?> kdcPut = [:]
     kdcPut.put('requestContentType', ContentType.URLENC)
@@ -72,7 +74,7 @@ trait KerberosService extends BlueprintService {
     ambari.put(kdcPut)
   }
 
-  def void setKerberosPrincipal(String principal, String password) {
+  def void setKerberosPrincipal(String principal, String password) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def body = ['Credential': ['principal': principal, 'key': password, 'type':'temporary']]
     def Map<String, ?> kdcPost = [:]
     kdcPost.put('requestContentType', ContentType.URLENC)
@@ -87,7 +89,7 @@ trait KerberosService extends BlueprintService {
    *
    * @return id of the request
    */
-  def int enableKerberos() {
+  def int enableKerberos() throws Exception {
     changeKerberosState('KERBEROS')
   }
 
@@ -96,11 +98,11 @@ trait KerberosService extends BlueprintService {
    *
    * @return id of the request
    */
-  def int disableKerberos() {
+  def int disableKerberos() throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     changeKerberosState('NONE')
   }
 
-  private int changeKerberosState(String state) {
+  private int changeKerberosState(String state) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     Map<String, ?> putRequestMap = [:]
     putRequestMap.put('requestContentType', ContentType.URLENC)
     putRequestMap.put('path', "clusters/${getClusterName()}")
@@ -115,7 +117,7 @@ trait KerberosService extends BlueprintService {
    * @param missingOnly if set to true, keytabs will be generated only for missing hosts and services
    * @return id of the request
    */
-  def int generateKeytabs(boolean missingOnly) {
+  def int generateKeytabs(boolean missingOnly) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def Map<String, ?> putRequestMap = [:]
     putRequestMap.put('requestContentType', ContentType.URLENC)
     putRequestMap.put('path', "clusters/${getClusterName()}")

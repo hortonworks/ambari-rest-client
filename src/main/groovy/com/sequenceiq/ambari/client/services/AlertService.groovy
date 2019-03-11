@@ -17,7 +17,10 @@
  */
 package com.sequenceiq.ambari.client.services
 
+import com.sequenceiq.ambari.client.AmbariConnectionException
 import groovy.util.logging.Slf4j
+import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait AlertService extends ClusterService {
@@ -27,7 +30,7 @@ trait AlertService extends ClusterService {
    *
    * @param definition alert definition as json
    */
-  def void createAlert(String definition) {
+  def void createAlert(String definition) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     ambari.post(path: "clusters/${getClusterName()}/alert_definitions", body: definition, { it })
   }
 
@@ -36,7 +39,7 @@ trait AlertService extends ClusterService {
    *
    * @return collection of definitions
    */
-  def List<Map<String, String>> getAlertDefinitions() {
+  def List<Map<String, String>> getAlertDefinitions() throws AmbariConnectionException {
     utils.getAllResources('alert_definitions', 'AlertDefinition').items.collect {
       def details = [:]
       def definition = it.AlertDefinition
@@ -51,7 +54,7 @@ trait AlertService extends ClusterService {
     }
   }
 
-  def Map<String, List<Map<String, Object>>> getAlerts() {
+  def Map<String, List<Map<String, Object>>> getAlerts() throws AmbariConnectionException {
     return getAlerts(Collections.emptyList())
   }
 
@@ -61,7 +64,7 @@ trait AlertService extends ClusterService {
    *
    * @return alert properties
    */
-  def Map<String, List<Map<String, Object>>> getAlerts(List<String> scope) {
+  def Map<String, List<Map<String, Object>>> getAlerts(List<String> scope) throws AmbariConnectionException {
     utils.getAllResources('alerts', 'Alert').items.findAll {
       scope == [] || scope.contains(it.Alert.scope)
     }.collect { it.Alert }.groupBy { it.definition_name }
@@ -73,7 +76,7 @@ trait AlertService extends ClusterService {
    * @param id id of the alert
    * @return alert or empty collection
    */
-  Map<String, Object> getAlert(int id) {
+  Map<String, Object> getAlert(int id) throws AmbariConnectionException {
     def response = utils.getAllResources("alerts/$id")
     response ? response.Alert : [:]
   }
@@ -85,7 +88,7 @@ trait AlertService extends ClusterService {
    * @param definitionName alert definition name
    * @return list of alerts or empty collection
    */
-  List<Map<String, Object>> getAlert(String definitionName) {
+  List<Map<String, Object>> getAlert(String definitionName) throws AmbariConnectionException {
     getAlerts()[definitionName] ?: []
   }
 
@@ -95,7 +98,7 @@ trait AlertService extends ClusterService {
    * @param id id of the alert history
    * @return history or empty collection
    */
-  Map<String, Object> getAlertHistory(int id) {
+  Map<String, Object> getAlertHistory(int id) throws AmbariConnectionException {
     def response = utils.getAllResources("alert_history/$id")
     response ? response.AlertHistory : [:]
   }
@@ -107,7 +110,7 @@ trait AlertService extends ClusterService {
    * @param count desired number of result from the latest one
    * @return list of alert properties or empty collection
    */
-  def List<Map<String, Object>> getAlertHistory(String alertDefinition, int count) {
+  def List<Map<String, Object>> getAlertHistory(String alertDefinition, int count) throws AmbariConnectionException {
     def result = []
     def prePredicate = ['AlertHistory/definition_name': alertDefinition]
     def items = utils.getAllPredictedResources('alert_history', prePredicate).items

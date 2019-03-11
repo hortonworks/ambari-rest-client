@@ -17,9 +17,12 @@
  */
 package com.sequenceiq.ambari.client.services
 
+import com.sequenceiq.ambari.client.AmbariConnectionException
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
+import groovyx.net.http.HttpResponseException
+import org.apache.http.client.ClientProtocolException
 
 @Slf4j
 trait HBaseService extends ClusterService {
@@ -27,7 +30,7 @@ trait HBaseService extends ClusterService {
   /**
    * Decommission the HBase Region Server on the given hosts.
    */
-  def int decommissionHBaseRegionServers(List<String> hosts) {
+  def int decommissionHBaseRegionServers(List<String> hosts) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     decommission(hosts, 'HBASE_REGIONSERVER', 'HBASE', 'HBASE_MASTER')
   }
 
@@ -37,7 +40,7 @@ trait HBaseService extends ClusterService {
    * @param hostNames names of the hosts which is running the Region server
    * @param mode true to maintenance mode false to active mode
    */
-  def void setHBaseRegionServersToMaintenance(List<String> hostNames, boolean mode) {
+  def void setHBaseRegionServersToMaintenance(List<String> hostNames, boolean mode) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     hostNames.each {
       setHBaseRegionServerToMaintenance(it, mode)
     }
@@ -49,7 +52,7 @@ trait HBaseService extends ClusterService {
    * @param hostName name of the host which is running the Region server
    * @param mode true to maintenance mode false to active mode
    */
-  def void setHBaseRegionServerToMaintenance(String hostName, boolean mode) {
+  def void setHBaseRegionServerToMaintenance(String hostName, boolean mode) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     def reqInfo = ['RequestInfo': ['context': 'Turn On Maintenance Mode for RegionServer'],
                    'Body'       : ['HostRoles': ['maintenance_state': mode ? 'ON' : 'OFF']]]
     def Map<String, ?> putRequestMap = [:]
@@ -66,7 +69,7 @@ trait HBaseService extends ClusterService {
    * @param hostFilter filter for which hosts are interested
    * @return map key - hostname value - state
    */
-  def Map<String, String> getHBaseRegionServersState(List<String> hosts) {
+  def Map<String, String> getHBaseRegionServersState(List<String> hosts) throws AmbariConnectionException {
     def res = [:]
     hosts.each {
       def rs = utils.getAllResources("hosts/$it/host_components/HBASE_REGIONSERVER")
