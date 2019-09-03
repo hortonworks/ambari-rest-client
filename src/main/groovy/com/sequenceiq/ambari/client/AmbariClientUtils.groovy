@@ -133,7 +133,9 @@ class AmbariClientUtils {
    */
   def getSlurpedResource(Map resourceRequestMap) throws AmbariConnectionException {
     def rawResource = getRawResource(resourceRequestMap)
+    log.info("getSlurpedResource() rawResource value: {}", rawResource)
     def slurpedResource = (rawResource != null) ? ambariClient.slurper.parseText(rawResource) : rawResource
+    log.info("getSlurpedResource() return value: {}", slurpedResource)
     return slurpedResource
   }
 
