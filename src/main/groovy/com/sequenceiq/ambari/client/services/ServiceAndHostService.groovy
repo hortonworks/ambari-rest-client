@@ -224,7 +224,11 @@ trait ServiceAndHostService extends ClusterService {
    * deleted/unregistered from Ambari. It will remain there with UNKNOWN state.
    */
   def deleteHosts(List<String> hosts) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
-    ambari.delete(path: "clusters/${getClusterName()}/hosts", queryString: "Hosts/host_name.in(${hosts.join(',')})".toString())
+    log.debug('AmbariClient deletehosts {}', hosts)
+    def responseDecorator = ambari.delete(path: "clusters/${getClusterName()}/hosts", queryString: "Hosts/host_name.in(${hosts.join(',')})".toString())
+    def statusLine = responseDecorator?.statusLine
+    def responseData = responseDecorator?.data?.text
+    log.debug('AmbariClient deletehosts statusLine: {}, responseData: {}', statusLine, responseData)
   }
 
   /**
