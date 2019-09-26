@@ -20,13 +20,10 @@ package com.sequenceiq.ambari.client
 import com.sequenceiq.ambari.client.services.CommonService
 import groovy.text.SimpleTemplateEngine
 import groovy.util.logging.Slf4j
-import groovyx.net.http.HttpResponseException
 import org.apache.commons.io.IOUtils
-import org.apache.http.NoHttpResponseException
 import org.apache.http.client.ClientProtocolException
 import org.apache.http.config.Registry
 import org.apache.http.config.RegistryBuilder
-import org.apache.http.conn.HttpHostConnectException
 import org.apache.http.conn.socket.ConnectionSocketFactory
 import org.apache.http.conn.socket.PlainConnectionSocketFactory
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
@@ -90,17 +87,8 @@ class AmbariClientUtils {
       responseData = responseDecorator?.data?.text
       log.debug('AmbariClient statusLine: {}, responseData: {}', statusLine, responseData)
     } catch (e) {
-      def clazz = e.class
       log.info('Error occurred during GET request to {}, exception: ', resourceRequestMap, e)
-      if (clazz == NoHttpResponseException.class
-              || clazz == ConnectException.class
-              || clazz == ClientProtocolException.class
-              || clazz == NoRouteToHostException.class
-              || clazz == UnknownHostException.class
-              || clazz == HttpHostConnectException.class
-              || (clazz == HttpResponseException.class && (e.message == 'Bad credentials' || e.statusCode == 403))) {
-        throw new AmbariConnectionException("Cannot connect to Ambari ${ambariClient.ambari.getUri()}")
-      }
+      throw e
     }
     return responseData
   }
