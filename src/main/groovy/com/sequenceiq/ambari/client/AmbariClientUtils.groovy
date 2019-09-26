@@ -118,9 +118,9 @@ class AmbariClientUtils {
     getSlurpedResource(resourceReqMap)
   }
 
-  def slurp(path, fields = '') throws AmbariConnectionException {
+  def slurp(path, fields = '', queryString = '') throws AmbariConnectionException {
     def fieldsMap = fields ? ['fields': fields] : [:]
-    def Map resourceReqMap = getResourceRequestMap(path, fieldsMap)
+    def Map resourceReqMap = getResourceRequestMap(path, fieldsMap, queryString)
     def result = getSlurpedResource(resourceReqMap)
     return result
   }
@@ -177,6 +177,28 @@ class AmbariClientUtils {
   }
 
   /**
+   * Returns the filtered parameters of the given hosts as a Map
+   * @param hosts the list of the hosts
+   * @param fields the list of the parameter names
+   * @throws AmbariConnectionException
+   */
+  def Map<String, Object> getFilteredHostsParams(String clusterName, List<String> hosts, List<String> fields) throws AmbariConnectionException {
+    slurp("clusters/${clusterName}/hosts", fields.join(','), "Hosts/host_name.in(${hosts.join(',')})")
+  }
+
+  /**
+   * Returns the filtered parameters of the given hosts and components as a Map
+   * @param hosts the list of the hosts
+   * @param fields the list of the parameter names
+   * @throws AmbariConnectionException
+   */
+  def Map<String, Object> getFilteredHostsParams(String clusterName, List<String> hosts, List<String> components, List<String> fields)
+          throws AmbariConnectionException {
+    slurp("clusters/${clusterName}/hosts", fields.join(','),
+            "Hosts/host_name.in(${hosts.join(',')})&host_components/HostRoles/component_name.in(${components.join(',')})")
+  }
+
+  /**
    * Returns the properties of the host components as a Map parsed from the Ambari response json.
    *
    * @param host which host's components are requested
@@ -186,12 +208,15 @@ class AmbariClientUtils {
     getAllResources("hosts/$host/host_components", 'HostRoles')
   }
 
-  Map<String, ?> getResourceRequestMap(String path, Map<String, String> queryParams) {
+  Map<String, ?> getResourceRequestMap(String path, Map<String, String> queryParams, String queryString = '') {
     def Map requestMap
     if (queryParams) {
       requestMap = ['path': "${ambariClient.ambari.getUri()}" + path, 'query': queryParams]
     } else {
       requestMap = ['path': "${ambariClient.ambari.getUri()}" + path]
+    }
+    if (queryString) {
+      requestMap << ['queryString': queryString]
     }
     return requestMap
   }
