@@ -18,6 +18,8 @@
 package com.sequenceiq.ambari.client.services
 
 import com.sequenceiq.ambari.client.AmbariConnectionException
+import com.sequenceiq.ambari.client.model.HostComponentStatuses
+import com.sequenceiq.ambari.client.model.HostStatus
 import groovy.json.JsonBuilder
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
@@ -97,6 +99,52 @@ trait ServiceAndHostService extends ClusterService {
     utils.getHosts().items.collectEntries { [(it.Hosts.public_host_name): it.Hosts.host_name] }
   }
 
+  Map<String, HostStatus> getHostsStatuses(List<String> hosts) throws AmbariConnectionException {
+    def fields = ["Hosts/host_status", "host_components/HostRoles/desired_admin_state", "host_components/HostRoles/state",
+              "host_components/HostRoles/desired_state", "host_components/HostRoles/maintenance_state","host_components/HostRoles/upgrade_state"]
+    Map<String, Object> hostParams = utils.getFilteredHostsParams(getClusterName(), hosts, fields)
+    Map<String, HostStatus> hostsStatuses = [:]
+    hostParams?.items?.collectEntries {
+      HostStatus hostStatus = new HostStatus()
+      hostStatus.hostStatus = it?.Hosts?.host_status
+      hostStatus.hostComponentsStatuses = [:]
+      hostsStatuses << [(it?.Hosts?.host_name) : hostStatus]
+      it.host_components.collectEntries {
+        HostComponentStatuses hostComponentStatuses = new HostComponentStatuses()
+        hostComponentStatuses.desired_admin_state = it?.HostRoles?.desired_admin_state
+        hostComponentStatuses.desired_state = it?.HostRoles?.desired_state
+        hostComponentStatuses.state = it?.HostRoles?.state
+        hostComponentStatuses.maintenance_state = it?.HostRoles?.maintenance_state
+        hostComponentStatuses.upgrade_state = it?.HostRoles?.upgrade_state
+        hostStatus.hostComponentsStatuses << [(it.HostRoles.component_name) : hostComponentStatuses]
+      }
+    }
+    return hostsStatuses
+  }
+
+  Map<String, HostStatus> getHostComponentStatuses(List<String> hosts, List<String> components) {
+    def fields = ["Hosts/host_status", "host_components/HostRoles/desired_admin_state", "host_components/HostRoles/state",
+                  "host_components/HostRoles/desired_state", "host_components/HostRoles/maintenance_state","host_components/HostRoles/upgrade_state"]
+    Map<String, Object> hostParams = utils.getFilteredHostsParams(getClusterName(), hosts, components, fields)
+    Map<String, HostStatus> hostsStatuses = [:]
+    hostParams?.items?.collectEntries {
+      HostStatus hostStatus = new HostStatus()
+      hostStatus.hostStatus = it?.Hosts?.host_status
+      hostStatus.hostComponentsStatuses = [:]
+      hostsStatuses << [(it?.Hosts?.host_name): hostStatus]
+      it.host_components.collectEntries {
+        HostComponentStatuses hostComponentStatuses = new HostComponentStatuses()
+        hostComponentStatuses.desired_admin_state = it?.HostRoles?.desired_admin_state
+        hostComponentStatuses.desired_state = it?.HostRoles?.desired_state
+        hostComponentStatuses.state = it?.HostRoles?.state
+        hostComponentStatuses.maintenance_state = it?.HostRoles?.maintenance_state
+        hostComponentStatuses.upgrade_state = it?.HostRoles?.upgrade_state
+        hostStatus.hostComponentsStatuses << [(it.HostRoles.component_name): hostComponentStatuses]
+      }
+    }
+    return hostsStatuses
+  }
+
   /**
    * Returns the names of the hosts which have the given state. It also
    * contains hosts which are not part of the cluster, but are connected
@@ -168,6 +216,15 @@ trait ServiceAndHostService extends ClusterService {
    */
   def deleteHost(String hostName) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     ambari.delete(path: "clusters/${getClusterName()}/hosts/$hostName")
+  }
+
+  /**
+   * Deletes the hosts from the cluster.
+   * Note: Deleting a host from a cluster does not mean it is also
+   * deleted/unregistered from Ambari. It will remain there with UNKNOWN state.
+   */
+  def deleteHosts(List<String> hosts) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
+    ambari.delete(path: "clusters/${getClusterName()}/hosts", queryString: "Hosts/host_name.in(${hosts.join(',')})".toString())
   }
 
   /**
