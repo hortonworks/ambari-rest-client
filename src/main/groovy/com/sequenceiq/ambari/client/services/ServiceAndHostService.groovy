@@ -101,14 +101,14 @@ trait ServiceAndHostService extends ClusterService {
 
   Map<String, HostStatus> getHostsStatuses(List<String> hosts) throws AmbariConnectionException {
     def fields = ["Hosts/host_status", "host_components/HostRoles/desired_admin_state", "host_components/HostRoles/state",
-              "host_components/HostRoles/desired_state", "host_components/HostRoles/maintenance_state","host_components/HostRoles/upgrade_state"]
+                  "host_components/HostRoles/desired_state", "host_components/HostRoles/maintenance_state", "host_components/HostRoles/upgrade_state"]
     Map<String, Object> hostParams = utils.getFilteredHostsParams(getClusterName(), hosts, fields)
     Map<String, HostStatus> hostsStatuses = [:]
     hostParams?.items?.collectEntries {
       HostStatus hostStatus = new HostStatus()
       hostStatus.hostStatus = it?.Hosts?.host_status
       hostStatus.hostComponentsStatuses = [:]
-      hostsStatuses << [(it?.Hosts?.host_name) : hostStatus]
+      hostsStatuses << [(it?.Hosts?.host_name): hostStatus]
       it.host_components.collectEntries {
         HostComponentStatuses hostComponentStatuses = new HostComponentStatuses()
         hostComponentStatuses.desired_admin_state = it?.HostRoles?.desired_admin_state
@@ -116,7 +116,7 @@ trait ServiceAndHostService extends ClusterService {
         hostComponentStatuses.state = it?.HostRoles?.state
         hostComponentStatuses.maintenance_state = it?.HostRoles?.maintenance_state
         hostComponentStatuses.upgrade_state = it?.HostRoles?.upgrade_state
-        hostStatus.hostComponentsStatuses << [(it.HostRoles.component_name) : hostComponentStatuses]
+        hostStatus.hostComponentsStatuses << [(it.HostRoles.component_name): hostComponentStatuses]
       }
     }
     return hostsStatuses
@@ -124,7 +124,7 @@ trait ServiceAndHostService extends ClusterService {
 
   Map<String, HostStatus> getHostComponentStatuses(List<String> hosts, List<String> components) {
     def fields = ["Hosts/host_status", "host_components/HostRoles/desired_admin_state", "host_components/HostRoles/state",
-                  "host_components/HostRoles/desired_state", "host_components/HostRoles/maintenance_state","host_components/HostRoles/upgrade_state"]
+                  "host_components/HostRoles/desired_state", "host_components/HostRoles/maintenance_state", "host_components/HostRoles/upgrade_state"]
     Map<String, Object> hostParams = utils.getFilteredHostsParams(getClusterName(), hosts, components, fields)
     Map<String, HostStatus> hostsStatuses = [:]
     hostParams?.items?.collectEntries {
@@ -224,8 +224,17 @@ trait ServiceAndHostService extends ClusterService {
    * deleted/unregistered from Ambari. It will remain there with UNKNOWN state.
    */
   def deleteHosts(List<String> hosts) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
-    log.debug('AmbariClient deletehosts {}', hosts)
-    def responseDecorator = ambari.delete(path: "clusters/${getClusterName()}/hosts", queryString: "Hosts/host_name.in(${hosts.join(',')})".toString())
+    Map bodyMap = [
+            RequestInfo: [
+                    query                  : "Hosts/host_name.in(" + hosts.join(',') + ")",
+                    force_delete_components: true
+            ]
+    ]
+    def Map<String, ?> deleteRequestMap = [:]
+    deleteRequestMap.put('requestContentType', ContentType.URLENC)
+    deleteRequestMap.put('path', "clusters/${getClusterName()}/hosts")
+    deleteRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
+    def responseDecorator = ambari.delete(deleteRequestMap).getAt('responseData')?.getAt('str')
     def statusLine = responseDecorator?.statusLine
     def responseData = responseDecorator?.data?.text
     log.debug('AmbariClient deletehosts statusLine: {}, responseData: {}', statusLine, responseData)
@@ -313,17 +322,17 @@ trait ServiceAndHostService extends ClusterService {
       println "[DEBUG] PUT ${ambari.getUri()}clusters/${getClusterName()}/hosts/$hostName/host_components"
     }
     Map bodyMap = [
-            RequestInfo : [
-                    context : "${hostName.toUpperCase()} components ${state.toUpperCase()}",
-                    operation_level : [
-                            level : "HOST",
-                            cluster_name : getClusterName(),
-                            host_name : hostName
+            RequestInfo: [
+                    context        : "${hostName.toUpperCase()} components ${state.toUpperCase()}",
+                    operation_level: [
+                            level       : "HOST",
+                            cluster_name: getClusterName(),
+                            host_name   : hostName
                     ],
-                    query : "HostRoles/component_name.in(" + components.join(',') + ")"
+                    query          : "HostRoles/component_name.in(" + components.join(',') + ")"
             ],
-            HostRoles : [
-                    state : state.toUpperCase()
+            HostRoles  : [
+                    state: state.toUpperCase()
             ]
     ]
     def Map<String, ?> putRequestMap = [:]
@@ -331,7 +340,7 @@ trait ServiceAndHostService extends ClusterService {
     putRequestMap.put('path', "clusters/${getClusterName()}/hosts/$hostName/host_components")
     putRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
     def response = ambari.put(putRequestMap).getAt('responseData')?.getAt('str')
-    return response ? ["SET_STATE_$state" : slurper.parseText(response)?.Requests?.id] : ["SET_STATE_$state" : -1]
+    return response ? ["SET_STATE_$state": slurper.parseText(response)?.Requests?.id] : ["SET_STATE_$state": -1]
   }
 
   /**
@@ -372,7 +381,7 @@ trait ServiceAndHostService extends ClusterService {
    */
   def int restartAllServices(String clusterName) throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
     Map bodyMap = [
-            'RequestInfo'              : [command: 'RESTART', context: 'Restart all services', operation_level:'host_component'],
+            'RequestInfo'              : [command: 'RESTART', context: 'Restart all services', operation_level: 'host_component'],
             'Requests/resource_filters': [[hosts_predicate: "HostRoles/cluster_name=$clusterName"]]
     ]
     ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), {
@@ -406,8 +415,8 @@ trait ServiceAndHostService extends ClusterService {
     def component = "HST_AGENT"
     def filter = [service_name: "SMARTSENSE", component_name: component, 'hosts': getHostNamesByComponent(component).join(',')];
     Map bodyMap = [
-            'RequestInfo': [command: 'Capture', context: "SmartSense Data Capture", 'parameters/service': "all", 'parameters/caseNumber': "$caseId"],
-            'Requests/resource_filters': [ filter ]
+            'RequestInfo'              : [command: 'Capture', context: "SmartSense Data Capture", 'parameters/service': "all", 'parameters/caseNumber': "$caseId"],
+            'Requests/resource_filters': [filter]
     ]
     ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), {
       utils.getRequestId(it)

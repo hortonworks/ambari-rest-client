@@ -33,12 +33,14 @@ import com.sequenceiq.ambari.client.services.ViewService
 import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import groovyx.net.http.ContentType
+import groovyx.net.http.HTTPBuilder.RequestConfigDelegate
 import groovyx.net.http.RESTClient
 import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.client.ClientProtocolException
 import org.apache.http.client.CredentialsProvider
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase
 import org.apache.http.conn.ssl.SSLContextBuilder
 import org.apache.http.conn.ssl.TrustStrategy
 import org.apache.http.impl.client.BasicCredentialsProvider
@@ -74,6 +76,12 @@ class AmbariClient implements AlertService, BlueprintService, ConfigService, Gro
                String clientCert = null, String clientKey = null, String serverCert = null,
                String proxyHost = null, Integer proxyPort = null, String proxyUser = null, String proxyPassword = null,
                String basePath = "", boolean https = false) {
+
+    RESTClient.metaClass.delete = { Map<String,?> args ->
+      def deleteRequestWithEntity = [getMethod: { "DELETE" }] as HttpEntityEnclosingRequestBase
+      delegate.doRequest(new RequestConfigDelegate(delegate, args, deleteRequestWithEntity, null));
+    }
+
     validateClientParams(host, port, user, password)
     def http = clientCert == null && !https ? 'http' : 'https';
     ambari = new RESTClient("${http}://${host}:${port}${basePath}/api/v1/" as String)
