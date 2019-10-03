@@ -234,7 +234,7 @@ trait ServiceAndHostService extends ClusterService {
     deleteRequestMap.put('requestContentType', ContentType.URLENC)
     deleteRequestMap.put('path', "clusters/${getClusterName()}/hosts")
     deleteRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
-    def responseDecorator = ambari.delete(deleteRequestMap).getAt('responseData')?.getAt('str')
+    def responseDecorator = ambari.delete(deleteRequestMap)
     def statusLine = responseDecorator?.statusLine
     def responseData = responseDecorator?.data?.text
     log.debug('AmbariClient deletehosts statusLine: {}, responseData: {}', statusLine, responseData)
