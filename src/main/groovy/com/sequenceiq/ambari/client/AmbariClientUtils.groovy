@@ -165,6 +165,16 @@ class AmbariClientUtils {
   }
 
   /**
+   * Returns the filtered parameters of all hosts as a Map
+   * @param hosts the list of the hosts
+   * @param fields the list of the parameter names
+   * @throws AmbariConnectionException
+   */
+  def Map<String, Object> getFilteredParamsForAllHosts(String clusterName, List<String> fields) throws AmbariConnectionException {
+    slurp("clusters/${clusterName}/hosts", fields.join(','))
+  }
+
+  /**
    * Returns the filtered parameters of the given hosts as a Map
    * @param hosts the list of the hosts
    * @param fields the list of the parameter names
@@ -184,6 +194,17 @@ class AmbariClientUtils {
           throws AmbariConnectionException {
     slurp("clusters/${clusterName}/hosts", fields.join(','),
             "Hosts/host_name.in(${hosts.join(',')})&host_components/HostRoles/component_name.in(${components.join(',')})")
+  }
+
+  /**
+   * Returns the filtered parameters of components for all the hosts as a Map
+   * @param hosts the list of the hosts
+   * @param fields the list of the parameter names
+   * @throws AmbariConnectionException
+   */
+  def Map<String, Object> getFilteredComponentParamsForAllHosts(String clusterName, List<String> components, List<String> fields)
+          throws AmbariConnectionException {
+    slurp("clusters/${clusterName}/hosts", fields.join(','), "host_components/HostRoles/component_name.in(${components.join(',')})")
   }
 
   /**

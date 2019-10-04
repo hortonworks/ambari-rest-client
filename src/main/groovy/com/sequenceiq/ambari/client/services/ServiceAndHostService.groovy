@@ -102,9 +102,9 @@ trait ServiceAndHostService extends ClusterService {
   Map<String, HostStatus> getHostsStatuses(List<String> hosts) throws AmbariConnectionException {
     def fields = ["Hosts/host_status", "host_components/HostRoles/desired_admin_state", "host_components/HostRoles/state",
                   "host_components/HostRoles/desired_state", "host_components/HostRoles/maintenance_state", "host_components/HostRoles/upgrade_state"]
-    Map<String, Object> hostParams = utils.getFilteredHostsParams(getClusterName(), hosts, fields)
+    Map<String, Object> hostParams = utils.getFilteredParamsForAllHosts(getClusterName(), fields)
     Map<String, HostStatus> hostsStatuses = [:]
-    hostParams?.items?.collectEntries {
+    hostParams?.items?.findAll{ hosts.contains(it?.Hosts?.host_name) }?.collectEntries {
       HostStatus hostStatus = new HostStatus()
       hostStatus.hostStatus = it?.Hosts?.host_status
       hostStatus.hostComponentsStatuses = [:]
@@ -125,9 +125,9 @@ trait ServiceAndHostService extends ClusterService {
   Map<String, HostStatus> getHostComponentStatuses(List<String> hosts, List<String> components) {
     def fields = ["Hosts/host_status", "host_components/HostRoles/desired_admin_state", "host_components/HostRoles/state",
                   "host_components/HostRoles/desired_state", "host_components/HostRoles/maintenance_state", "host_components/HostRoles/upgrade_state"]
-    Map<String, Object> hostParams = utils.getFilteredHostsParams(getClusterName(), hosts, components, fields)
+    Map<String, Object> hostParams = utils.getFilteredComponentParamsForAllHosts(getClusterName(), components, fields)
     Map<String, HostStatus> hostsStatuses = [:]
-    hostParams?.items?.collectEntries {
+    hostParams?.items?.findAll{ hosts.contains(it?.Hosts?.host_name) }?.collectEntries {
       HostStatus hostStatus = new HostStatus()
       hostStatus.hostStatus = it?.Hosts?.host_status
       hostStatus.hostComponentsStatuses = [:]
