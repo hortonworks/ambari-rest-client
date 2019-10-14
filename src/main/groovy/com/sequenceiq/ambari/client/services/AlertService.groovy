@@ -59,6 +59,17 @@ trait AlertService extends ClusterService {
   }
 
   /**
+   * Returns the filtered parameters of the given hosts and components as a Map
+   * @param hosts the list of the hosts
+   * @param fields the list of the parameter names
+   * @throws AmbariConnectionException
+   */
+  def List<Map<String, Object>> getAlertByNameAndState(String alertName, String state) throws AmbariConnectionException {
+    utils.slurp("clusters/${getClusterName()}/alerts".toString(), "*", "Alert/definition_name=${alertName}&Alert/state=${state}".toString())
+            .items.collect { it.Alert }
+  }
+
+  /**
    * Returns all the defined alerts grouped by alert definition name.
    * A filter can be applied for scopes: HOST, ANY, SERVICE
    *

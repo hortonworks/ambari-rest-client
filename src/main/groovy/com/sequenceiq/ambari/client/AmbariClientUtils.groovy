@@ -156,6 +156,15 @@ class AmbariClientUtils {
   }
 
   /**
+   * Returns a Map containing the cluster's properties parsed from the Ambari response json.
+   *
+   * @return cluster's properties as Map or empty Map
+   */
+  def getClustersFields(List<String> fields) throws AmbariConnectionException {
+    slurp('clusters', fields.join(','))
+  }
+
+  /**
    * Returns the available hosts properties as a Map.
    *
    * @return Map containing the hosts properties
