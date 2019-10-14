@@ -35,7 +35,7 @@ trait ClusterService extends CommonService {
    */
   def String getClusterName() throws AmbariConnectionException {
     if (!clusterNameCache) {
-      def clusters = utils.getClusters();
+      def clusters = utils.getClustersFields(["Clusters/cluster_name"]);
       if (clusters) {
         clusterNameCache = clusters.items[0]?.Clusters?.cluster_name
       }
