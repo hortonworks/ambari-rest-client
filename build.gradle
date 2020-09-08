@@ -33,8 +33,8 @@ uploadArchives {
     repositories {
         mavenDeployer {
             configuration = configurations.deployerJars
-            repository(url: "$System.env.NEXUS_URL") {
-                authentication(userName: "$System.env.NEXUS_USER", password: "$System.env.NEXUS_PASSWORD")
+            repository(url: "$System.env.S3_BUCKET") {
+                authentication(userName: "$System.env.NEXUS_USER", passphrase: "$System.env.NEXUS_PASSWORD")
             }
         }
     }
@@ -70,7 +70,6 @@ dependencies {
     deployerJars 'org.springframework.build.aws:org.springframework.build.aws.maven:3.0.0.RELEASE'
 }
 
-task wrapper(type: Wrapper) { gradleVersion = "2.3" }
 
 task buildInfo(type: BuildInfoTask) {
     destination = file("$buildDir")
