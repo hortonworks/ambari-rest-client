@@ -288,13 +288,15 @@ trait ServiceAndHostService extends ClusterService {
 
   /**
    * Returns the name of the node and the size of the replicated block that are remaining.
-   *
+   * @param forceMetricsFetch if it is set, ambari metrics service should refresh its metrics cache 
+            and get the new values from Hadoop daemon
    * @return Map where the key is the internal host name of the node and the value
    *         is size of the replicated block
    */
-  def Map<String, Long> getDecommissioningDataNodes() throws AmbariConnectionException {
+  def Map<String, Long> getDecommissioningDataNodes(boolean forceMetricsFetch = false) throws AmbariConnectionException {
     def result = [:]
-    def response = utils.slurp("clusters/${getClusterName()}/services/HDFS/components/NAMENODE", 'metrics/dfs/namenode/DecomNodes')
+    def query = forceMetricsFetch ? 'force_metrics_fetch=true' : ''
+    def response = utils.slurp("clusters/${getClusterName()}/services/HDFS/components/NAMENODE", 'metrics/dfs/namenode/DecomNodes', query)
     def nodes = slurper.parseText(response?.metrics?.dfs?.namenode?.DecomNodes)
     if (nodes) {
       nodes.each {
