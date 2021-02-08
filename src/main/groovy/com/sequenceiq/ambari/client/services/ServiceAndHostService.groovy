@@ -297,10 +297,12 @@ trait ServiceAndHostService extends ClusterService {
     def result = [:]
     def query = forceMetricsFetch ? 'force_metrics_fetch=true' : ''
     def response = utils.slurp("clusters/${getClusterName()}/services/HDFS/components/NAMENODE", 'metrics/dfs/namenode/DecomNodes', query)
-    def nodes = slurper.parseText(response?.metrics?.dfs?.namenode?.DecomNodes)
-    if (nodes) {
-      nodes.each {
-        result << [(it.key): it.value.underReplicatedBlocks as Long]
+    if (!forceMetricsFetch || response != null) {
+      def nodes = slurper.parseText(response?.metrics?.dfs?.namenode?.DecomNodes)
+      if (nodes) {
+        nodes.each {
+          result << [(it.key): it.value.underReplicatedBlocks as Long]
+        }
       }
     }
     result
