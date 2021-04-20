@@ -219,6 +219,30 @@ trait ClusterService extends CommonService {
   }
 
   /**
+   * Retire a host component on a given host.
+   * @param host hostName where the component is installed to
+   * @param serviceName the service to retire
+   * @param componentName the name of the component
+   */
+  def int retire(List<String> hosts, String serviceName, String componentName)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
+    def requestInfo = [
+            command   : 'RETIRE',
+            context   : "Execute retire command."
+    ]
+    def filter = [
+            ['service_name': serviceName, 'component_name': componentName, 'hosts': hosts.join(',')]
+    ]
+    Map bodyMap = [
+            'RequestInfo'              : requestInfo,
+            'Requests/resource_filters': filter
+    ]
+    ambari.post(path: "clusters/${getClusterName()}/requests", body: new JsonBuilder(bodyMap).toPrettyString(), {
+      utils.getRequestId(it)
+    })
+  }
+
+  /**
    * Does not return until all the requests are finished.
    * @param requestIds ids of the requests
    */
