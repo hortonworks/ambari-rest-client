@@ -367,6 +367,30 @@ trait ClusterService extends CommonService {
     return utils.getRawResource(resourceRequestMap)
   }
 
+  /**
+   * Turn on or off the auto-restart for the given components.
+   * @param componentNames the components where we want to modify the auto-restart
+   * @param enabled the flag to set the value of the auto-restart setting
+   */
+  def setAutoRestart(List<String> componentNames, boolean enabled)
+          throws URISyntaxException, ClientProtocolException, HttpResponseException, IOException {
+    def requestInfo = [
+            'query'   : 'ServiceComponentInfo/component_name.in(' + componentNames.join(',') + ')'
+    ]
+    def serviceComponentInfo = [
+            'recovery_enabled' : enabled
+    ]
+    Map bodyMap = [
+            'RequestInfo'         : requestInfo,
+            'ServiceComponentInfo': serviceComponentInfo
+    ]
+    Map<String, ?> putRequestMap = [:]
+    putRequestMap.put('requestContentType', ContentType.URLENC)
+    putRequestMap.put('path', "clusters/${getClusterName()}/components")
+    putRequestMap.put('body', new JsonBuilder(bodyMap).toPrettyString());
+    ambari.put(putRequestMap)
+  }
+
   private boolean isAmbariGreaterThan(List baseVersion, version) {
     def act = version.split('\\.')
     for (int i = 0; i < baseVersion.size(); i++) {
